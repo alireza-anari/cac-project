@@ -39,3 +39,11 @@ The separate Work delivery reports **13 new + 32 original passing tests** for th
 4. Run clean-environment integration tests and resolve acceptance gates with actual commit-linked logs.
 
 No production release is authorized by this record.
+
+## Verified GitHub import (2026-10-27)
+
+- Main branch contains the eight original core `docs/cac/00..07` v3.42 governance files. Each Git blob SHA was compared to the corresponding original file and **matched byte-for-byte**.
+- Reference branch `archive/v3.40-unpatched-reference` contains an **unpatched, historical** Python/SQLite onboarding source snapshot and its tests/OpenAPI addendum. The seven core source/test/API blobs matched their original archive bytes.
+- This branch is **not merged into main**, and must never be treated as the corrected `SEC-REV-001` handoff.
+- Corrected S0-02 and S0-03 artifact ZIPs have not been fetched directly through this session; their **reported** hashes remain in Source Registry.
+- `SOURCE-001` and all Django/PostgreSQL/RLS integration gates remain BLOCKED.
