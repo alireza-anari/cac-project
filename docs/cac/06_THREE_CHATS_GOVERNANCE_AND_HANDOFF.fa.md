@@ -10,6 +10,6 @@
 مسئول **repo، کدنویسی، تست، migration، افزونه Woo، UI، API، CI، خروجی قابل استفاده و شواهد**. اولین کار شناسایی سورس واقعی؛ بعد S0/S1؛ به هیچ عنوان source ناموجود v3.37/v3.38/v3.39 را خودساخته «مبدأ صحیح» اعلام نکند. بدون repo مقصد تأییدشده نباید remote GitHub write کند، و production/provider egress نیازمند مجوز جداست.
 
 ## انتقال
-Architecture → Work: `SPEC_ID + baseline + acceptance + relevant files + SHA`؛ Work → Management: `source hash/commit + test evidence + gaps`؛ Management → Architecture: `CR request`؛ Architecture → Management/Work: `decision & updated spec`.
+Architecture → Work: `SPEC_ID + baseline + acceptance + relevant files + SHA`; Work → Management: `source hash/commit + test evidence + gaps`; Management → Architecture: `CR request`; Architecture → Management/Work: `decision & updated spec`.
 
 **چت‌ها همگام‌سازی خودکار ندارند.** باید بسته یا پیام مرجع به هر چت منتقل شود. وضعیت یا تکمیل کار بین چت‌ها تنها پس از receipt شواهد واقعی تغییر می‌کند.
