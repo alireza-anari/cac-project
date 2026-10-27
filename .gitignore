@@ -1,4 +1,4 @@
-# Secrets and environment-specific configuration
+# Real credentials and local configuration
 .env
 .env.*
 !.env.example
@@ -12,7 +12,7 @@ secrets.*
 id_rsa*
 id_ed25519*
 
-# Runtime and local databases
+# Runtime/generated content
 *.sqlite
 *.sqlite3
 *.db
@@ -30,14 +30,7 @@ dist/
 build/
 .coverage
 htmlcov/
-
-# Logs / local artifacts and unreviewed archives
-*.log
-*.zip
-*.tar
-*.tar.gz
-*.tgz
-evidence/
-private/
-local/
 .DS_Store
+
+# Note: ZIP archives, source documents, sanitized logs and evidence may be
+# published intentionally. They are no longer blanket-ignored.
