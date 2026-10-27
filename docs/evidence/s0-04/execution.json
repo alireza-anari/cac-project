@@ -1,0 +1,66 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.39",
+  "sqlite": "3.53.1",
+  "executions": [
+    {
+      "id": "install",
+      "command": [
+        "<workspace>/s0-04/clean-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "<workspace>/cac-project/standalone/onboarding"
+      ],
+      "cwd": "<workspace>/s0-04",
+      "exit_code": 0,
+      "log": "install.log"
+    },
+    {
+      "id": "installed-import",
+      "command": [
+        "<workspace>/s0-04/clean-venv/bin/python",
+        "-c",
+        "import cac_onboarding.service; print(cac_onboarding.service.__file__)"
+      ],
+      "cwd": "<workspace>/s0-04",
+      "exit_code": 0,
+      "log": "installed-import.log"
+    },
+    {
+      "id": "unittest",
+      "command": [
+        "<workspace>/s0-04/clean-venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "cwd": "<workspace>/cac-project/standalone/onboarding",
+      "exit_code": 0,
+      "log": "unittest.log"
+    }
+  ],
+  "postgres_binaries": {
+    "postgres": null,
+    "psql": null,
+    "pg_ctl": null,
+    "docker": null
+  },
+  "scope": "Standalone SQLite only; PostgreSQL/Django NOT_RUN",
+  "environment_overrides": {
+    "PYTHONPATH": ".",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "counts": {
+    "executed": 45,
+    "passed": 45,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

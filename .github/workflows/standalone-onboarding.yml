@@ -1,0 +1,62 @@
+name: Standalone onboarding
+
+on:
+  pull_request:
+    paths:
+      - 'standalone/onboarding/**'
+      - '.github/workflows/standalone-onboarding.yml'
+  push:
+    branches: [main, work/sec-rev-001-standalone-import]
+    paths:
+      - 'standalone/onboarding/**'
+      - '.github/workflows/standalone-onboarding.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Record environment and source
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p evidence
+          python -VV > evidence/environment.txt
+          python -c 'import sqlite3, platform; print(platform.platform()); print("SQLite", sqlite3.sqlite_version)' >> evidence/environment.txt
+          git rev-parse HEAD > evidence/tested-sha.txt
+          printf '%s\n' "$PR_HEAD_SHA" > evidence/pr-head-sha.txt
+      - name: Install standalone distribution
+        run: python -m pip install ./standalone/onboarding
+      - name: Verify installed import outside source tree
+        working-directory: ${{ runner.temp }}
+        run: python -c 'import cac_onboarding.service; print(cac_onboarding.service.__file__)'
+      - name: Run original and new tests
+        working-directory: standalone/onboarding
+        env:
+          PYTHONPATH: .
+        run: |
+          set +e
+          python -m unittest discover -s tests -p 'test_*.py' -v > ../../evidence/unittest.log 2>&1
+          result=$?
+          cat ../../evidence/unittest.log
+          printf '%s\n' "$result" > ../../evidence/exit-code.txt
+          exit "$result"
+      - name: Upload execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence/
+          retention-days: 30

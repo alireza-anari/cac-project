@@ -1,0 +1,69 @@
+{
+  "source_id": "CAC-SEC-REV-001-STANDALONE-S0-02",
+  "status": "NOT_MERGED / SOURCE_UNVERIFIED",
+  "archives": [
+    {
+      "archive": "CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip",
+      "sha256": "bdae7c4d6d146714bc0ef4a3e2d0280944c1ecf85560a491050fa427315ac39f",
+      "size_bytes": 86213,
+      "manifest": "PASS",
+      "CRC": "PASS"
+    },
+    {
+      "archive": "CAC-S0-03-Security-Fix-Handoff-2026-10-26.zip",
+      "sha256": "94f4d586023779500ea85a8cc7f76f092817e6b7da8a0dcb06aec2e59391a240",
+      "size_bytes": 111923,
+      "manifest": "PASS",
+      "CRC": "PASS"
+    }
+  ],
+  "imported_files": [
+    {
+      "path": "cac_onboarding/__init__.py",
+      "sha256": "b7f55398182bdb6307de7dce0fb5190caec26ffa1ec484c78e0eb6fe14db46d1"
+    },
+    {
+      "path": "cac_onboarding/policy.py",
+      "sha256": "af4ea5b879edbf3e74fe50aeeab6ba2ba893750a09fc1fcaa772a1b5fa0d0324"
+    },
+    {
+      "path": "cac_onboarding/service.py",
+      "sha256": "98d8694e6b31b047fb44896a48815ca62e0761cd28fb1c05c3d0a766d9d952c2"
+    },
+    {
+      "path": "cac_onboarding/storage.py",
+      "sha256": "22a972263643ce94ff48e131cd0efd72e60d0819ad6bbce47eef6e4492856684"
+    },
+    {
+      "path": "integration/ADAPTER_PORTS.py",
+      "sha256": "ffbda36c59dd5bb4bcc1899c5c7237f9883431705ea8b8cf94d110805b85fbb4"
+    },
+    {
+      "path": "integration/openapi-onboarding-addendum.yaml",
+      "sha256": "536492ff09fefeebf3ead93a502620a5dad1117c30ecdc6138738f4b302f7bf4"
+    },
+    {
+      "path": "tests/test_onboarding.py",
+      "sha256": "8fe1418842ea6a8b976000e4f04f4b00bed151e766b0860b681a07859fa56367"
+    },
+    {
+      "path": "tests/test_revocation.py",
+      "sha256": "2511edc65e765230880cf735f7180fb6937384315ca035b06c4c570bf597f391"
+    }
+  ],
+  "historical_branch": "archive/v3.40-unpatched-reference",
+  "historical_commit": "0923d9bd761e04ba5bcf83c37e91ef7332f64c64",
+  "historical_exact_matches": [
+    "cac_onboarding/__init__.py",
+    "cac_onboarding/policy.py",
+    "cac_onboarding/service.py",
+    "cac_onboarding/storage.py",
+    "integration/ADAPTER_PORTS.py",
+    "integration/openapi-onboarding-addendum.yaml",
+    "tests/test_onboarding.py"
+  ],
+  "base_main": "16ffff85f07d1464103f2e81769696e2ee28f612",
+  "baseline_recovered": false,
+  "independent_review": "S0-02 review_s002; no critical/important/minor findings; review covers identical service/test hashes only, not PostgreSQL/IdP/backend",
+  "review_sha256": "a7224bd7f8e6a262c17ffc10e8f0bc54fb960243397a998feee7a77f4943264b"
+}

@@ -27,3 +27,7 @@ This repository is intentionally **public at the owner's direction**. Reviewed s
 Historical standalone v3.40 contained a reported revoke/invitation security defect. It is not the corrected S0-02 security fix, and should not be used as a production onboarding service.
 
 No product release or production deployment is authorized by this repository bootstrap.
+
+## Standalone security remediation
+
+The reviewed standalone SEC-REV-001 source is available at [standalone/onboarding](standalone/onboarding/README.md) on the Work import branch. See [S0-04 handoff](docs/S0_04_HANDOFF.md) for provenance, local test evidence and integration blockers. Import into this repository does not recover the frozen backend or establish application integration.
