@@ -1,0 +1,43 @@
+# Secrets and environment-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.*
+!secrets.example.*
+id_rsa*
+id_ed25519*
+
+# Runtime and local databases
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+node_modules/
+dist/
+build/
+.coverage
+htmlcov/
+
+# Logs / local artifacts and unreviewed archives
+*.log
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+evidence/
+private/
+local/
+.DS_Store
