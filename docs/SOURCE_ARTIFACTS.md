@@ -28,3 +28,11 @@ Important: The SHA-256 values for S0-02 and S0-03 are **reported from the Work h
 A flaw in original standalone v3.40 `revoke_capability` was reported: a pending invitation could survive revoke if no active grant existed. A later standalone fix is reported with **13 added + 32 original passing tests**, but remains **NOT_MERGED / SOURCE_UNVERIFIED**, and PostgreSQL accept/revoke race tests were designed but NOT EXECUTED.
 
 Do not describe the original v3.40 source as the corrected security release.
+
+## GitHub import status — 2026-10-27
+
+- Eight original `v3.42` core governance documents were imported to `main` under `docs/cac/`, verified byte-for-byte against the project ZIP.
+- Seven reference source/test/OpenAPI blobs from the **original unpatched v3.40** archive were imported byte-for-byte on `archive/v3.40-unpatched-reference` under `reference/v3.40-unpatched/`.
+- The corrected S0-02 and final S0-03 Library links are **not** equivalent to locally accessible archive bytes; those corrected artifacts have **not** yet been imported to GitHub.
+- Source recovery issue: https://github.com/alireza-anari/cac-project/issues/1
+- Corrected security handoff issue: https://github.com/alireza-anari/cac-project/issues/2
