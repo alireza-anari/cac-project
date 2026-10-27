@@ -1,24 +1,29 @@
 # CAC Project
 
-CAC development repository.
+Official development repository for CAC.
 
-> **Status:** Bootstrap / source verification in progress. This repository does **not** currently represent a complete, verified or production-ready application.
+> **Current state:** `SOURCE_UNVERIFIED` / `NOT_MERGED`. A public repository and documentation bootstrap have been created; the authentic v3.37 baseline and later v3.38/v3.39 sources have not yet been recovered, and Django/PostgreSQL integration is not verified.
 
-## Governance
+## Documentation
 
-- Architecture baseline: `v3.37 / APR-036` (approved; original source archive not yet recovered).
-- Development workflow: feature branches, reviewable pull requests and evidence-backed acceptance gates.
-- Source recovery: `SOURCE-001` remains **BLOCKED** until the actual baseline is recovered and verified.
-- A standalone onboarding security fix has been reported as tested, but is **NOT_MERGED / SOURCE_UNVERIFIED**. It is not part of this initial repository bootstrap.
+- [Execution Roadmap](docs/MVP_ROADMAP.md) — Sprint 0–6 scope and exit gates
+- [Architecture Governance](docs/ARCHITECTURE_GOVERNANCE.md) — APR-033/034/035/036 and change control
+- [Source Registry](docs/SOURCE_ARTIFACTS.md) — known references, checksums and outstanding artifacts
+- [Security Release Gates](docs/SECURITY_RELEASE_GATES.md) — expected tests and evidence
+- [Current Project Status](docs/PROJECT_STATUS.md) — delivery and integration status
 
-## Public repository safety
+## Development process
 
-This repository is **public**. Do **not** commit credentials, tokens, customer data, private communications, security test evidence containing operational details, or unreviewed source archives. All uploads require a content and secret review first.
+1. Work performs source/code imports and actual development on a feature branch.
+2. Commit source and test evidence with real SHA references and no unsupported PASS claims.
+3. Astra Management reviews the evidence and decides if an acceptance gate is satisfied.
+4. Architecture contract changes require a documented CR and approval.
+5. Integrate only after the authentic baseline and relevant migration/security gates are verified.
 
-Making this repository private later **cannot undo previous public access, clones, or copies**.
+## Publication policy
 
-## Development status
+This repository is intentionally **public at the owner's direction**. Reviewed source code, project documents, tests and appropriate evidence may be published with clear provenance and integration labels. Never commit **real passwords, secret keys, access tokens, credentials or private customer data**, regardless of visibility.
 
-See [project status](docs/PROJECT_STATUS.md) for the current acceptance-gate summary.
+Historical standalone v3.40 contained a reported revoke/invitation security defect. It is not the corrected S0-02 security fix, and should not be used as a production onboarding service.
 
-No production deployment or integration is implied by any documentation in this repository.
+No product release or production deployment is authorized by this repository bootstrap.
