@@ -65,14 +65,14 @@ Tests and contract validation are separate jobs, each fail-closed and bounded to
 ## Gate decisions and residual risks
 
 - Standalone local install/tests and scoped contract checks: PASS, with the one declared warning/CR.
-- CI: final outcome must be attached to the real head in PR checks, not inferred here.
+- CI: final-head run [40713306009](https://github.com/alireza-anari/cac-project/actions/runs/40713306009) verified the exact head `fa71168b4501e8bf3fc7da5205943d255f8842ae`; both jobs succeeded. Management inspected both actual job logs: 45 Python tests, structural validation, scoped lint with one visible warning, and nine CLI fixtures all passed.
 - SOURCE-001 / GATE-SOURCE / BOOT / MIG / TENANT / ONBOARD: BLOCKED. No historical baseline recovered.
 - PostgreSQL/RLS/race testing, Django, live IdP/MFA/CSRF, append-only production audit: NOT_RUN / BLOCKED.
 - APR-033/034/035/036 unchanged. No production release or AI connection performed. Neither Sprint 0 nor Sprint 1 is completed by this change.
 
 ## Next actions
 
-1. P1 Management: review separate PR, exact head, CI job logs and explicit lint exceptions; do not auto-merge.
+1. Management reviewed the exact PR head and CI logs and merged PR #6 for repository tooling only via `690505b3b622cb622865d0dfb8ef364bc1a6f119`.
 2. P1 Architecture: decide CR-S0-05-001 after mapping the recovered baseline; retain the visible warning meanwhile.
 3. P0 Management: supply authentic v3.37/v3.38/v3.39 bytes or repository refs to unblock SOURCE-001.
 4. P0 Work/DB after source recovery: execute real adapter/migration/RLS and PostgreSQL accept/revoke race checks.
@@ -81,3 +81,13 @@ Tests and contract validation are separate jobs, each fail-closed and bounded to
 ## Independent S0-05 review
 
 Read-only reviewer inspected the full tracked diff and new files, independently reran 45 Python tests, nine real CLI fixtures, structural validation and `git diff --check`: PASS. No Critical/Important/Minor findings. Review did not revalidate upstream release SHA metadata, audit bundled dependencies, execute GitHub Actions or assess absent backend/production. Local review needed a writable scratch TMPDIR because its sandbox lacked `/tmp`; the rerun passed. This review supports opening the PR, not merge or production approval.
+
+
+## Astra Management final decision — 2026-10-28
+
+**ACCEPTED AND MERGED FOR REPOSITORY TOOLING ONLY.** PR [#6](https://github.com/alireza-anari/cac-project/pull/6) was squash-merged to `main` at `690505b3b622cb622865d0dfb8ef364bc1a6f119`, with the reviewed head `fa71168b4501e8bf3fc7da5205943d255f8842ae`. Management verified both actual CI job logs and independently matched the four Action pins to their upstream release tag commit SHAs.
+
+- Python CI: 45 tests, `OK`; install and out-of-source import succeeded.
+- Contract CI: OpenAPI 3.1.1 structural validation passed; scoped lint has 0 errors and one visible `operation-4xx-response` warning; all 9 CLI fixtures passed.
+- `CR-S0-05-001`: still **PROPOSED / NOT APPROVED / NOT IMPLEMENTED**. The API response contract was not changed. Architecture decision must wait for mapping against the recovered frozen baseline.
+- Current state: `MERGED_TO_REPOSITORY / NOT_INTEGRATED / SOURCE_UNVERIFIED`. `SOURCE-001`, `GATE-SOURCE`, `BOOT`, `MIG`, `TENANT`, `ONBOARD`, real PostgreSQL/RLS/race tests and identity integration remain BLOCKED/NOT_RUN. No production release or Sprint 0/1 completion is authorized.
