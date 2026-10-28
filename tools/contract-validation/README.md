@@ -1,8 +1,10 @@
 # Standalone OpenAPI validation
 
-Run from repository root with Node **24.22.1** (bundled npm **11.9.0**):
+Run from repository root with Node **24.22.1** and npm **11.19.1** (CI asserts the npm version bundled with that Node release):
 
 ```bash
+# If your local Node distribution ships a different npm:
+# npm install --global npm@11.19.1 --ignore-scripts --no-audit --no-fund
 npm ci --prefix tools/contract-validation --ignore-scripts --no-audit --no-fund
 REDOCLY_TELEMETRY=off npm --prefix tools/contract-validation run validate
 REDOCLY_TELEMETRY=off npm --prefix tools/contract-validation run lint

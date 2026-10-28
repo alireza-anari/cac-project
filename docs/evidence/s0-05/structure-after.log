@@ -1,15 +1,15 @@
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
 
 > cac-contract-validation@0.0.0 validate
 > redocly lint ../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml --config spec.yaml --format stylish --max-problems 1000
 
 validating ../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml...
-../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml: validated in 18ms
+../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml: validated in 15ms
 
 Woohoo! Your API description is valid. 🎉
 
 npm notice
-npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice New major version of npm available! 11.19.1 -> 12.2.1
 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
 npm notice To update run: npm install -g npm@12.2.1
 npm notice

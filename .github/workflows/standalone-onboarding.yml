@@ -101,6 +101,7 @@ jobs:
           mkdir -p evidence
           node --version > evidence/contract-environment.txt
           npm --version >> evidence/contract-environment.txt
+          test "$(npm --version)" = "11.19.1" # bundled with the pinned Node release; fail on drift
           git rev-parse HEAD > evidence/tested-sha.txt
           printf '%s\n' "$PR_HEAD_SHA" > evidence/pr-head-sha.txt
       - name: Install integrity-locked local validator

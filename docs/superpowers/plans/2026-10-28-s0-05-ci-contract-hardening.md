@@ -37,3 +37,6 @@ Bad 3.1 schemas and unresolved refs must fail; lint exceptions must not hide str
 - Ruling: separate spec.yaml avoids automatic recommended-config discovery; both profiles tested explicitly.
 - Ruling: missing server/license are documented profile exceptions, not invented contract values. Missing 4xx response remains visible with CR.
 - Independent final reviewer: 0 Critical/Important/Minor; independently reran 45 Python tests, nine CLI fixtures and structural validation. Ready for PR/CI, not merge.
+
+- CI evidence exposed npm version difference (local 11.9.0 vs Node CI bundled 11.19.1): pin by explicit CI assertion, correct docs, rerun local npm ci and contract checks with 11.19.1, then recheck final-head CI. Initial CI passed but is superseded.
+- Final local npm 11.19.1 clean ci, structural and scoped lint checks and nine CLI fixtures: exit 0; version guard rejects 11.9.0 (exit 1).

@@ -2,13 +2,13 @@
 
 **Work handoff for Astra Management. NOT_INTEGRATED / SOURCE_UNVERIFIED.**
 Base: main `2e62137defc2d53819fc0ba8bf42283dfeb7bbeb`, after confirmed PR #3 merge `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`.
-Branch: `work/s0-05-ci-contract-hardening`. No auto-merge. The final head, PR and actual CI run are recorded in the PR description after publication; local results are not CI results.
+Branch: `work/s0-05-ci-contract-hardening`. No auto-merge. The final head and actual CI run are recorded in [PR #6](https://github.com/alireza-anari/cac-project/pull/6); local results are not CI results.
 
 ## Changes and reproducibility
 
 - Runtime service, policy, storage and all 45 tests unchanged. No API semantic or DB/schema change. Migration: none created/executed. OpenAPI gains three operation summaries only; parsed documents compare equal after removing those three additions. Exact before/after hashes: [execution.json](evidence/s0-05/execution.json). Historical provenance remains intact.
 - Actions are pinned to verified upstream release commit SHAs, not floating tags. Release metadata and `action.yml`/README reviewed for Node 24 and runner requirements (minimum v2.327.1; GitHub-hosted Ubuntu 24.04). No claim of full source/security audit of bundled Action JavaScript.
-- Python CI 3.12.15; Node 24.22.1 (npm 11.9.0); Redocly 2.71.2 with npm tarball integrity; pip 26.2.2 and setuptools 84.2.1 with PyPI wheel SHA-256. Build installs with `--require-hashes --only-binary=:all:`, then `--no-build-isolation --no-deps`. Runtime dependencies remain empty.
+- Python CI 3.12.15; Node 24.22.1 with an explicit npm 11.19.1 version assertion; Redocly 2.71.2 with npm tarball integrity; pip 26.2.2 and setuptools 84.2.1 with PyPI wheel SHA-256. Build installs with `--require-hashes --only-binary=:all:`, then `--no-build-isolation --no-deps`. Runtime dependencies remain empty.
 - `npm ci --ignore-scripts --no-audit --no-fund` consumes committed lock; no floating npx download. No caching. Package registries, hosted OS images, runner and bootstrap pip remain external dependencies; this is not a hermetic/bit-identical build or vulnerability attestation. Redocly bundles dependencies, so the single npm lock entry is a distribution integrity guarantee only.
 
 | Action | Reviewed release | Commit SHA |
@@ -46,7 +46,7 @@ REDOCLY_TELEMETRY=off npm --prefix tools/contract-validation test
 | Final scoped recommended lint | PASS: 0 errors, 1 known warning / 0 | [after](evidence/s0-05/lint-after.log) |
 | Real CLI gate fixtures | 9 PASS, 0 failures/skips / 0 | [fixture log](evidence/s0-05/lint-gates.log) |
 
-Local Linux: Python 3.12.14, SQLite 3.53.1; CI Python is pinned separately. Environment and hashes are in execution.json. npm's local proxy-config/dependency-update notices are preserved in logs; they are not contract warnings. No proxy URLs or environment dump is published. Installation summary intentionally excludes index configuration and local temporary paths.
+Local Linux: Python 3.12.14, SQLite 3.53.1; CI Python is pinned separately. Environment and hashes are in execution.json. Initial local npm was 11.9.0; the first real CI exposed bundled npm 11.19.1, so final lock installation and contract checks were repeated locally with 11.19.1 and CI now rejects version drift. npm's local proxy-config/dependency-update notices are preserved in logs; they are not contract warnings. No proxy URLs or environment dump is published. Installation summary intentionally excludes index configuration and local temporary paths.
 
 ## Contract findings, decisions and CR
 

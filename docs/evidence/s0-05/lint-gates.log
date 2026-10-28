@@ -1,17 +1,17 @@
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
 
 > cac-contract-validation@0.0.0 test
 > node --test lint-gates.test.mjs
 
-✔ spec: accepts OpenAPI 3.1.1 nullable type array (5789.892013ms)
-✔ spec: rejects an invalid schema type (5542.767205ms)
-✔ spec: rejects an unresolved local reference (5668.28598ms)
-✔ spec: rejects duplicate operation IDs (5556.381855ms)
-✔ recommended: accepts OpenAPI 3.1.1 nullable type array (6213.292177ms)
-✔ recommended: rejects an invalid schema type (6264.055987ms)
-✔ recommended: rejects an unresolved local reference (5497.052662ms)
-✔ recommended: rejects duplicate operation IDs (5622.064209ms)
-✔ recommended: reports missing summary as an error (5471.085423ms)
+✔ spec: accepts OpenAPI 3.1.1 nullable type array (6212.322466ms)
+✔ spec: rejects an invalid schema type (6193.180977ms)
+✔ spec: rejects an unresolved local reference (6183.229447ms)
+✔ spec: rejects duplicate operation IDs (6206.797405ms)
+✔ recommended: accepts OpenAPI 3.1.1 nullable type array (6224.092179ms)
+✔ recommended: rejects an invalid schema type (6143.810018ms)
+✔ recommended: rejects an unresolved local reference (6091.027842ms)
+✔ recommended: rejects duplicate operation IDs (6180.317448ms)
+✔ recommended: reports missing summary as an error (6194.021941ms)
 ℹ tests 9
 ℹ suites 0
 ℹ pass 9
@@ -19,9 +19,4 @@ npm warn Unknown env config "http-proxy". This will stop working in the next maj
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 51710.633979
-npm notice
-npm notice New major version of npm available! 11.9.0 -> 12.2.1
-npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
-npm notice To update run: npm install -g npm@12.2.1
-npm notice
+ℹ duration_ms 55727.723316
