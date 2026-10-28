@@ -15,6 +15,7 @@ The approved architectural baseline is **v3.37 / APR-036**. Preserved decisions 
 | v3.40 standalone onboarding | Referenced locally, **not integrated** |
 | S0-02 security remediation | Standalone module merged to repository main via PR #3 at `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`; **NOT_INTEGRATED / SOURCE_UNVERIFIED** |
 | S0-03 evidence handoff | Archive/hash/manifest reported verified by Work; standalone handoff accepted for repository import by Management at PR #3 |
+| S0-05 CI/contract tooling | Merged via PR #6 at `690505b3b622cb622865d0dfb8ef364bc1a6f119`; **tooling accepted only; CR-S0-05-001 pending** |
 | v3.42 project sources | Governance/reference package, **not the complete product source** |
 
 ## Acceptance gates
@@ -64,4 +65,4 @@ Corrected artifact bytes and original reference branch were verified. Source liv
 
 ## S0-05 Work — CI and standalone contract validation
 
-A separate branch hardens Action/dependency pins and adds OpenAPI 3.1.1 structural/lint checks and negative fixtures. See [S0-05 handoff](S0_05_HANDOFF.md) for actual local results and known warning/CR; CI acceptance comes from the PR head checks. Runtime behavior and API semantics are unchanged. SOURCE-001 and all integrated gates remain BLOCKED. This entry does not predeclare Management acceptance or merge.
+A separate branch hardened Action/dependency pins and added OpenAPI 3.1.1 structural/lint checks and negative fixtures. Management reviewed the full PR diff and actual final-head CI logs, then accepted and merged PR #6 via squash commit `690505b3b622cb622865d0dfb8ef364bc1a6f119`. Final CI: 45 Python tests PASS, structural validation PASS, scoped lint 0 errors plus one visible `operation-4xx-response` warning, and 9 CLI fixtures PASS. [PR #6](https://github.com/alireza-anari/cac-project/pull/6) · [CI run](https://github.com/alireza-anari/cac-project/actions/runs/40713306009) · [handoff](S0_05_HANDOFF.md). `CR-S0-05-001` remains proposed, unapproved and unimplemented; no API semantics changed. SOURCE-001 and all integrated gates remain BLOCKED. This merge does not complete Sprint 0/1 or authorize production.
