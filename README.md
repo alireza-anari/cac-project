@@ -30,4 +30,4 @@ No product release or production deployment is authorized by this repository boo
 
 ## Standalone security remediation
 
-The reviewed standalone SEC-REV-001 source is available at [standalone/onboarding](standalone/onboarding/README.md) on the Work import branch. See [S0-04 handoff](docs/S0_04_HANDOFF.md) for provenance, local test evidence and integration blockers. Import into this repository does not recover the frozen backend or establish application integration.
+The reviewed standalone SEC-REV-001 source was imported into [standalone/onboarding](standalone/onboarding/README.md) on `main` via [PR #3](https://github.com/alireza-anari/cac-project/pull/3), merged in commit `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`. See [S0-04 handoff](docs/S0_04_HANDOFF.md) for provenance, local test evidence and integration blockers. Import into this repository does not recover the frozen backend or establish application integration.
