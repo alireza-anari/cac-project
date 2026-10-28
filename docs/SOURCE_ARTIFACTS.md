@@ -45,3 +45,7 @@ Do not describe the original v3.40 source as the corrected security release.
 - Branch: `work/sec-rev-001-standalone-import`; selected exact source under `standalone/onboarding/`. Packaging and README are new import metadata, not historical bytes.
 - Real clean-venv installation/import and 45 unittest results: [evidence](evidence/s0-04/execution.json). CI is tracked by actual commit/run checks, not inferred from these local results.
 - v3.37/v3.38/v3.39 remain MISSING. SOURCE-001 stays BLOCKED.
+
+## Repository acceptance update — 2026-10-28
+
+PR [#3](https://github.com/alireza-anari/cac-project/pull/3) was reviewed and merged on main with squash commit `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`. Only independent standalone code/test/evidence artifacts were imported. The Work-reported S0-02/S0-03 archive SHA-256 values remain provenance records; GitHub does not prove the authentic v3.37 source has been recovered. Current status is `MERGED_TO_REPOSITORY / NOT_INTEGRATED / SOURCE_UNVERIFIED`; full integration gates remain BLOCKED.
