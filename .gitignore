@@ -34,3 +34,6 @@ htmlcov/
 
 # Note: ZIP archives, source documents, sanitized logs and evidence may be
 # published intentionally. They are no longer blanket-ignored.
+
+# Local Python package metadata
+*.egg-info/

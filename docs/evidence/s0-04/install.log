@@ -1,0 +1,15 @@
+Processing <workspace>/cac-project/standalone/onboarding
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: cac-standalone-onboarding
+  Building wheel for cac-standalone-onboarding (pyproject.toml): started
+  Building wheel for cac-standalone-onboarding (pyproject.toml): finished with status 'done'
+  Created wheel for cac-standalone-onboarding: filename=cac_standalone_onboarding-0.3.40.post2-py3-none-any.whl size=8176 sha256=b36f7121970dda5cd5be4785682c5954c6e81e8fff9e59d54aab1ce1bbc34892
+  Stored in directory: <workspace>/s0-04/pip-ephem-wheel-cache-hm26zhgm/wheels/67/21/a8/a25ec29b632d28940fef421de501457e022e1e49076405d45a
+Successfully built cac-standalone-onboarding
+Installing collected packages: cac-standalone-onboarding
+Successfully installed cac-standalone-onboarding-0.3.40.post2

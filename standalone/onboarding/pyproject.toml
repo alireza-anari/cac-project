@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cac-standalone-onboarding"
+version = "0.3.40.post2"
+description = "Unmerged CAC onboarding reference with SEC-REV-001 remediation"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["cac_onboarding*"]
