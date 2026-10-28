@@ -1,0 +1,1296 @@
+{
+  "refs": {
+    "archive/v3.40-unpatched-reference": "0923d9bd761e04ba5bcf83c37e91ef7332f64c64",
+    "main": "2f155cb70c1752837ae7dec53ac958ebf32fdfbb",
+    "work/s0-05-ci-contract-hardening": "fa71168b4501e8bf3fc7da5205943d255f8842ae",
+    "work/s0-source-recovery": "c2587da55f80d986bc8010ff8b398635bc0ae92c",
+    "work/sec-rev-001-standalone-import": "a0deaa53b0eb01e33820f9acd1b54b3d24d89e24"
+  },
+  "git_shallow": "false",
+  "reachable_commit_count": 38,
+  "commits": [
+    "2f155cb70c1752837ae7dec53ac958ebf32fdfbb\t2026-10-28T21:16:06+03:30\tAlireza Anari\tdocs: finalize S0-05 handoff with management decision",
+    "0d0d8475bdc85953dcab1d62fe85769629579747\t2026-10-28T21:16:03+03:30\tAlireza Anari\tdocs: record S0-05 management acceptance and merge",
+    "690505b3b622cb622865d0dfb8ef364bc1a6f119\t2026-10-28T21:14:14+03:30\tAlireza Anari\tS0-05: harden standalone CI and validate OpenAPI contract (#6)",
+    "fa71168b4501e8bf3fc7da5205943d255f8842ae\t2026-10-28T18:40:33+03:30\tAlireza Anari\tAssert actual npm version and refresh reproducibility evidence",
+    "292dad468243277115870bb89a5b6c062f0c3267\t2026-10-28T14:44:38+03:30\tAlireza Anari\tHarden standalone CI pins and validate OpenAPI 3.1.1 without semantic changes",
+    "2e62137defc2d53819fc0ba8bf42283dfeb7bbeb\t2026-10-28T13:53:15+03:30\tAlireza Anari\tdocs: record S0-04 management acceptance and repo-only merge",
+    "a59a49d296b042405c634c72e48878f235970c06\t2026-10-28T13:53:12+03:30\tAlireza Anari\tdocs: record S0-04 management acceptance and repo-only merge",
+    "ed7e1ef8167dbd1dcb149dc5c7d1c08dbaf83477\t2026-10-28T13:53:09+03:30\tAlireza Anari\tdocs: record S0-04 management acceptance and repo-only merge",
+    "a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed\t2026-10-28T13:52:25+03:30\tAlireza Anari\tS0-04: import SEC-REV-001 standalone remediation and CI (#3)",
+    "a0deaa53b0eb01e33820f9acd1b54b3d24d89e24\t2026-10-27T10:18:54+03:30\tAlireza Anari\tImport verified SEC-REV-001 standalone source with regression tests and CI",
+    "16ffff85f07d1464103f2e81769696e2ee28f612\t2026-10-27T08:29:15+03:30\tAlireza Anari\tdocs: differentiate exact historical imports from missing corrected artifacts",
+    "1e7821380d0748a511e43ed4be9c35bf7caf80f8\t2026-10-27T08:29:13+03:30\tAlireza Anari\tdocs: record verified v3.42 and legacy source imports",
+    "6e54433be1e0778455cabdc8330652cee5f16310\t2026-10-27T08:28:34+03:30\tAlireza Anari\tdocs: preserve byte-exact original v3.42 handoff contract",
+    "72053127466cdb318aeef354f22a3a65f60dc545\t2026-10-27T08:28:01+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 07_DECISION_ISSUE_AND_REPORT_TEMPLATES.fa.md",
+    "0e546f781c05f8a792fd0dfa32902b00f9ff15d9\t2026-10-27T08:27:58+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 06_THREE_CHATS_GOVERNANCE_AND_HANDOFF.fa.md",
+    "84b53bb81ebb2080c2a6b6905cc24363bf604393\t2026-10-27T08:27:56+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 05_EXECUTION_BACKLOG_AND_PRIORITY.fa.md",
+    "2be6d587e13b6e2040e70f179059f12fadd47348\t2026-10-27T08:27:54+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 04_SOURCE_OF_TRUTH_REGISTRY_AND_BLOCKERS.fa.md",
+    "6715dd8bec5f1c5ed8bd377a66b854e8e26c08a2\t2026-10-27T08:27:51+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 00_READ_ME_FIRST.fa.md",
+    "d2dce2acc432c4e07528079ebc4be24331fdf452\t2026-10-27T08:26:43+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 03_SECURITY_DATA_CONTRACTS_AND_RELEASE_GATES.fa.md",
+    "f36264c3e08c3b7053083ef3e0edd7dcf0027ab5\t2026-10-27T08:26:41+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 02_APPROVALS_AND_ARCHITECTURE_GOVERNANCE.fa.md",
+    "d4108373aeac7e059b38381a91a02fb0da067161\t2026-10-27T08:26:39+03:30\tAlireza Anari\tdocs: import original CAC Project Sources v3.42 01_PRODUCT_V1_AND_USER_EXPERIENCE.fa.md",
+    "0923d9bd761e04ba5bcf83c37e91ef7332f64c64\t2026-10-27T08:24:58+03:30\tAlireza Anari\tarchive: include v3.40 unmerged OpenAPI design addendum",
+    "2e5615baf4e13f81732a5d827be85402ea55356a\t2026-10-27T08:23:56+03:30\tAlireza Anari\tarchive: import original unpatched v3.40 Python/SQLite unit tests",
+    "30cd45344a1c9fcfb31aa71025d288d8d854ba6c\t2026-10-27T08:22:39+03:30\tAlireza Anari\tarchive: import original unpatched v3.40 onboarding service for provenance review",
+    "95b84172cf9f6e0860156af7698e511b8eed7a4f\t2026-10-27T08:21:33+03:30\tAlireza Anari\tarchive: import historical unpatched v3.40 reference (ADAPTER_PORTS.py)",
+    "10a4b79a004145ae2536c4822a2ec439404bd3ef\t2026-10-27T08:21:31+03:30\tAlireza Anari\tarchive: import historical unpatched v3.40 reference (storage.py)",
+    "10ba3e281dc9f7231669cfd44281a827cd20592e\t2026-10-27T08:21:29+03:30\tAlireza Anari\tarchive: import historical unpatched v3.40 reference (policy.py)",
+    "c14c3bdfbdc887110a5fc1aee57bff8a85ecaf97\t2026-10-27T08:21:26+03:30\tAlireza Anari\tarchive: import historical unpatched v3.40 reference (__init__.py)",
+    "b312bba51f69be9f0f17c79f1d2a474f6a18eb64\t2026-10-27T08:21:24+03:30\tAlireza Anari\tarchive: import historical unpatched v3.40 reference (README.md)",
+    "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df\t2026-10-27T08:20:11+03:30\tAlireza Anari\tchore: permit intentional archived source publication while ignoring secrets",
+    "251bc30e7e80cade6266bcaca3a94f6905526c5a\t2026-10-27T08:20:09+03:30\tAlireza Anari\tdocs: align public-repo policy with owner authorization",
+    "78307723da8722983bfe00f1ed8f4365b33b5132\t2026-10-27T08:19:08+03:30\tAlireza Anari\tdocs: publish security acceptance gates and remaining integration blockers",
+    "52bbe4102204919233ba3db297b23c6d19d84f74\t2026-10-27T08:19:06+03:30\tAlireza Anari\tdocs: record source hashes, missing baselines and standalone fix provenance",
+    "764e1c44c87582d98bfd22bbf74e241fa0897aa7\t2026-10-27T08:19:03+03:30\tAlireza Anari\tdocs: publish frozen decisions and engineering authority",
+    "e49dc5f4ade342c25001e9dc46e04f3bf68b8e08\t2026-10-27T08:19:01+03:30\tAlireza Anari\tdocs: publish CAC MVP sprint plan and acceptance boundaries",
+    "c2587da55f80d986bc8010ff8b398635bc0ae92c\t2026-10-27T08:11:50+03:30\tAlireza Anari\tdocs: record evidence boundaries and blocked integration gates",
+    "ef1e73c8ced1f4fcf57ad849431353c104152917\t2026-10-27T08:11:48+03:30\tAlireza Anari\tchore: exclude secrets, unreviewed archives and runtime artifacts",
+    "b3cf52b239566e7fbdb6b45578d6c471a55c1e61\t2026-10-27T08:11:08+03:30\tAlireza Anari\tdocs: initialize public CAC repository with source status and safety guardrails"
+  ],
+  "unique_blob_count": 82,
+  "history_paths": {
+    ".github/workflows/standalone-onboarding.yml": [
+      "0845ee7da66837730fc84530c1995d3a0fb1a65e",
+      "51d10b56739ccb60548cf23bc07f9ddb0f5435d6",
+      "851a0666a3b9ddd1391500a4947147d75dcf98f0"
+    ],
+    ".gitignore": [
+      "8ca1a89cccc6f9bcafa38324e588b9224e416f2e",
+      "b57d363119473b1fe8f933d9e1128951acbce443",
+      "dc47ce42a550c6728d1cc0773b831ec510153ef5"
+    ],
+    "README.md": [
+      "06f555ba44ef7343a799cfefbea8109f4d1b5672",
+      "9d0267672204dfa69312bdda321566a1a1bca668",
+      "bbca573ab5390d132eace2f1a8dab5333959ca34",
+      "be866173492ac735fadc5eb5e7125476de87cff6"
+    ],
+    "docs/ARCHITECTURE_GOVERNANCE.md": [
+      "9a317b2f12d158bcc8438d9d7f7f9109e8a03d1d"
+    ],
+    "docs/MVP_ROADMAP.md": [
+      "a827caa9a20118ee04e0325e8de4b62c1e85822b"
+    ],
+    "docs/PROJECT_STATUS.md": [
+      "2a6d32ab082181a2d18b7436f7e61310b98658ea",
+      "32cd4e0c4c37bd8391cdc2d0cf9420f6e1804d54",
+      "4486720f7f44b35ff7ecb874e8f5e1abf03374f2",
+      "7eda72910a5d23483c708aa7d0a6adb1cf5a3234",
+      "d1a07c471ee7f5e794de5e99df251239aa01985e",
+      "f3364503962eb94b9d6043835ea00bfebe36c759"
+    ],
+    "docs/S0_04_HANDOFF.md": [
+      "af4414f8e4fa720f12ed1f155bdf17dfbb2e702c"
+    ],
+    "docs/S0_05_HANDOFF.md": [
+      "871fe717eb98c9d0e0ba7664a3c0d7b4770091ee",
+      "9c7f7d2962ac4a1b2b60ed1c386d119ea9929e6e",
+      "a276cff9923329d8a413c579692bf983793540ff"
+    ],
+    "docs/SECURITY_RELEASE_GATES.md": [
+      "d828c97c112226c09a8365a37aa0166f1a33984c"
+    ],
+    "docs/SOURCE_ARTIFACTS.md": [
+      "1d628a1e8a2077df228b181dcacff687ad03cc59",
+      "24a6b743570686008bced96174d78315c080ad39",
+      "2a6c6f889e9179cd42286bb94fbc9bbc4f648f5e",
+      "d20acbfb1297ba0be15008270df304eb17c1047d"
+    ],
+    "docs/cac/00_READ_ME_FIRST.fa.md": [
+      "55b272ec571121698901e7756fd2261365aedf0a"
+    ],
+    "docs/cac/01_PRODUCT_V1_AND_USER_EXPERIENCE.fa.md": [
+      "acef3f2d7ad9b3e788600ebbff7ad03aff3644f3"
+    ],
+    "docs/cac/02_APPROVALS_AND_ARCHITECTURE_GOVERNANCE.fa.md": [
+      "1d1a17b427f447c27079ff13184261750278ffb9"
+    ],
+    "docs/cac/03_SECURITY_DATA_CONTRACTS_AND_RELEASE_GATES.fa.md": [
+      "4f34fa90314cb648a404f74c4e791f6c950d19c3"
+    ],
+    "docs/cac/04_SOURCE_OF_TRUTH_REGISTRY_AND_BLOCKERS.fa.md": [
+      "dce4baabef2264d344fd7770c2d232470f9f1949"
+    ],
+    "docs/cac/05_EXECUTION_BACKLOG_AND_PRIORITY.fa.md": [
+      "a4ebf84b9d5cdfc7988f5ef89d961f753988d28b"
+    ],
+    "docs/cac/06_THREE_CHATS_GOVERNANCE_AND_HANDOFF.fa.md": [
+      "2428f2a862093695e8dacca26eba403ea0601f0a",
+      "4f2f78b3fd3c398933d754f0b59d9d56ed314400"
+    ],
+    "docs/cac/07_DECISION_ISSUE_AND_REPORT_TEMPLATES.fa.md": [
+      "34fe4afe338762990da143014b76a6ceca9a785e"
+    ],
+    "docs/changes/CR-S0-05-001-invitation-error-response.md": [
+      "e1482ff0dde950bdf988a720a7d524c50cd9449d"
+    ],
+    "docs/evidence/s0-04/execution.json": [
+      "8d5020f34546e67d130daf42d579f7750deb9700"
+    ],
+    "docs/evidence/s0-04/install.log": [
+      "a1c52835beab81bb0f252ba171aa0d71cb55aca0"
+    ],
+    "docs/evidence/s0-04/installed-import.log": [
+      "f2d904ff73398892059bc36cc45b8938121b093c"
+    ],
+    "docs/evidence/s0-04/unittest.log": [
+      "19e5544688005ac5db9406972c16ddfe0f3f9d24"
+    ],
+    "docs/evidence/s0-05/execution.json": [
+      "1a72e7f31d77dbd09222885f6a5e3df9b719f611",
+      "9e99472453e00b18d3de5f2306bb4939d2ebc93e"
+    ],
+    "docs/evidence/s0-05/install-summary.log": [
+      "62a7a53ff03ed6b5a859ff4b55e990ffada6b464"
+    ],
+    "docs/evidence/s0-05/lint-after.log": [
+      "2c9ae418f896238e9f2464ef026f3bdf5eb62d65",
+      "a73deb5721f9d7cfa620bda5b99dd09c502d3cbe"
+    ],
+    "docs/evidence/s0-05/lint-before.log": [
+      "c6163cb4c964d64d631cf52a646159c2b2145d59"
+    ],
+    "docs/evidence/s0-05/lint-gates.log": [
+      "9e46e31513022e2022a11ce97b63afddaa23478f",
+      "b79200307f304d384ee870f0779fd5d59730ed2c"
+    ],
+    "docs/evidence/s0-05/structure-after.log": [
+      "cdb0b7880abe86cb6044c0cbe35274ff8a404e82",
+      "d881373fd7b915e85c814d40474d4e8a19b4d8a7"
+    ],
+    "docs/evidence/s0-05/structure-before.log": [
+      "860ff2ba0ced05faec8db3c3f1a8c4925e1884c2"
+    ],
+    "docs/evidence/s0-05/unittest-exit-code.txt": [
+      "573541ac9702dd3969c9bc859d2b91ec1f7e6e56"
+    ],
+    "docs/evidence/s0-05/unittest.log": [
+      "0e2b536b00f3f2385c8230541d4df921fca148da"
+    ],
+    "docs/superpowers/plans/2026-10-28-s0-05-ci-contract-hardening.md": [
+      "26d6cf7cb26a6f96fbb475b7b54f6cdc03e77aaf",
+      "c5a4ce89ad1f0cc819f8024f52b1de2a5fa444b6"
+    ],
+    "reference/v3.40-unpatched/README.md": [
+      "614ee311aab3cd96eec90d662d50431fc99cf7b4"
+    ],
+    "reference/v3.40-unpatched/cac_onboarding/__init__.py": [
+      "3c09fd7d7d8a47b67f486fb8d0d350ad5524468f"
+    ],
+    "reference/v3.40-unpatched/cac_onboarding/policy.py": [
+      "066bbaa70be2ee7609ad0c89279e421d4aac87f7"
+    ],
+    "reference/v3.40-unpatched/cac_onboarding/service.py": [
+      "047b77953e4b2d30b020d915c107eb056536b362"
+    ],
+    "reference/v3.40-unpatched/cac_onboarding/storage.py": [
+      "4e0ca37f2f136dd5331edfd249a3f34f6dad8ed9"
+    ],
+    "reference/v3.40-unpatched/integration/ADAPTER_PORTS.py": [
+      "b7d7b878c902ca1d80fd06046075de24c947e328"
+    ],
+    "reference/v3.40-unpatched/integration/openapi-onboarding-addendum.yaml": [
+      "4bf7ac874e869c0e0312f095cb0cf13912bdc67a"
+    ],
+    "reference/v3.40-unpatched/tests/test_onboarding.py": [
+      "cb5ba8c31f4506c35fb1716f0ed7a65e57a6ec16"
+    ],
+    "standalone/onboarding/PROVENANCE.json": [
+      "129f8e2895c455c562c243a9e0cff2a3998a0194"
+    ],
+    "standalone/onboarding/README.md": [
+      "28a07f66ba630e0aeef919addf1140d5a4d3d183",
+      "8a8d2f85a623df3f6edf8ae28b8494b1c7d7f1c9"
+    ],
+    "standalone/onboarding/cac_onboarding/__init__.py": [
+      "3c09fd7d7d8a47b67f486fb8d0d350ad5524468f"
+    ],
+    "standalone/onboarding/cac_onboarding/policy.py": [
+      "066bbaa70be2ee7609ad0c89279e421d4aac87f7"
+    ],
+    "standalone/onboarding/cac_onboarding/service.py": [
+      "f3059b5f8c54519c70d338a41f972abeeaa78fd3"
+    ],
+    "standalone/onboarding/cac_onboarding/storage.py": [
+      "4e0ca37f2f136dd5331edfd249a3f34f6dad8ed9"
+    ],
+    "standalone/onboarding/docs/INTEGRATION-READINESS.fa.md": [
+      "2c9f763b1528c59ee7e49ec2ece716a203fab8a3"
+    ],
+    "standalone/onboarding/docs/POSTGRES-ACCEPT-REVOKE-RACE-PLAN.fa.md": [
+      "0708d56c631815fba028be119eae8aed15876523"
+    ],
+    "standalone/onboarding/integration/ADAPTER_PORTS.py": [
+      "b7d7b878c902ca1d80fd06046075de24c947e328"
+    ],
+    "standalone/onboarding/integration/openapi-onboarding-addendum.yaml": [
+      "467180b98e6f20dac369f46d019cba6556223820",
+      "4bf7ac874e869c0e0312f095cb0cf13912bdc67a"
+    ],
+    "standalone/onboarding/pyproject.toml": [
+      "2f1ddcf1be0bb3fba39a30cfdd1002c0bb74ea0f",
+      "713fdb068540b5f9e886fdd764e16ac9e23c96b0"
+    ],
+    "standalone/onboarding/requirements-build.lock": [
+      "533e8ba0e94990010efbfc804f4955cc93c4ce8e"
+    ],
+    "standalone/onboarding/tests/test_onboarding.py": [
+      "cb5ba8c31f4506c35fb1716f0ed7a65e57a6ec16"
+    ],
+    "standalone/onboarding/tests/test_revocation.py": [
+      "fff55b884da0a9ffee01c37796543e96d9fbd103"
+    ],
+    "tools/contract-validation/README.md": [
+      "0b2845310e062decb049ec5987d3179d2e1c5c9f",
+      "230bae9d397ac86d7d0d1b3eed1a00ef430a5dd6"
+    ],
+    "tools/contract-validation/lint-gates.test.mjs": [
+      "2da3c4145ab1caf83812ef6f9a6271b554675335"
+    ],
+    "tools/contract-validation/package-lock.json": [
+      "2070be5ea976b15ee51176bfabc9b0ba502760a8"
+    ],
+    "tools/contract-validation/package.json": [
+      "5f43d719b79c090f5fd736df9711e188a083a137"
+    ],
+    "tools/contract-validation/redocly.yaml": [
+      "850a7fd7b3f7ce1aa395544178d12de512e8a26f"
+    ],
+    "tools/contract-validation/spec.yaml": [
+      "4b85139da4faadfb4fe028a7888e049bf373fc82"
+    ]
+  },
+  "text_hits": [
+    {
+      "blob": "06f555ba44ef7343a799cfefbea8109f4d1b5672",
+      "sha256": "008c21a4baf0e9d64b5f1af0c764907bff79d18dcbf8ad81a973095b4979065e",
+      "paths": [
+        "README.md"
+      ],
+      "commit_example": "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df",
+      "matching_lines": [
+        5
+      ]
+    },
+    {
+      "blob": "9a317b2f12d158bcc8438d9d7f7f9109e8a03d1d",
+      "sha256": "a020693bac81f552c4522e630a9e95e32264e096edb6b2af6ca20d4afaea7438",
+      "paths": [
+        "docs/ARCHITECTURE_GOVERNANCE.md"
+      ],
+      "commit_example": "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df",
+      "matching_lines": [
+        5,
+        12,
+        19
+      ]
+    },
+    {
+      "blob": "a827caa9a20118ee04e0325e8de4b62c1e85822b",
+      "sha256": "ded575b7203c2b36ec3264ac81f47d696cd579833cf0b1b553fa36f0b794194b",
+      "paths": [
+        "docs/MVP_ROADMAP.md"
+      ],
+      "commit_example": "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df",
+      "matching_lines": [
+        3,
+        31
+      ]
+    },
+    {
+      "blob": "7eda72910a5d23483c708aa7d0a6adb1cf5a3234",
+      "sha256": "00882c3ae37f9c50426f26cbc6aaf414c9590c2bdee1033dd2ca08f3d12304b4",
+      "paths": [
+        "docs/PROJECT_STATUS.md"
+      ],
+      "commit_example": "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df",
+      "matching_lines": [
+        7,
+        13,
+        14
+      ]
+    },
+    {
+      "blob": "d828c97c112226c09a8365a37aa0166f1a33984c",
+      "sha256": "e0a88722e668acea441cc988167d3348f4cb0420c40935b7a584c10521b82830",
+      "paths": [
+        "docs/SECURITY_RELEASE_GATES.md"
+      ],
+      "commit_example": "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df",
+      "matching_lines": [
+        22
+      ]
+    },
+    {
+      "blob": "2a6c6f889e9179cd42286bb94fbc9bbc4f648f5e",
+      "sha256": "0072048b8d59a206916adc5496e346709532c0d5b28c572971b5c4ae1cf9015b",
+      "paths": [
+        "docs/SOURCE_ARTIFACTS.md"
+      ],
+      "commit_example": "0504eb75c0e2dfe59d8e955bb4bb180ca6b9f4df",
+      "matching_lines": [
+        12,
+        13,
+        14,
+        24
+      ]
+    },
+    {
+      "blob": "614ee311aab3cd96eec90d662d50431fc99cf7b4",
+      "sha256": "ba538ffdfd42acd6b471bd04e7690ac75011a3f5da1482e9e8deb7fdc9131d4c",
+      "paths": [
+        "reference/v3.40-unpatched/README.md"
+      ],
+      "commit_example": "0923d9bd761e04ba5bcf83c37e91ef7332f64c64",
+      "matching_lines": [
+        9
+      ]
+    },
+    {
+      "blob": "3c09fd7d7d8a47b67f486fb8d0d350ad5524468f",
+      "sha256": "b7f55398182bdb6307de7dce0fb5190caec26ffa1ec484c78e0eb6fe14db46d1",
+      "paths": [
+        "reference/v3.40-unpatched/cac_onboarding/__init__.py",
+        "standalone/onboarding/cac_onboarding/__init__.py"
+      ],
+      "commit_example": "0923d9bd761e04ba5bcf83c37e91ef7332f64c64",
+      "matching_lines": [
+        1
+      ]
+    },
+    {
+      "blob": "4bf7ac874e869c0e0312f095cb0cf13912bdc67a",
+      "sha256": "536492ff09fefeebf3ead93a502620a5dad1117c30ecdc6138738f4b302f7bf4",
+      "paths": [
+        "reference/v3.40-unpatched/integration/openapi-onboarding-addendum.yaml",
+        "standalone/onboarding/integration/openapi-onboarding-addendum.yaml"
+      ],
+      "commit_example": "0923d9bd761e04ba5bcf83c37e91ef7332f64c64",
+      "matching_lines": [
+        7
+      ]
+    },
+    {
+      "blob": "9d0267672204dfa69312bdda321566a1a1bca668",
+      "sha256": "12ddbee56f1fb79c502e507ab7d41b6ac5ff12f20fb3b04aff6b84de66caefdc",
+      "paths": [
+        "README.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        5
+      ]
+    },
+    {
+      "blob": "4486720f7f44b35ff7ecb874e8f5e1abf03374f2",
+      "sha256": "4b865e71c2c462a2c812df604df9fe33a22a698d78c5ef2eabe586a6497d0c89",
+      "paths": [
+        "docs/PROJECT_STATUS.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        7,
+        13,
+        14,
+        50,
+        54,
+        58,
+        63,
+        68
+      ]
+    },
+    {
+      "blob": "af4414f8e4fa720f12ed1f155bdf17dfbb2e702c",
+      "sha256": "e8a75126c97655ba351d71db8bf74bdf78a2f5e70dc8f1ab262e9b2e8d61d51f",
+      "paths": [
+        "docs/S0_04_HANDOFF.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        3,
+        28,
+        34
+      ]
+    },
+    {
+      "blob": "a276cff9923329d8a413c579692bf983793540ff",
+      "sha256": "19c72ec28501e37ec9c822ad22ce98a18a2459f760d058eb881aa05d8cb58d71",
+      "paths": [
+        "docs/S0_05_HANDOFF.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        69,
+        77
+      ]
+    },
+    {
+      "blob": "1d628a1e8a2077df228b181dcacff687ad03cc59",
+      "sha256": "84ea4aa0a6226140d389643d31b5b3df37a50f2626ae32f469d8eb93fbacd26f",
+      "paths": [
+        "docs/SOURCE_ARTIFACTS.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        12,
+        13,
+        14,
+        24,
+        47,
+        51
+      ]
+    },
+    {
+      "blob": "55b272ec571121698901e7756fd2261365aedf0a",
+      "sha256": "c6f925d66d922f3796478b0528708d2913fbeada591f802be944ff11d528380f",
+      "paths": [
+        "docs/cac/00_READ_ME_FIRST.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        3,
+        15,
+        16
+      ]
+    },
+    {
+      "blob": "1d1a17b427f447c27079ff13184261750278ffb9",
+      "sha256": "637c30fe746cd2556d76d07061027e0f8f4fdc354654e210fb9ef0fc35aa2adc",
+      "paths": [
+        "docs/cac/02_APPROVALS_AND_ARCHITECTURE_GOVERNANCE.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        10,
+        17
+      ]
+    },
+    {
+      "blob": "dce4baabef2264d344fd7770c2d232470f9f1949",
+      "sha256": "47ca94c50495175eedec39bf4c7bbded573d5c56c57ff3e2673f027ffa765ec6",
+      "paths": [
+        "docs/cac/04_SOURCE_OF_TRUTH_REGISTRY_AND_BLOCKERS.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        7,
+        8,
+        9,
+        15
+      ]
+    },
+    {
+      "blob": "a4ebf84b9d5cdfc7988f5ef89d961f753988d28b",
+      "sha256": "2b60001ab66b6ab78fb3a8200814022f98ba881a4f017ecebc141aba2008bcbd",
+      "paths": [
+        "docs/cac/05_EXECUTION_BACKLOG_AND_PRIORITY.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        5
+      ]
+    },
+    {
+      "blob": "2428f2a862093695e8dacca26eba403ea0601f0a",
+      "sha256": "1d6f63d7c6a5b8c46506562156feb032bbdb6a3cabf273059017f5448a07a768",
+      "paths": [
+        "docs/cac/06_THREE_CHATS_GOVERNANCE_AND_HANDOFF.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        10
+      ]
+    },
+    {
+      "blob": "e1482ff0dde950bdf988a720a7d524c50cd9449d",
+      "sha256": "39d0c97bbbbbe7824e74e8b21a4b9ff6c779e54658f638b8755cab514dee9ef8",
+      "paths": [
+        "docs/changes/CR-S0-05-001-invitation-error-response.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        3,
+        7,
+        35
+      ]
+    },
+    {
+      "blob": "c5a4ce89ad1f0cc819f8024f52b1de2a5fa444b6",
+      "sha256": "1d6e04935ec0bef691a3ca59698a9a6ad527d30bb45e7d52126481a26698da46",
+      "paths": [
+        "docs/superpowers/plans/2026-10-28-s0-05-ci-contract-hardening.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        8
+      ]
+    },
+    {
+      "blob": "129f8e2895c455c562c243a9e0cff2a3998a0194",
+      "sha256": "8b340b62203a9c08c03e71d978d9f2149af518102d324769433d450f7e79d952",
+      "paths": [
+        "standalone/onboarding/PROVENANCE.json"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        68
+      ]
+    },
+    {
+      "blob": "8a8d2f85a623df3f6edf8ae28b8494b1c7d7f1c9",
+      "sha256": "f8f536a6a8fe600b77e653a8a51426de4cee5f1578090d1484bd13a3ca1b7e68",
+      "paths": [
+        "standalone/onboarding/README.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        36
+      ]
+    },
+    {
+      "blob": "2c9f763b1528c59ee7e49ec2ece716a203fab8a3",
+      "sha256": "09b82377722023c48304e1451af4742527e8f0f07017bec433d21c068ef4e091",
+      "paths": [
+        "standalone/onboarding/docs/INTEGRATION-READINESS.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        3,
+        7,
+        8,
+        35
+      ]
+    },
+    {
+      "blob": "0708d56c631815fba028be119eae8aed15876523",
+      "sha256": "17224f766290d7c62e4594a214269c7f31bd1d054b9e8bd571d02556c2d94ed8",
+      "paths": [
+        "standalone/onboarding/docs/POSTGRES-ACCEPT-REVOKE-RACE-PLAN.fa.md"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        3
+      ]
+    },
+    {
+      "blob": "467180b98e6f20dac369f46d019cba6556223820",
+      "sha256": "a167efcb286974163c84006af6ab5eb342655fede51f11758d5cca1ea4a9f401",
+      "paths": [
+        "standalone/onboarding/integration/openapi-onboarding-addendum.yaml"
+      ],
+      "commit_example": "0d0d8475bdc85953dcab1d62fe85769629579747",
+      "matching_lines": [
+        7
+      ]
+    },
+    {
+      "blob": "4f2f78b3fd3c398933d754f0b59d9d56ed314400",
+      "sha256": "87d4f5a0c651376bb95a26a1f40741e663ee4e558176258e11f07706c7c423e4",
+      "paths": [
+        "docs/cac/06_THREE_CHATS_GOVERNANCE_AND_HANDOFF.fa.md"
+      ],
+      "commit_example": "0e546f781c05f8a792fd0dfa32902b00f9ff15d9",
+      "matching_lines": [
+        10
+      ]
+    },
+    {
+      "blob": "d1a07c471ee7f5e794de5e99df251239aa01985e",
+      "sha256": "72a52d2e3e5d7882aa84f7476a5a0e749c840fdad8138b7ab94e73f325f08e5f",
+      "paths": [
+        "docs/PROJECT_STATUS.md"
+      ],
+      "commit_example": "16ffff85f07d1464103f2e81769696e2ee28f612",
+      "matching_lines": [
+        7,
+        13,
+        14,
+        49
+      ]
+    },
+    {
+      "blob": "d20acbfb1297ba0be15008270df304eb17c1047d",
+      "sha256": "72eefb7d9a53615d8cc451f9fc0532658d68a77eb9db318d899629d660c39577",
+      "paths": [
+        "docs/SOURCE_ARTIFACTS.md"
+      ],
+      "commit_example": "16ffff85f07d1464103f2e81769696e2ee28f612",
+      "matching_lines": [
+        12,
+        13,
+        14,
+        24
+      ]
+    },
+    {
+      "blob": "32cd4e0c4c37bd8391cdc2d0cf9420f6e1804d54",
+      "sha256": "b58d330034951e3358a752dc1f078b74ca282436371a0c7fd54d12cdddb08fe9",
+      "paths": [
+        "docs/PROJECT_STATUS.md"
+      ],
+      "commit_example": "292dad468243277115870bb89a5b6c062f0c3267",
+      "matching_lines": [
+        7,
+        13,
+        14,
+        49,
+        53,
+        57,
+        62,
+        67
+      ]
+    },
+    {
+      "blob": "9c7f7d2962ac4a1b2b60ed1c386d119ea9929e6e",
+      "sha256": "99fc7d4b71e7049b7903f799b323795f9fe1e972d0558b98f0b62ee512a95dd5",
+      "paths": [
+        "docs/S0_05_HANDOFF.md"
+      ],
+      "commit_example": "292dad468243277115870bb89a5b6c062f0c3267",
+      "matching_lines": [
+        69,
+        77
+      ]
+    },
+    {
+      "blob": "9e46e31513022e2022a11ce97b63afddaa23478f",
+      "sha256": "0bb2940fd3537acb73cb67d7db0327103a008e0e05eb2f90c1c9abee27155c32",
+      "paths": [
+        "docs/evidence/s0-05/lint-gates.log"
+      ],
+      "commit_example": "292dad468243277115870bb89a5b6c062f0c3267",
+      "matching_lines": [
+        22
+      ]
+    },
+    {
+      "blob": "26d6cf7cb26a6f96fbb475b7b54f6cdc03e77aaf",
+      "sha256": "7d526131c65251329ab3721a4a3b1109e274c15f4338cc944c780b4c12537152",
+      "paths": [
+        "docs/superpowers/plans/2026-10-28-s0-05-ci-contract-hardening.md"
+      ],
+      "commit_example": "292dad468243277115870bb89a5b6c062f0c3267",
+      "matching_lines": [
+        8
+      ]
+    },
+    {
+      "blob": "2a6d32ab082181a2d18b7436f7e61310b98658ea",
+      "sha256": "a5ab551c0fa817648341d41986004c5a7f9ca891ddf60c4b5fbe0cb72822c535",
+      "paths": [
+        "docs/PROJECT_STATUS.md"
+      ],
+      "commit_example": "2e62137defc2d53819fc0ba8bf42283dfeb7bbeb",
+      "matching_lines": [
+        7,
+        13,
+        14,
+        49,
+        53,
+        57,
+        62
+      ]
+    },
+    {
+      "blob": "28a07f66ba630e0aeef919addf1140d5a4d3d183",
+      "sha256": "57dc9b6e70e35bbea6803981e9991aa4d5ba6c4caf194415a2c8c64f28daf6d4",
+      "paths": [
+        "standalone/onboarding/README.md"
+      ],
+      "commit_example": "2e62137defc2d53819fc0ba8bf42283dfeb7bbeb",
+      "matching_lines": [
+        35
+      ]
+    },
+    {
+      "blob": "871fe717eb98c9d0e0ba7664a3c0d7b4770091ee",
+      "sha256": "6995190e6bce5147b3e066e81febad74b582c36a77e4d20eef3623f485aacbc5",
+      "paths": [
+        "docs/S0_05_HANDOFF.md"
+      ],
+      "commit_example": "2f155cb70c1752837ae7dec53ac958ebf32fdfbb",
+      "matching_lines": [
+        69,
+        77,
+        93
+      ]
+    },
+    {
+      "blob": "be866173492ac735fadc5eb5e7125476de87cff6",
+      "sha256": "d4b2587082c102f84389fc8e61a258de6e1d135e5db275a6c5cd6c4a24434313",
+      "paths": [
+        "README.md"
+      ],
+      "commit_example": "52bbe4102204919233ba3db297b23c6d19d84f74",
+      "matching_lines": [
+        9,
+        11
+      ]
+    },
+    {
+      "blob": "bbca573ab5390d132eace2f1a8dab5333959ca34",
+      "sha256": "c460769c4a65745882a550231333e928a1cfe03df4394656948d434cfa7ca9a6",
+      "paths": [
+        "README.md"
+      ],
+      "commit_example": "a0deaa53b0eb01e33820f9acd1b54b3d24d89e24",
+      "matching_lines": [
+        5
+      ]
+    },
+    {
+      "blob": "f3364503962eb94b9d6043835ea00bfebe36c759",
+      "sha256": "414d739eb955722a4c9d1573a6cd4ba066bb37c8664aead88ab0fc8f0a2d9225",
+      "paths": [
+        "docs/PROJECT_STATUS.md"
+      ],
+      "commit_example": "a0deaa53b0eb01e33820f9acd1b54b3d24d89e24",
+      "matching_lines": [
+        7,
+        13,
+        14,
+        49,
+        53
+      ]
+    },
+    {
+      "blob": "24a6b743570686008bced96174d78315c080ad39",
+      "sha256": "8eccd27cd7fadcff4b9f197137191f49c3ab1697dc60440ab306286ffc724aa8",
+      "paths": [
+        "docs/SOURCE_ARTIFACTS.md"
+      ],
+      "commit_example": "a0deaa53b0eb01e33820f9acd1b54b3d24d89e24",
+      "matching_lines": [
+        12,
+        13,
+        14,
+        24,
+        47
+      ]
+    }
+  ],
+  "workspace_exclusions": [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "clean-venv",
+    "node_modules",
+    "s0-05-venv",
+    "venv"
+  ],
+  "workspace_files": [
+    {
+      "path": "CAC-S0-01-Evidence-2026-10-26.zip",
+      "size": 317680,
+      "sha256": "f3ca10aacabd3a0e46276015dadf8b564855e839441124fbc937cc95f468d14f"
+    },
+    {
+      "path": "CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip",
+      "size": 86213,
+      "sha256": "bdae7c4d6d146714bc0ef4a3e2d0280944c1ecf85560a491050fa427315ac39f"
+    },
+    {
+      "path": "CAC-S0-03-Security-Fix-Handoff-2026-10-26.zip",
+      "size": 111923,
+      "sha256": "94f4d586023779500ea85a8cc7f76f092817e6b7da8a0dcb06aec2e59391a240"
+    },
+    {
+      "path": "audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.40-standalone-onboarding.zip",
+      "size": 25597,
+      "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e"
+    },
+    {
+      "path": "audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip",
+      "size": 41775,
+      "sha256": "08316862c0afa60d500f7619dccaaee02ea92f60148111531e0f0aa6cee938bf"
+    },
+    {
+      "path": "audit/v341/CAC-v3.41-Work-Handoff-Documents/reference/CAC-v3.40-standalone-onboarding.zip",
+      "size": 25597,
+      "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e"
+    },
+    {
+      "path": "project_sources/01-CAC-Project-Sources-v3.42.zip",
+      "size": 101556,
+      "sha256": "c951e9656be6d35cf5b6a8b86129c5d80de5fd47c3bd0b7aeac446eba2271aa7"
+    },
+    {
+      "path": "s0-02/inputs/CAC-v3.40-standalone-onboarding.zip",
+      "size": 25597,
+      "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e"
+    },
+    {
+      "path": "s0-03/inputs/CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip",
+      "size": 86213,
+      "sha256": "bdae7c4d6d146714bc0ef4a3e2d0280944c1ecf85560a491050fa427315ac39f"
+    },
+    {
+      "path": "s0-03/runtime/verified-s002/inputs/CAC-v3.40-standalone-onboarding.zip",
+      "size": 25597,
+      "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e"
+    }
+  ],
+  "archives_by_sha256": {
+    "f3ca10aacabd3a0e46276015dadf8b564855e839441124fbc937cc95f468d14f": {
+      "sha256": "f3ca10aacabd3a0e46276015dadf8b564855e839441124fbc937cc95f468d14f",
+      "size": 317680,
+      "locations": [
+        "CAC-S0-01-Evidence-2026-10-26.zip"
+      ],
+      "crc": "PASS",
+      "members": [
+        "README-S0-01.md",
+        "project_sources/01-CAC-Project-Sources-v3.42.zip",
+        "audit/CR-S0-API-001.fa.md",
+        "audit/EXECUTION_REPORT.json",
+        "audit/ISSUES.json",
+        "audit/REPORT.fa.md",
+        "audit/SPRINT1_PLAN.fa.md",
+        "audit/evidence/archive-integrity.json",
+        "audit/evidence/clean-venv-command.json",
+        "audit/evidence/clean-venv-unittest.log",
+        "audit/evidence/discovery-scope.json",
+        "audit/evidence/environment.json",
+        "audit/evidence/github-discovery.json",
+        "audit/evidence/manifest-verification.json",
+        "audit/evidence/openapi-structure.json",
+        "audit/evidence/python-ast.json",
+        "audit/evidence/revocation-probe.json",
+        "audit/evidence/source-files.json",
+        "audit/evidence/structural-checks.log",
+        "audit/evidence/test-cases.json",
+        "audit/evidence/unittest-command.json",
+        "audit/evidence/unittest.log",
+        "audit/extracted/CAC-Project-Sources-v3.42/00_READ_ME_FIRST.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/01_PRODUCT_V1_AND_USER_EXPERIENCE.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/02_APPROVALS_AND_ARCHITECTURE_GOVERNANCE.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/03_SECURITY_DATA_CONTRACTS_AND_RELEASE_GATES.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/04_SOURCE_OF_TRUTH_REGISTRY_AND_BLOCKERS.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/05_EXECUTION_BACKLOG_AND_PRIORITY.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/06_THREE_CHATS_GOVERNANCE_AND_HANDOFF.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/07_DECISION_ISSUE_AND_REPORT_TEMPLATES.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/MANIFEST.sha256",
+        "audit/extracted/CAC-Project-Sources-v3.42/PROMPT_MANAGEMENT_CHAT.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/PROMPT_WORK_CHAT.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/VALIDATION_REPORT.json",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.40-standalone-onboarding.zip",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.40-rerun-tests.txt",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/01_WORKSPACE_ROLES_AND_AUTHORITY.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/02_V1_PRODUCT_AND_SECURITY_REQUIREMENTS.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/03_SOURCE_OF_TRUTH_AND_CONTRACT_RULES.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/04_WORK_EXECUTION_BACKLOG.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/05_ACCEPTANCE_AND_EVIDENCE_GATES.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/06_MANAGEMENT_BRIEF.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/07_READY_TO_PASTE_WORK_PROMPT.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/08_OPEN_ISSUES_AND_ASSUMPTIONS.fa.md",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/v3.41-documents/README_START_HERE.fa.md",
+        "audit/probe_revocation.py",
+        "audit/run_checks.py",
+        "audit/v340/cac-v3.40-onboarding-module/MANIFEST.sha256",
+        "audit/v340/cac-v3.40-onboarding-module/README.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/cac_onboarding/__init__.py",
+        "audit/v340/cac-v3.40-onboarding-module/cac_onboarding/policy.py",
+        "audit/v340/cac-v3.40-onboarding-module/cac_onboarding/service.py",
+        "audit/v340/cac-v3.40-onboarding-module/cac_onboarding/storage.py",
+        "audit/v340/cac-v3.40-onboarding-module/docs/CR-340-001.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/docs/DEVELOPMENT_STATUS.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/docs/NEXT_EXECUTION_GATE.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/docs/V340_SECURITY_FINDINGS.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/integration/ADAPTER_PORTS.py",
+        "audit/v340/cac-v3.40-onboarding-module/integration/G3_ONBOARDING_API_CONTRACT.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/integration/POSTGRES_RLS_PROVISIONING_REVIEW.fa.md",
+        "audit/v340/cac-v3.40-onboarding-module/integration/openapi-onboarding-addendum.yaml",
+        "audit/v340/cac-v3.40-onboarding-module/test-output.txt",
+        "audit/v340/cac-v3.40-onboarding-module/tests/test_onboarding.py",
+        "audit/v340/cac-v3.40-onboarding-module/validation-report.json",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/01_WORKSPACE_ROLES_AND_AUTHORITY.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/02_V1_PRODUCT_AND_SECURITY_REQUIREMENTS.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/03_SOURCE_OF_TRUTH_AND_CONTRACT_RULES.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/04_WORK_EXECUTION_BACKLOG.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/05_ACCEPTANCE_AND_EVIDENCE_GATES.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/06_MANAGEMENT_BRIEF.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/07_READY_TO_PASTE_WORK_PROMPT.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/08_OPEN_ISSUES_AND_ASSUMPTIONS.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/MANIFEST.sha256",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/README_START_HERE.fa.md",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/VALIDATION_AND_SOURCE_STATUS.json",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/reference/CAC-v3.40-standalone-onboarding.zip",
+        "artifact-manifest.sha256"
+      ],
+      "manifests": [
+        {
+          "path": "audit/extracted/CAC-Project-Sources-v3.42/MANIFEST.sha256",
+          "sha256": "765e18f10a4a32a9d4be89aa68333d96e1e1ad316245e164977931f38a13d141",
+          "checked_entries": 23,
+          "failures": [],
+          "pass": true
+        },
+        {
+          "path": "audit/v340/cac-v3.40-onboarding-module/MANIFEST.sha256",
+          "sha256": "2ac8a99b057785ac089a4eebce4e1870abca069847e9988b99314d28a92bd96c",
+          "checked_entries": 16,
+          "failures": [],
+          "pass": true
+        },
+        {
+          "path": "audit/v341/CAC-v3.41-Work-Handoff-Documents/MANIFEST.sha256",
+          "sha256": "53d3cee6e922cac4da4709bfe21a5baf76c890840048c91f5ea89084da1f3b28",
+          "checked_entries": 11,
+          "failures": [],
+          "pass": true
+        },
+        {
+          "path": "artifact-manifest.sha256",
+          "sha256": "ef38473f380b8b924ab4dce5ad32f71d23822a79c8c62243e5e4ae74e7d0fc9f",
+          "checked_entries": 77,
+          "failures": [],
+          "pass": true
+        }
+      ],
+      "validation_reports": [
+        {
+          "path": "audit/extracted/CAC-Project-Sources-v3.42/VALIDATION_REPORT.json",
+          "sha256": "80dd8ee10ccdccb1cfd39578451c36dd1a1c339d0ea5fd376690efdad1964726",
+          "content": {
+            "artifact": "CAC Project Sources v3.42",
+            "kind": "project documentation and two chat prompts, NOT source code or architecture freeze",
+            "created_on": "2026-10-26",
+            "architecture_approved_in_conversation": "v3.37 / APR-036",
+            "original_v337_zip_available": false,
+            "v338_v339_source_available": false,
+            "v341_archive_sha256": "08316862c0afa60d500f7619dccaaee02ea92f60148111531e0f0aa6cee938bf",
+            "v340_source_archive_sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e",
+            "v341_zip_integrity": "PASS",
+            "v340_zip_integrity": "PASS",
+            "v340_python_sqlite_unit_tests_rerun": {
+              "command": "PYTHONPATH=. python -m unittest discover -s tests -p 'test_*.py' -v",
+              "result": "PASS",
+              "count": 32
+            },
+            "postgresql_rls_integration_run": false,
+            "code_merged_with_backend": false,
+            "production_deployed": false,
+            "notes": [
+              "v3.42 is documentation-only for project sources",
+              "Do not equate approved v3.37 architectural freeze with currently available original source archive",
+              "Prompts do not synchronize separate chats; share files/status manually"
+            ]
+          }
+        },
+        {
+          "path": "audit/v341/CAC-v3.41-Work-Handoff-Documents/VALIDATION_AND_SOURCE_STATUS.json",
+          "sha256": "d3fd837f1778b007ddc954095bab2edb51fdb2564188b30d8b3b473b72d6d94a",
+          "content": {
+            "artifact": "CAC v3.41 Work Handoff Documents",
+            "artifact_type": "documentation_only",
+            "created_on": "2026-10-26",
+            "frozen_architecture_claim": "v3.37 / APR-036 approved in conversation; original archive NOT available in current runtime",
+            "locally_verified_source": {
+              "name": "CAC v3.40 standalone onboarding",
+              "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e",
+              "zip_integrity": "PASS",
+              "reported_unit_tests_in_source": 32
+            },
+            "implementation_done_in_this_turn": false,
+            "source_v338_v339_available_in_current_runtime": false,
+            "postgresql_integration_tests_performed_in_this_turn": false,
+            "external_repo_changes": false,
+            "instructions": "Take documents to separate Work and Management chats; do not infer cross-chat sync"
+          }
+        }
+      ]
+    },
+    "c951e9656be6d35cf5b6a8b86129c5d80de5fd47c3bd0b7aeac446eba2271aa7": {
+      "sha256": "c951e9656be6d35cf5b6a8b86129c5d80de5fd47c3bd0b7aeac446eba2271aa7",
+      "size": 101556,
+      "locations": [
+        "CAC-S0-01-Evidence-2026-10-26.zip!project_sources/01-CAC-Project-Sources-v3.42.zip",
+        "project_sources/01-CAC-Project-Sources-v3.42.zip"
+      ],
+      "crc": "PASS",
+      "members": [
+        "CAC-Project-Sources-v3.42/00_READ_ME_FIRST.fa.md",
+        "CAC-Project-Sources-v3.42/01_PRODUCT_V1_AND_USER_EXPERIENCE.fa.md",
+        "CAC-Project-Sources-v3.42/02_APPROVALS_AND_ARCHITECTURE_GOVERNANCE.fa.md",
+        "CAC-Project-Sources-v3.42/03_SECURITY_DATA_CONTRACTS_AND_RELEASE_GATES.fa.md",
+        "CAC-Project-Sources-v3.42/04_SOURCE_OF_TRUTH_REGISTRY_AND_BLOCKERS.fa.md",
+        "CAC-Project-Sources-v3.42/05_EXECUTION_BACKLOG_AND_PRIORITY.fa.md",
+        "CAC-Project-Sources-v3.42/06_THREE_CHATS_GOVERNANCE_AND_HANDOFF.fa.md",
+        "CAC-Project-Sources-v3.42/07_DECISION_ISSUE_AND_REPORT_TEMPLATES.fa.md",
+        "CAC-Project-Sources-v3.42/MANIFEST.sha256",
+        "CAC-Project-Sources-v3.42/PROMPT_MANAGEMENT_CHAT.fa.md",
+        "CAC-Project-Sources-v3.42/PROMPT_WORK_CHAT.fa.md",
+        "CAC-Project-Sources-v3.42/VALIDATION_REPORT.json",
+        "CAC-Project-Sources-v3.42/references/CAC-v3.40-standalone-onboarding.zip",
+        "CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip",
+        "CAC-Project-Sources-v3.42/references/v3.40-rerun-tests.txt",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/01_WORKSPACE_ROLES_AND_AUTHORITY.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/02_V1_PRODUCT_AND_SECURITY_REQUIREMENTS.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/03_SOURCE_OF_TRUTH_AND_CONTRACT_RULES.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/04_WORK_EXECUTION_BACKLOG.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/05_ACCEPTANCE_AND_EVIDENCE_GATES.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/06_MANAGEMENT_BRIEF.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/07_READY_TO_PASTE_WORK_PROMPT.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/08_OPEN_ISSUES_AND_ASSUMPTIONS.fa.md",
+        "CAC-Project-Sources-v3.42/references/v3.41-documents/README_START_HERE.fa.md"
+      ],
+      "manifests": [
+        {
+          "path": "CAC-Project-Sources-v3.42/MANIFEST.sha256",
+          "sha256": "765e18f10a4a32a9d4be89aa68333d96e1e1ad316245e164977931f38a13d141",
+          "checked_entries": 23,
+          "failures": [],
+          "pass": true
+        }
+      ],
+      "validation_reports": [
+        {
+          "path": "CAC-Project-Sources-v3.42/VALIDATION_REPORT.json",
+          "sha256": "80dd8ee10ccdccb1cfd39578451c36dd1a1c339d0ea5fd376690efdad1964726",
+          "content": {
+            "artifact": "CAC Project Sources v3.42",
+            "kind": "project documentation and two chat prompts, NOT source code or architecture freeze",
+            "created_on": "2026-10-26",
+            "architecture_approved_in_conversation": "v3.37 / APR-036",
+            "original_v337_zip_available": false,
+            "v338_v339_source_available": false,
+            "v341_archive_sha256": "08316862c0afa60d500f7619dccaaee02ea92f60148111531e0f0aa6cee938bf",
+            "v340_source_archive_sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e",
+            "v341_zip_integrity": "PASS",
+            "v340_zip_integrity": "PASS",
+            "v340_python_sqlite_unit_tests_rerun": {
+              "command": "PYTHONPATH=. python -m unittest discover -s tests -p 'test_*.py' -v",
+              "result": "PASS",
+              "count": 32
+            },
+            "postgresql_rls_integration_run": false,
+            "code_merged_with_backend": false,
+            "production_deployed": false,
+            "notes": [
+              "v3.42 is documentation-only for project sources",
+              "Do not equate approved v3.37 architectural freeze with currently available original source archive",
+              "Prompts do not synchronize separate chats; share files/status manually"
+            ]
+          }
+        }
+      ]
+    },
+    "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e": {
+      "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e",
+      "size": 25597,
+      "locations": [
+        "CAC-S0-01-Evidence-2026-10-26.zip!project_sources/01-CAC-Project-Sources-v3.42.zip!CAC-Project-Sources-v3.42/references/CAC-v3.40-standalone-onboarding.zip",
+        "CAC-S0-01-Evidence-2026-10-26.zip!project_sources/01-CAC-Project-Sources-v3.42.zip!CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip!CAC-v3.41-Work-Handoff-Documents/reference/CAC-v3.40-standalone-onboarding.zip",
+        "CAC-S0-01-Evidence-2026-10-26.zip!audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.40-standalone-onboarding.zip",
+        "CAC-S0-01-Evidence-2026-10-26.zip!audit/v341/CAC-v3.41-Work-Handoff-Documents/reference/CAC-v3.40-standalone-onboarding.zip",
+        "CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip!inputs/CAC-v3.40-standalone-onboarding.zip",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.40-standalone-onboarding.zip",
+        "audit/v341/CAC-v3.41-Work-Handoff-Documents/reference/CAC-v3.40-standalone-onboarding.zip",
+        "s0-02/inputs/CAC-v3.40-standalone-onboarding.zip",
+        "s0-03/runtime/verified-s002/inputs/CAC-v3.40-standalone-onboarding.zip"
+      ],
+      "crc": "PASS",
+      "members": [
+        "cac-v3.40-onboarding-module/MANIFEST.sha256",
+        "cac-v3.40-onboarding-module/README.fa.md",
+        "cac-v3.40-onboarding-module/cac_onboarding/__init__.py",
+        "cac-v3.40-onboarding-module/cac_onboarding/policy.py",
+        "cac-v3.40-onboarding-module/cac_onboarding/service.py",
+        "cac-v3.40-onboarding-module/cac_onboarding/storage.py",
+        "cac-v3.40-onboarding-module/docs/CR-340-001.fa.md",
+        "cac-v3.40-onboarding-module/docs/DEVELOPMENT_STATUS.fa.md",
+        "cac-v3.40-onboarding-module/docs/NEXT_EXECUTION_GATE.fa.md",
+        "cac-v3.40-onboarding-module/docs/V340_SECURITY_FINDINGS.fa.md",
+        "cac-v3.40-onboarding-module/integration/ADAPTER_PORTS.py",
+        "cac-v3.40-onboarding-module/integration/G3_ONBOARDING_API_CONTRACT.fa.md",
+        "cac-v3.40-onboarding-module/integration/POSTGRES_RLS_PROVISIONING_REVIEW.fa.md",
+        "cac-v3.40-onboarding-module/integration/openapi-onboarding-addendum.yaml",
+        "cac-v3.40-onboarding-module/test-output.txt",
+        "cac-v3.40-onboarding-module/tests/test_onboarding.py",
+        "cac-v3.40-onboarding-module/validation-report.json"
+      ],
+      "manifests": [
+        {
+          "path": "cac-v3.40-onboarding-module/MANIFEST.sha256",
+          "sha256": "2ac8a99b057785ac089a4eebce4e1870abca069847e9988b99314d28a92bd96c",
+          "checked_entries": 16,
+          "failures": [],
+          "pass": true
+        }
+      ],
+      "validation_reports": []
+    },
+    "08316862c0afa60d500f7619dccaaee02ea92f60148111531e0f0aa6cee938bf": {
+      "sha256": "08316862c0afa60d500f7619dccaaee02ea92f60148111531e0f0aa6cee938bf",
+      "size": 41775,
+      "locations": [
+        "CAC-S0-01-Evidence-2026-10-26.zip!project_sources/01-CAC-Project-Sources-v3.42.zip!CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip",
+        "CAC-S0-01-Evidence-2026-10-26.zip!audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip",
+        "audit/extracted/CAC-Project-Sources-v3.42/references/CAC-v3.41-Work-Handoff-Documents.zip"
+      ],
+      "crc": "PASS",
+      "members": [
+        "CAC-v3.41-Work-Handoff-Documents/01_WORKSPACE_ROLES_AND_AUTHORITY.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/02_V1_PRODUCT_AND_SECURITY_REQUIREMENTS.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/03_SOURCE_OF_TRUTH_AND_CONTRACT_RULES.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/04_WORK_EXECUTION_BACKLOG.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/05_ACCEPTANCE_AND_EVIDENCE_GATES.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/06_MANAGEMENT_BRIEF.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/07_READY_TO_PASTE_WORK_PROMPT.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/08_OPEN_ISSUES_AND_ASSUMPTIONS.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/MANIFEST.sha256",
+        "CAC-v3.41-Work-Handoff-Documents/README_START_HERE.fa.md",
+        "CAC-v3.41-Work-Handoff-Documents/VALIDATION_AND_SOURCE_STATUS.json",
+        "CAC-v3.41-Work-Handoff-Documents/reference/CAC-v3.40-standalone-onboarding.zip"
+      ],
+      "manifests": [
+        {
+          "path": "CAC-v3.41-Work-Handoff-Documents/MANIFEST.sha256",
+          "sha256": "53d3cee6e922cac4da4709bfe21a5baf76c890840048c91f5ea89084da1f3b28",
+          "checked_entries": 11,
+          "failures": [],
+          "pass": true
+        }
+      ],
+      "validation_reports": [
+        {
+          "path": "CAC-v3.41-Work-Handoff-Documents/VALIDATION_AND_SOURCE_STATUS.json",
+          "sha256": "d3fd837f1778b007ddc954095bab2edb51fdb2564188b30d8b3b473b72d6d94a",
+          "content": {
+            "artifact": "CAC v3.41 Work Handoff Documents",
+            "artifact_type": "documentation_only",
+            "created_on": "2026-10-26",
+            "frozen_architecture_claim": "v3.37 / APR-036 approved in conversation; original archive NOT available in current runtime",
+            "locally_verified_source": {
+              "name": "CAC v3.40 standalone onboarding",
+              "sha256": "e685e8872e953aff66daeeb6c551332f0dc6a178269f4041382c2f84c8e1118e",
+              "zip_integrity": "PASS",
+              "reported_unit_tests_in_source": 32
+            },
+            "implementation_done_in_this_turn": false,
+            "source_v338_v339_available_in_current_runtime": false,
+            "postgresql_integration_tests_performed_in_this_turn": false,
+            "external_repo_changes": false,
+            "instructions": "Take documents to separate Work and Management chats; do not infer cross-chat sync"
+          }
+        }
+      ]
+    },
+    "bdae7c4d6d146714bc0ef4a3e2d0280944c1ecf85560a491050fa427315ac39f": {
+      "sha256": "bdae7c4d6d146714bc0ef4a3e2d0280944c1ecf85560a491050fa427315ac39f",
+      "size": 86213,
+      "locations": [
+        "CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip",
+        "CAC-S0-03-Security-Fix-Handoff-2026-10-26.zip!inputs/CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip",
+        "s0-03/inputs/CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip"
+      ],
+      "crc": "PASS",
+      "members": [
+        "EXECUTION_REPORT.json",
+        "README.md",
+        "REPORT.fa.md",
+        "candidate/cac-v3.40-onboarding-module/MANIFEST.sha256",
+        "candidate/cac-v3.40-onboarding-module/README.fa.md",
+        "candidate/cac-v3.40-onboarding-module/S0-02-STATUS.fa.md",
+        "candidate/cac-v3.40-onboarding-module/cac_onboarding/__init__.py",
+        "candidate/cac-v3.40-onboarding-module/cac_onboarding/policy.py",
+        "candidate/cac-v3.40-onboarding-module/cac_onboarding/service.py",
+        "candidate/cac-v3.40-onboarding-module/cac_onboarding/storage.py",
+        "candidate/cac-v3.40-onboarding-module/docs/CR-340-001.fa.md",
+        "candidate/cac-v3.40-onboarding-module/docs/DEVELOPMENT_STATUS.fa.md",
+        "candidate/cac-v3.40-onboarding-module/docs/NEXT_EXECUTION_GATE.fa.md",
+        "candidate/cac-v3.40-onboarding-module/docs/V340_SECURITY_FINDINGS.fa.md",
+        "candidate/cac-v3.40-onboarding-module/integration/ADAPTER_PORTS.py",
+        "candidate/cac-v3.40-onboarding-module/integration/G3_ONBOARDING_API_CONTRACT.fa.md",
+        "candidate/cac-v3.40-onboarding-module/integration/POSTGRES_RLS_PROVISIONING_REVIEW.fa.md",
+        "candidate/cac-v3.40-onboarding-module/integration/openapi-onboarding-addendum.yaml",
+        "candidate/cac-v3.40-onboarding-module/test-output.txt",
+        "candidate/cac-v3.40-onboarding-module/tests/test_onboarding.py",
+        "candidate/cac-v3.40-onboarding-module/tests/test_revocation.py",
+        "candidate/cac-v3.40-onboarding-module/validation-report.json",
+        "changes.patch",
+        "evidence/changed-files.json",
+        "evidence/code-review.md",
+        "evidence/final-verification.json",
+        "evidence/full-suite.json",
+        "evidence/full-suite.log",
+        "evidence/green.json",
+        "evidence/green.log",
+        "evidence/original-regression.json",
+        "evidence/original-regression.log",
+        "evidence/red.json",
+        "evidence/red.log",
+        "evidence/s001-probe-after.json",
+        "evidence/s001-probe-after.log",
+        "evidence/source-recovery.json",
+        "evidence/test-evidence.json",
+        "inputs/CAC-v3.40-standalone-onboarding.zip",
+        "inputs/S0-01-discovery-scope.json",
+        "inputs/S0-01-revocation-probe.json",
+        "inputs/S0-01-source-files.json",
+        "inputs/probe_revocation.py",
+        "run_tests.py",
+        "ARTIFACT-MANIFEST.sha256"
+      ],
+      "manifests": [
+        {
+          "path": "candidate/cac-v3.40-onboarding-module/MANIFEST.sha256",
+          "sha256": "ce5f68abfa1686d491afa08d3a2f3368e5f0a1706bbd65b0dea7027691cbc3bc",
+          "checked_entries": 18,
+          "failures": [],
+          "pass": true
+        },
+        {
+          "path": "ARTIFACT-MANIFEST.sha256",
+          "sha256": "7965625dc82da312440cb5d05ad0870d2cff15fa576bd37df48548c14b7e096c",
+          "checked_entries": 44,
+          "failures": [],
+          "pass": true
+        }
+      ],
+      "validation_reports": []
+    },
+    "94f4d586023779500ea85a8cc7f76f092817e6b7da8a0dcb06aec2e59391a240": {
+      "sha256": "94f4d586023779500ea85a8cc7f76f092817e6b7da8a0dcb06aec2e59391a240",
+      "size": 111923,
+      "locations": [
+        "CAC-S0-03-Security-Fix-Handoff-2026-10-26.zip"
+      ],
+      "crc": "PASS",
+      "members": [
+        "EXECUTION_REPORT.json",
+        "INTEGRATION-READINESS.fa.md",
+        "POSTGRES-ACCEPT-REVOKE-RACE-PLAN.fa.md",
+        "README.md",
+        "REPORT.fa.md",
+        "changes-v340-to-fix.patch",
+        "evidence/S0-02-red.json",
+        "evidence/S0-02-red.log",
+        "evidence/changed-files.json",
+        "evidence/clean-environment.json",
+        "evidence/executions.json",
+        "evidence/full-45.log",
+        "evidence/independent-review-S0-02.md",
+        "evidence/new-13.log",
+        "evidence/original-32.log",
+        "evidence/source-provenance.json",
+        "evidence/test-evidence.json",
+        "inputs/CAC-S0-02-SEC-REV-001-Evidence-2026-10-26.zip",
+        "ARTIFACT-MANIFEST.sha256"
+      ],
+      "manifests": [
+        {
+          "path": "ARTIFACT-MANIFEST.sha256",
+          "sha256": "6ef7d82f984c7e949b3e4e5d153734b5239e3cea4675894028ce3658dc1d37de",
+          "checked_entries": 18,
+          "failures": [],
+          "pass": true
+        }
+      ],
+      "validation_reports": []
+    }
+  },
+  "scope": "Current accessible refs and workspace only; hashes do not authenticate APR-036."
+}
