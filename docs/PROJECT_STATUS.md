@@ -1,6 +1,6 @@
 # CAC — Public Project Status
 
-_Last updated: 2026-10-27. This is a management status record, not independent CI evidence._
+_Last updated: 2026-10-28. Management checked GitHub PR and CI logs; independent integrated security validation remains outstanding._
 
 ## Authorized architecture
 
@@ -13,8 +13,8 @@ The approved architectural baseline is **v3.37 / APR-036**. Preserved decisions 
 | v3.37 approved baseline | Original source archive not recovered; **SOURCE-001 BLOCKED** |
 | v3.38 / v3.39 | Original sources not recovered |
 | v3.40 standalone onboarding | Referenced locally, **not integrated** |
-| S0-02 security remediation | Verified artifact; corrected standalone source imported on Work branch; **NOT_MERGED / SOURCE_UNVERIFIED** |
-| S0-03 evidence handoff | Actual archive/hash/manifest verified; Management acceptance pending |
+| S0-02 security remediation | Standalone module merged to repository main via PR #3 at `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`; **NOT_INTEGRATED / SOURCE_UNVERIFIED** |
+| S0-03 evidence handoff | Archive/hash/manifest reported verified by Work; standalone handoff accepted for repository import by Management at PR #3 |
 | v3.42 project sources | Governance/reference package, **not the complete product source** |
 
 ## Acceptance gates
@@ -48,6 +48,16 @@ No production release is authorized by this record.
 - Corrected S0-02 and S0-03 artifact ZIPs have not been fetched directly through this session; their **reported** hashes remain in Source Registry.
 - `SOURCE-001` and all Django/PostgreSQL/RLS integration gates remain BLOCKED.
 
-## S0-04 Work branch
+## S0-04 Work branch (historical record before merge)
 
-Corrected artifact bytes and original reference branch were verified. Source lives under `standalone/onboarding/`; installation metadata and standalone-only GitHub Actions are added. See [handoff](S0_04_HANDOFF.md). No backend integration, migration, deployment or merge is claimed. SOURCE-001 and all integrated gates remain BLOCKED.
+Corrected artifact bytes and original reference branch were verified. Source lives under `standalone/onboarding/`; installation metadata and standalone-only GitHub Actions are added. See [handoff](S0_04_HANDOFF.md). This paragraph records the *pre-merge handoff*. PR #3 was subsequently merged into the GitHub repository on 2026-10-28; **no backend integration, migration or deployment** is claimed. SOURCE-001 and all integrated gates remain BLOCKED.
+
+## Astra Management acceptance — 2026-10-28
+
+- Reviewed [PR #3](https://github.com/alireza-anari/cac-project/pull/3), actual diff, original-vs-fixed revocation behavior, and GitHub Actions [run 40463377495](https://github.com/alireza-anari/cac-project/actions/runs/40463377495).
+- Standalone package import accepted and merged via squash commit `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`. No integrated backend was merged.
+- CI evidence: Python 3.12.15, **45 tests passed**, package installed and out-of-tree import succeeded; synthetic PR merge was tested by CI. Job log was reviewed by Management.
+- **Current source state: `MERGED_TO_REPOSITORY / NOT_INTEGRATED / SOURCE_UNVERIFIED`.**
+- `SEC-REV-001`: **DONE for standalone scope only**. Historical tests are not a PostgreSQL concurrency, RLS, trusted IdP/MFA, CSRF or production security guarantee.
+- `SOURCE-001` and `GATE-SOURCE / BOOT / MIG / TENANT / ONBOARD` remain **BLOCKED**; Sprint 0 is not complete; no Production release authorized.
+- Follow-up work: source recovery; PostgreSQL concurrency and security gates; CI dependency pinning/maintenance.
