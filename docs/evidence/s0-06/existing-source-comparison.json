@@ -1,0 +1,63 @@
+[
+  {
+    "path": "cac_onboarding/__init__.py",
+    "original_sha256": "b7f55398182bdb6307de7dce0fb5190caec26ffa1ec484c78e0eb6fe14db46d1",
+    "historical_sha256": "b7f55398182bdb6307de7dce0fb5190caec26ffa1ec484c78e0eb6fe14db46d1",
+    "historical_exact": true,
+    "current_sha256": "b7f55398182bdb6307de7dce0fb5190caec26ffa1ec484c78e0eb6fe14db46d1",
+    "current_exact": true
+  },
+  {
+    "path": "cac_onboarding/policy.py",
+    "original_sha256": "af4ea5b879edbf3e74fe50aeeab6ba2ba893750a09fc1fcaa772a1b5fa0d0324",
+    "historical_sha256": "af4ea5b879edbf3e74fe50aeeab6ba2ba893750a09fc1fcaa772a1b5fa0d0324",
+    "historical_exact": true,
+    "current_sha256": "af4ea5b879edbf3e74fe50aeeab6ba2ba893750a09fc1fcaa772a1b5fa0d0324",
+    "current_exact": true
+  },
+  {
+    "path": "cac_onboarding/service.py",
+    "original_sha256": "43a9a3f6f4beb5a93e619ba98e9ad3825d26f7cef2e9060fd300cb5964c57041",
+    "historical_sha256": "43a9a3f6f4beb5a93e619ba98e9ad3825d26f7cef2e9060fd300cb5964c57041",
+    "historical_exact": true,
+    "current_sha256": "98d8694e6b31b047fb44896a48815ca62e0761cd28fb1c05c3d0a766d9d952c2",
+    "current_exact": false
+  },
+  {
+    "path": "cac_onboarding/storage.py",
+    "original_sha256": "22a972263643ce94ff48e131cd0efd72e60d0819ad6bbce47eef6e4492856684",
+    "historical_sha256": "22a972263643ce94ff48e131cd0efd72e60d0819ad6bbce47eef6e4492856684",
+    "historical_exact": true,
+    "current_sha256": "22a972263643ce94ff48e131cd0efd72e60d0819ad6bbce47eef6e4492856684",
+    "current_exact": true
+  },
+  {
+    "path": "integration/ADAPTER_PORTS.py",
+    "original_sha256": "ffbda36c59dd5bb4bcc1899c5c7237f9883431705ea8b8cf94d110805b85fbb4",
+    "historical_sha256": "ffbda36c59dd5bb4bcc1899c5c7237f9883431705ea8b8cf94d110805b85fbb4",
+    "historical_exact": true,
+    "current_sha256": "ffbda36c59dd5bb4bcc1899c5c7237f9883431705ea8b8cf94d110805b85fbb4",
+    "current_exact": true
+  },
+  {
+    "path": "integration/openapi-onboarding-addendum.yaml",
+    "original_sha256": "536492ff09fefeebf3ead93a502620a5dad1117c30ecdc6138738f4b302f7bf4",
+    "historical_sha256": "536492ff09fefeebf3ead93a502620a5dad1117c30ecdc6138738f4b302f7bf4",
+    "historical_exact": true,
+    "current_sha256": "a167efcb286974163c84006af6ab5eb342655fede51f11758d5cca1ea4a9f401",
+    "current_exact": false
+  },
+  {
+    "path": "tests/test_onboarding.py",
+    "original_sha256": "8fe1418842ea6a8b976000e4f04f4b00bed151e766b0860b681a07859fa56367",
+    "historical_sha256": "8fe1418842ea6a8b976000e4f04f4b00bed151e766b0860b681a07859fa56367",
+    "historical_exact": true,
+    "current_sha256": "8fe1418842ea6a8b976000e4f04f4b00bed151e766b0860b681a07859fa56367",
+    "current_exact": true
+  },
+  {
+    "path": "tests/test_revocation.py",
+    "status": "added after v3.40",
+    "current_sha256": "2511edc65e765230880cf735f7180fb6937384315ca035b06c4c570bf597f391"
+  }
+]

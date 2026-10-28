@@ -1,0 +1,324 @@
+{
+  "github": [
+    {
+      "endpoint": "branches",
+      "per_page": 100,
+      "page": 1,
+      "count": 5,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "name": "archive/v3.40-unpatched-reference",
+          "sha": "0923d9bd761e04ba5bcf83c37e91ef7332f64c64"
+        },
+        {
+          "name": "main",
+          "sha": "2f155cb70c1752837ae7dec53ac958ebf32fdfbb"
+        },
+        {
+          "name": "work/s0-05-ci-contract-hardening",
+          "sha": "fa71168b4501e8bf3fc7da5205943d255f8842ae"
+        },
+        {
+          "name": "work/s0-source-recovery",
+          "sha": "c2587da55f80d986bc8010ff8b398635bc0ae92c"
+        },
+        {
+          "name": "work/sec-rev-001-standalone-import",
+          "sha": "a0deaa53b0eb01e33820f9acd1b54b3d24d89e24"
+        }
+      ]
+    },
+    {
+      "endpoint": "releases",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    },
+    {
+      "endpoint": "pulls?state=all",
+      "per_page": 100,
+      "page": 1,
+      "count": 2,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "number": 6,
+          "title": "S0-05: Harden standalone CI and validate OpenAPI 3.1.1",
+          "state": "closed",
+          "merged_at": "2026-10-28T17:44:15Z",
+          "id": 5049540072
+        },
+        {
+          "number": 3,
+          "title": "Import verified SEC-REV-001 standalone remediation and CI",
+          "state": "closed",
+          "merged_at": "2026-10-28T10:22:25Z",
+          "id": 5029828971
+        }
+      ]
+    },
+    {
+      "endpoint": "issues?state=all",
+      "per_page": 100,
+      "page": 1,
+      "count": 7,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "number": 7,
+          "title": "CR-S0-05-001 (P1): Architecture decision for invitation denial response contract",
+          "state": "open",
+          "id": 6084385926
+        },
+        {
+          "number": 6,
+          "title": "S0-05: Harden standalone CI and validate OpenAPI 3.1.1",
+          "state": "closed",
+          "id": 6077818499
+        },
+        {
+          "number": 5,
+          "title": "CI-001 (P1): harden standalone onboarding workflow reproducibility and action pinning",
+          "state": "closed",
+          "id": 6077029794
+        },
+        {
+          "number": 4,
+          "title": "DB-001 / PG-RACE-001 (P0): verify RLS, roles and accept/revoke ordering on PostgreSQL",
+          "state": "open",
+          "id": 6077029294
+        },
+        {
+          "number": 3,
+          "title": "Import verified SEC-REV-001 standalone remediation and CI",
+          "state": "closed",
+          "id": 6054372263
+        },
+        {
+          "number": 2,
+          "title": "S0 handoff: import reviewed standalone remediation without claiming integration",
+          "state": "closed",
+          "id": 6053010746
+        },
+        {
+          "number": 1,
+          "title": "SOURCE-001 (P0): recover and verify authentic CAC baseline",
+          "state": "open",
+          "id": 6053005434
+        }
+      ]
+    },
+    {
+      "endpoint": "issues/1/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 1,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "id": 6476427126
+        }
+      ]
+    },
+    {
+      "endpoint": "issues/2/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 1,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "id": 6466504824
+        }
+      ]
+    },
+    {
+      "endpoint": "issues/3/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 1,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "id": 6466475006
+        }
+      ]
+    },
+    {
+      "endpoint": "issues/4/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    },
+    {
+      "endpoint": "issues/5/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 1,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "id": 6476352777
+        }
+      ]
+    },
+    {
+      "endpoint": "issues/6/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 2,
+      "exhaustion": "count < 100",
+      "items": [
+        {
+          "id": 6476311337
+        },
+        {
+          "id": 6476369462
+        }
+      ]
+    },
+    {
+      "endpoint": "issues/7/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    },
+    {
+      "endpoint": "pulls/3/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    },
+    {
+      "endpoint": "pulls/3/reviews",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    },
+    {
+      "endpoint": "pulls/6/comments",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    },
+    {
+      "endpoint": "pulls/6/reviews",
+      "per_page": 100,
+      "page": 1,
+      "count": 0,
+      "exhaustion": "count < 100",
+      "items": []
+    }
+  ],
+  "drive": [
+    {
+      "query": "v3.37",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "v3.38",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "v3.39",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "APR-036",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "cac-v3.39-implementation-sprint-02.zip",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "CAC",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 3,
+      "relevant_candidates": 0,
+      "note": "Three unrelated cache-named folders; not opened; private IDs omitted.",
+      "next_page_token": null
+    },
+    {
+      "query": "v337",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "v338",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "v339",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    },
+    {
+      "query": "Architecture Freeze",
+      "best_effort_fetch": false,
+      "topn": 100,
+      "count": 0,
+      "relevant_candidates": 0,
+      "note": "No result",
+      "next_page_token": null
+    }
+  ],
+  "limitations": [
+    {
+      "endpoint": "tags",
+      "result": "GitHub fetch rejected endpoint HTTP400 INVALID_ARGUMENT; use git ls-remote --tags origin and fetched git tags instead."
+    }
+  ]
+}

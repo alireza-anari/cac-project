@@ -49,3 +49,7 @@ Do not describe the original v3.40 source as the corrected security release.
 ## Repository acceptance update — 2026-10-28
 
 PR [#3](https://github.com/alireza-anari/cac-project/pull/3) was reviewed and merged on main with squash commit `a6f7818bb4b2bfa0db24d5007dcc924bfaeaf8ed`. Only independent standalone code/test/evidence artifacts were imported. The Work-reported S0-02/S0-03 archive SHA-256 values remain provenance records; GitHub does not prove the authentic v3.37 source has been recovered. Current status is `MERGED_TO_REPOSITORY / NOT_INTEGRATED / SOURCE_UNVERIFIED`; full integration gates remain BLOCKED.
+
+## S0-06 — renewed source recovery audit
+
+See [S0-06 provenance report](S0_06_SOURCE_RECOVERY.md). All five advertised branch histories and current accessible ZIP bytes were rechecked: 38 commits, 82 blobs, six unique archives, 257 matching manifest entries. No authentic v3.37/v3.38/v3.39 source recovered; SOURCE-001 remains BLOCKED. Exact searches, exclusions and unavailable conversation-file leads are recorded separately from verified byte sources. No original archive is published by this audit.
