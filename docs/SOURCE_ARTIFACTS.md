@@ -53,3 +53,9 @@ PR [#3](https://github.com/alireza-anari/cac-project/pull/3) was reviewed and me
 ## S0-06 — renewed source recovery audit
 
 See [S0-06 provenance report](S0_06_SOURCE_RECOVERY.md). All five advertised branch histories and current accessible ZIP bytes were rechecked: 38 commits, 82 blobs, six unique archives, 257 matching manifest entries. No authentic v3.37/v3.38/v3.39 source recovered; SOURCE-001 remains BLOCKED. Exact searches, exclusions and unavailable conversation-file leads are recorded separately from verified byte sources. No original archive is published by this audit.
+
+## S0-06 merge and new-origin contingency — 2026-10-28
+
+The reviewed, docs/audit-only source inventory was merged via [PR #8](https://github.com/alireza-anari/cac-project/pull/8), squash commit `43b5a0888723d621bad2722a74ce9b8a37825666`. It establishes no authentic original v3.37/v3.38/v3.39 implementation and does not clear `SOURCE-001`.
+
+[ARCH-BASELINE-001 #9](https://github.com/alireza-anari/cac-project/issues/9) proposes an explicitly separate **new implementation** strategy requiring an Architecture ruling before canonical baseline promotion. [S0-07 #10](https://github.com/alireza-anari/cac-project/issues/10) scopes only an isolated exploratory Django/PostgreSQL prototype. Any such work must retain `NEW_IMPLEMENTATION_EXPERIMENTAL` provenance, never be called a recovered historical source, and cannot pass the historical source gate.
