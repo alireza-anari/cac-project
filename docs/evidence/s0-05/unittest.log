@@ -1,0 +1,50 @@
+test_anonymous_or_boolean_ids_not_accepted (test_onboarding.ProvisioningTests.test_anonymous_or_boolean_ids_not_accepted) ... ok
+test_cannot_invite_unverified_target (test_onboarding.ProvisioningTests.test_cannot_invite_unverified_target) ... ok
+test_cannot_revoke_owner_capabilities (test_onboarding.ProvisioningTests.test_cannot_revoke_owner_capabilities) ... ok
+test_canonical_caps_does_not_crash_on_mixed_types (test_onboarding.ProvisioningTests.test_canonical_caps_does_not_crash_on_mixed_types) ... ok
+test_concurrent_requests_distinct_keys_only_one_owner (test_onboarding.ProvisioningTests.test_concurrent_requests_distinct_keys_only_one_owner) ... ok
+test_database_prevents_cross_store_grant (test_onboarding.ProvisioningTests.test_database_prevents_cross_store_grant) ... ok
+test_database_prevents_grants_without_membership (test_onboarding.ProvisioningTests.test_database_prevents_grants_without_membership) ... ok
+test_foreign_store_cannot_be_managed (test_onboarding.ProvisioningTests.test_foreign_store_cannot_be_managed) ... ok
+test_high_risk_10_min_boundary (test_onboarding.ProvisioningTests.test_high_risk_10_min_boundary) ... ok
+test_high_risk_old_mfa_denied (test_onboarding.ProvisioningTests.test_high_risk_old_mfa_denied) ... ok
+test_high_risk_requires_owner_fresh_mfa (test_onboarding.ProvisioningTests.test_high_risk_requires_owner_fresh_mfa) ... ok
+test_idempotent_request (test_onboarding.ProvisioningTests.test_idempotent_request) ... ok
+test_invalid_idempotency_key (test_onboarding.ProvisioningTests.test_invalid_idempotency_key) ... ok
+test_invitation_cancel_restricted_to_store (test_onboarding.ProvisioningTests.test_invitation_cancel_restricted_to_store) ... ok
+test_invitation_cancelled_by_owner (test_onboarding.ProvisioningTests.test_invitation_cancelled_by_owner) ... ok
+test_invitation_expiry (test_onboarding.ProvisioningTests.test_invitation_expiry) ... ok
+test_invite_low_risk_owner (test_onboarding.ProvisioningTests.test_invite_low_risk_owner) ... ok
+test_invite_wrong_user_and_token (test_onboarding.ProvisioningTests.test_invite_wrong_user_and_token) ... ok
+test_manager_cannot_grant_high_risk (test_onboarding.ProvisioningTests.test_manager_cannot_grant_high_risk) ... ok
+test_manager_delegates_subset_it_holds (test_onboarding.ProvisioningTests.test_manager_delegates_subset_it_holds) ... ok
+test_normalization (test_onboarding.ProvisioningTests.test_normalization) ... ok
+test_queue_guardrail (test_onboarding.ProvisioningTests.test_queue_guardrail) ... ok
+test_queued_status_hidden_from_another_user (test_onboarding.ProvisioningTests.test_queued_status_hidden_from_another_user) ... ok
+test_recheck_trust_at_worker_execution (test_onboarding.ProvisioningTests.test_recheck_trust_at_worker_execution) ... ok
+test_reject_unknown_capability (test_onboarding.ProvisioningTests.test_reject_unknown_capability) ... ok
+test_revoked_grant_does_not_get_resurrected_by_pending_invitation (test_onboarding.ProvisioningTests.test_revoked_grant_does_not_get_resurrected_by_pending_invitation) ... ok
+test_revoked_inviter_authority_blocks_pending_invite (test_onboarding.ProvisioningTests.test_revoked_inviter_authority_blocks_pending_invite) ... ok
+test_second_first_store_blocked (test_onboarding.ProvisioningTests.test_second_first_store_blocked) ... ok
+test_sensitive_revoke_requires_mfa (test_onboarding.ProvisioningTests.test_sensitive_revoke_requires_mfa) ... ok
+test_unknown_user_fails_closed (test_onboarding.ProvisioningTests.test_unknown_user_fails_closed) ... ok
+test_verified_owner_first_store (test_onboarding.ProvisioningTests.test_verified_owner_first_store) ... ok
+test_worker_repeat_idempotent (test_onboarding.ProvisioningTests.test_worker_repeat_idempotent) ... ok
+test_all_matching_pending_invites_are_invalidated (test_revocation.RevocationTests.test_all_matching_pending_invites_are_invalidated) ... ok
+test_audit_failure_rolls_back_grant_and_invitation_revocation (test_revocation.RevocationTests.test_audit_failure_rolls_back_grant_and_invitation_revocation) ... ok
+test_authorized_manager_can_revoke_held_low_risk_pending_capability (test_revocation.RevocationTests.test_authorized_manager_can_revoke_held_low_risk_pending_capability) ... ok
+test_manager_cannot_revoke_unheld_or_sensitive_pending_capability (test_revocation.RevocationTests.test_manager_cannot_revoke_unheld_or_sensitive_pending_capability) ... ok
+test_multi_capability_invite_is_invalidated_as_a_whole (test_revocation.RevocationTests.test_multi_capability_invite_is_invalidated_as_a_whole) ... ok
+test_new_authorized_invitation_after_revoke_remains_allowed (test_revocation.RevocationTests.test_new_authorized_invitation_after_revoke_remains_allowed) ... ok
+test_no_effect_revoke_does_not_emit_effective_event (test_revocation.RevocationTests.test_no_effect_revoke_does_not_emit_effective_event) ... ok
+test_pending_only_audit_failure_rolls_back_invitation_revocation (test_revocation.RevocationTests.test_pending_only_audit_failure_rolls_back_invitation_revocation) ... ok
+test_pending_only_effective_revoke_is_audited (test_revocation.RevocationTests.test_pending_only_effective_revoke_is_audited) ... ok
+test_pending_only_invite_cannot_grant_after_revoke (test_revocation.RevocationTests.test_pending_only_invite_cannot_grant_after_revoke) ... ok
+test_repeated_revoke_has_no_new_side_effects (test_revocation.RevocationTests.test_repeated_revoke_has_no_new_side_effects) ... ok
+test_sensitive_pending_revoke_requires_fresh_mfa (test_revocation.RevocationTests.test_sensitive_pending_revoke_requires_fresh_mfa) ... ok
+test_store_target_and_capability_scope_preserves_unrelated_invites (test_revocation.RevocationTests.test_store_target_and_capability_scope_preserves_unrelated_invites) ... ok
+
+----------------------------------------------------------------------
+Ran 45 tests in 1.259s
+
+OK

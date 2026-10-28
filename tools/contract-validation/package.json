@@ -1,0 +1,18 @@
+{
+  "name": "cac-contract-validation",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Local-only validation of the standalone OpenAPI addendum",
+  "engines": {
+    "node": ">=24.22.1 <25",
+    "npm": ">=11 <12"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.71.2"
+  },
+  "scripts": {
+    "lint": "redocly lint ../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml --config redocly.yaml --format stylish --max-problems 1000",
+    "validate": "redocly lint ../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml --config spec.yaml --format stylish --max-problems 1000",
+    "test": "node --test lint-gates.test.mjs"
+  }
+}

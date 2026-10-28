@@ -1,6 +1,6 @@
 # CAC standalone onboarding — SEC-REV-001
 
-**NOT_MERGED / SOURCE_UNVERIFIED / NOT_PRODUCTION_READY**
+**MERGED_TO_REPOSITORY / NOT_INTEGRATED / SOURCE_UNVERIFIED / NOT_PRODUCTION_READY**
 
 Source ID: `CAC-SEC-REV-001-STANDALONE-S0-02`. This import is the actual previously delivered correction, not a recreation. `PROVENANCE.json` records verified archive SHA-256 values and exact imported source hashes. The packaging version `0.3.40.post2` identifies this standalone distribution only; it is not a new architecture Freeze or integrated backend release.
 
@@ -12,12 +12,13 @@ From the repository root (Python 3.12 recommended):
 
 ```bash
 python -m venv .venv
-.venv/bin/python -m pip install ./standalone/onboarding
+.venv/bin/python -m pip install --only-binary=:all: --require-hashes -r standalone/onboarding/requirements-build.lock
+.venv/bin/python -m pip install --no-build-isolation --no-deps ./standalone/onboarding
 cd standalone/onboarding
 PYTHONPATH=. ../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-The runtime uses only Python stdlib and SQLite. Installation uses pinned setuptools 80.9.0 in its isolated build environment. For offline source tests, no installation or third-party package is needed:
+The runtime uses only Python stdlib and SQLite. The repeatable install path uses hash-locked pip 26.2.2 and setuptools 84.2.1, then builds without isolation or runtime dependencies. CI pins Python 3.12.15; local evidence uses 3.12.14. A plain isolated pip install still uses the exact setuptools pin in pyproject.toml but is not the hash-enforced CI path. For offline source tests, no installation or third-party package is needed:
 
 ```bash
 cd standalone/onboarding
@@ -39,3 +40,7 @@ SQLite tests do **not** prove PostgreSQL concurrency, RLS, real identity/MFA/CSR
 The prior independent S0-02 review reported no Critical/Important/Minor findings for the identical service/test bytes. Its review digest is recorded in `PROVENANCE.json`; it explicitly excluded PostgreSQL/RLS, real IdP, production adapters and integration. Current execution evidence is separate from that historical review.
 
 All imported code originates from the owner-provided CAC artifacts. No third-party implementation was copied and no new license grant is introduced. The upstream artifacts and repository do not declare an open-source license; public visibility alone is not a license. Do not package credentials, customer data or original evidence ZIPs into this distribution.
+
+## S0-05 contract and CI tooling
+
+See [contract validation commands and rule scope](../../tools/contract-validation/README.md) and [S0-05 handoff](../../docs/S0_05_HANDOFF.md). CI retains all 45 tests, verifies installed import outside the source tree, and runs separate structural, lint and negative-fixture gates. OpenAPI gained three summaries only; historical `PROVENANCE.json` continues to describe the original S0-02 import, while S0-05 before/after hashes are recorded separately. No service, schema or security behavior changed.

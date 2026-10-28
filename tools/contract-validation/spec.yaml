@@ -1,0 +1,3 @@
+# Independent structural profile: do not inherit recommended policy exceptions.
+extends:
+  - spec

@@ -61,3 +61,7 @@ Corrected artifact bytes and original reference branch were verified. Source liv
 - `SEC-REV-001`: **DONE for standalone scope only**. Historical tests are not a PostgreSQL concurrency, RLS, trusted IdP/MFA, CSRF or production security guarantee.
 - `SOURCE-001` and `GATE-SOURCE / BOOT / MIG / TENANT / ONBOARD` remain **BLOCKED**; Sprint 0 is not complete; no Production release authorized.
 - Follow-up work: source recovery; PostgreSQL concurrency and security gates; CI dependency pinning/maintenance.
+
+## S0-05 Work — CI and standalone contract validation
+
+A separate branch hardens Action/dependency pins and adds OpenAPI 3.1.1 structural/lint checks and negative fixtures. See [S0-05 handoff](S0_05_HANDOFF.md) for actual local results and known warning/CR; CI acceptance comes from the PR head checks. Runtime behavior and API semantics are unchanged. SOURCE-001 and all integrated gates remain BLOCKED. This entry does not predeclare Management acceptance or merge.

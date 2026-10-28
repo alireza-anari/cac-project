@@ -35,6 +35,7 @@ paths:
   /api/v1/admin/onboarding/requests/{request_id}:
     get:
       operationId: getFirstStoreOnboardingStatus
+      summary: Get first store onboarding status
       security:
         - AdminSession: []
       parameters:
@@ -51,6 +52,7 @@ paths:
   /api/v1/admin/stores/{store_id}/invitations:
     post:
       operationId: issueStoreInvitation
+      summary: Issue a store invitation
       description: >-
         Requires store.members.manage, same-store membership and a verified
         target. Sensitive rights require owner and fresh MFA. Delivery of the
@@ -76,6 +78,7 @@ paths:
   /api/v1/admin/invitations/{invitation_id}/accept:
     post:
       operationId: acceptStoreInvitation
+      summary: Accept a store invitation
       security:
         - AdminSession: []
           AdminCSRF: []

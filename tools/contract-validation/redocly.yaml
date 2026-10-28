@@ -1,0 +1,9 @@
+extends:
+  - recommended
+rules:
+  # This is an undeployed design addendum. Do not invent a server URL.
+  no-empty-servers: off
+  # The owner has not granted a license; public visibility is not a license.
+  info-license: off
+  # Remains visible; defining invitation error responses requires Architecture CR.
+  operation-4xx-response: warn

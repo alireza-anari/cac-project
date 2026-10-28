@@ -1,0 +1,43 @@
+{
+  "base_commit": "2e62137defc2d53819fc0ba8bf42283dfeb7bbeb",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.39",
+  "sqlite": "3.53.1",
+  "node": "v24.22.1",
+  "npm": "11.9.0",
+  "redocly": "2.71.2",
+  "pip": "26.2.2",
+  "setuptools": "84.2.1",
+  "openapi_before_sha256": "536492ff09fefeebf3ead93a502620a5dad1117c30ecdc6138738f4b302f7bf4",
+  "openapi_after_sha256": "a167efcb286974163c84006af6ab5eb342655fede51f11758d5cca1ea4a9f401",
+  "semantic_comparison": "equal after removal of exactly three added operation summaries",
+  "local_results": {
+    "install_locked_build_tools": 0,
+    "install_distribution": 0,
+    "installed_import_outside_source": 0,
+    "unittest": {
+      "exit": 0,
+      "passed": 45,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "structure_before": 0,
+    "recommended_lint_before": {
+      "exit": 1,
+      "errors": 4,
+      "warnings": 2
+    },
+    "structure_after": 0,
+    "scoped_lint_after": {
+      "exit": 0,
+      "errors": 0,
+      "warnings": 1
+    },
+    "lint_gate_tests": {
+      "exit": 0,
+      "passed": 9
+    }
+  },
+  "ci_result": "Read actual PR check; not inferred from local evidence."
+}
