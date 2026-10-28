@@ -1,0 +1,14 @@
+validating standalone/onboarding/integration/openapi-onboarding-addendum.yaml...
+standalone/onboarding/integration/openapi-onboarding-addendum.yaml:
+  1:1   error    no-empty-servers        Servers must be present.
+  36:5  error    operation-summary       Operation object should contain `summary` field.
+  52:5  error    operation-summary       Operation object should contain `summary` field.
+  77:5  error    operation-summary       Operation object should contain `summary` field.
+  2:1   warning  info-license            Info object should contain `license` field.
+  69:7  warning  operation-4xx-response  Operation must have at least one `4XX` response.
+
+standalone/onboarding/integration/openapi-onboarding-addendum.yaml: validated in 38ms
+
+❌ Validation failed with 4 errors and 2 warnings.
+run `redocly lint --generate-ignore-file` to add all problems to the ignore file.
+

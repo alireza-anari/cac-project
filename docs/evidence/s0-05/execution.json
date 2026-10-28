@@ -1,0 +1,55 @@
+{
+  "base_commit": "2e62137defc2d53819fc0ba8bf42283dfeb7bbeb",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.39",
+  "sqlite": "3.53.1",
+  "node": "v24.22.1",
+  "npm": "11.19.1",
+  "redocly": "2.71.2",
+  "pip": "26.2.2",
+  "setuptools": "84.2.1",
+  "openapi_before_sha256": "536492ff09fefeebf3ead93a502620a5dad1117c30ecdc6138738f4b302f7bf4",
+  "openapi_after_sha256": "a167efcb286974163c84006af6ab5eb342655fede51f11758d5cca1ea4a9f401",
+  "semantic_comparison": "equal after removal of exactly three added operation summaries",
+  "local_results": {
+    "install_locked_build_tools": 0,
+    "install_distribution": 0,
+    "installed_import_outside_source": 0,
+    "unittest": {
+      "exit": 0,
+      "passed": 45,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "structure_before": 0,
+    "recommended_lint_before": {
+      "exit": 1,
+      "errors": 4,
+      "warnings": 2
+    },
+    "structure_after": 0,
+    "scoped_lint_after": {
+      "exit": 0,
+      "errors": 0,
+      "warnings": 1
+    },
+    "lint_gate_tests": {
+      "exit": 0,
+      "passed": 9
+    },
+    "npm_ci_11_19_1": 0,
+    "npm_version_guard": {
+      "accept_11_19_1_exit": 0,
+      "reject_11_9_0_exit": 1
+    }
+  },
+  "ci_result": "Read actual PR check; not inferred from local evidence.",
+  "initial_local_npm": "11.9.0",
+  "initial_ci": {
+    "run": "https://github.com/alireza-anari/cac-project/actions/runs/40678512918",
+    "head": "292dad468243277115870bb89a5b6c062f0c3267",
+    "result": "success",
+    "note": "Superseded by npm version assertion; final-head result recorded in PR #6."
+  }
+}

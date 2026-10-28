@@ -1,0 +1,22 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> cac-contract-validation@0.0.0 test
+> node --test lint-gates.test.mjs
+
+✔ spec: accepts OpenAPI 3.1.1 nullable type array (6212.322466ms)
+✔ spec: rejects an invalid schema type (6193.180977ms)
+✔ spec: rejects an unresolved local reference (6183.229447ms)
+✔ spec: rejects duplicate operation IDs (6206.797405ms)
+✔ recommended: accepts OpenAPI 3.1.1 nullable type array (6224.092179ms)
+✔ recommended: rejects an invalid schema type (6143.810018ms)
+✔ recommended: rejects an unresolved local reference (6091.027842ms)
+✔ recommended: rejects duplicate operation IDs (6180.317448ms)
+✔ recommended: reports missing summary as an error (6194.021941ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 55727.723316

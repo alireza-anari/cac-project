@@ -4,31 +4,40 @@ on:
   pull_request:
     paths:
       - 'standalone/onboarding/**'
+      - 'tools/contract-validation/**'
       - '.github/workflows/standalone-onboarding.yml'
   push:
-    branches: [main, work/sec-rev-001-standalone-import]
+    branches: [main, work/s0-05-ci-contract-hardening]
     paths:
       - 'standalone/onboarding/**'
+      - 'tools/contract-validation/**'
       - '.github/workflows/standalone-onboarding.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: standalone-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+  REDOCLY_TELEMETRY: 'off'
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
-      - name: Record environment and source
+          python-version: '3.12.15'
+      - name: Record allowlisted environment and source
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -37,26 +46,93 @@ jobs:
           python -c 'import sqlite3, platform; print(platform.platform()); print("SQLite", sqlite3.sqlite_version)' >> evidence/environment.txt
           git rev-parse HEAD > evidence/tested-sha.txt
           printf '%s\n' "$PR_HEAD_SHA" > evidence/pr-head-sha.txt
-      - name: Install standalone distribution
-        run: python -m pip install ./standalone/onboarding
+      - name: Install locked build tools and standalone distribution
+        run: |
+          python -m pip install --only-binary=:all: --require-hashes -r standalone/onboarding/requirements-build.lock
+          python -m pip install --no-build-isolation --no-deps ./standalone/onboarding
+          python -m pip --version >> evidence/environment.txt
+          python -c 'from importlib.metadata import version; print("setuptools", version("setuptools")); print("cac-standalone-onboarding", version("cac-standalone-onboarding"))' >> evidence/environment.txt
       - name: Verify installed import outside source tree
         working-directory: ${{ runner.temp }}
         run: python -c 'import cac_onboarding.service; print(cac_onboarding.service.__file__)'
-      - name: Run original and new tests
+      - name: Run all original and regression tests
         working-directory: standalone/onboarding
         env:
           PYTHONPATH: .
         run: |
+          # Fail if discovery silently loses the required suite.
+          python -c 'import unittest; n = unittest.defaultTestLoader.discover("tests", pattern="test_*.py").countTestCases(); assert n >= 45, f"Expected at least 45 tests, discovered {n}"'
           set +e
           python -m unittest discover -s tests -p 'test_*.py' -v > ../../evidence/unittest.log 2>&1
           result=$?
           cat ../../evidence/unittest.log
           printf '%s\n' "$result" > ../../evidence/exit-code.txt
           exit "$result"
-      - name: Upload execution evidence
+      - name: Upload only execution evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: standalone-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: evidence/
+          name: standalone-tests-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            evidence/environment.txt
+            evidence/tested-sha.txt
+            evidence/pr-head-sha.txt
+            evidence/unittest.log
+            evidence/exit-code.txt
+          include-hidden-files: false
+          if-no-files-found: error
+          retention-days: 30
+
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+      - name: Record allowlisted environment and source
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p evidence
+          node --version > evidence/contract-environment.txt
+          npm --version >> evidence/contract-environment.txt
+          test "$(npm --version)" = "11.19.1" # bundled with the pinned Node release; fail on drift
+          git rev-parse HEAD > evidence/tested-sha.txt
+          printf '%s\n' "$PR_HEAD_SHA" > evidence/pr-head-sha.txt
+      - name: Install integrity-locked local validator
+        run: |
+          npm ci --prefix tools/contract-validation --ignore-scripts --no-audit --no-fund
+          tools/contract-validation/node_modules/.bin/redocly --version >> evidence/contract-environment.txt
+      - name: Validate structure, lint and verify rejection gates
+        run: |
+          set +e
+          npm --prefix tools/contract-validation run validate > evidence/structure.log 2>&1
+          structure=$?
+          npm --prefix tools/contract-validation run lint > evidence/lint.log 2>&1
+          lint=$?
+          npm --prefix tools/contract-validation test > evidence/lint-gates.log 2>&1
+          gates=$?
+          cat evidence/structure.log evidence/lint.log evidence/lint-gates.log
+          printf 'structure=%s\nlint=%s\ngates=%s\n' "$structure" "$lint" "$gates" > evidence/contract-exit-codes.txt
+          test "$structure" -eq 0 && test "$lint" -eq 0 && test "$gates" -eq 0
+      - name: Upload only contract evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: standalone-contract-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            evidence/contract-environment.txt
+            evidence/tested-sha.txt
+            evidence/pr-head-sha.txt
+            evidence/structure.log
+            evidence/lint.log
+            evidence/lint-gates.log
+            evidence/contract-exit-codes.txt
+          include-hidden-files: false
+          if-no-files-found: error
           retention-days: 30

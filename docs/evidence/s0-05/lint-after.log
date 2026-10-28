@@ -1,0 +1,13 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> cac-contract-validation@0.0.0 lint
+> redocly lint ../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml --config redocly.yaml --format stylish --max-problems 1000
+
+validating ../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml...
+../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml:
+  71:7  warning  operation-4xx-response  Operation must have at least one `4XX` response.
+
+../../standalone/onboarding/integration/openapi-onboarding-addendum.yaml: validated in 28ms
+
+Woohoo! Your API description is valid. 🎉
+You have 1 warning.

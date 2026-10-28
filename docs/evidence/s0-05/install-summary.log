@@ -1,0 +1,8 @@
+Successfully installed pip-26.2.2 setuptools-84.2.1
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+  Building wheel for cac-standalone-onboarding (pyproject.toml): started
+  Building wheel for cac-standalone-onboarding (pyproject.toml): finished with status 'done'
+Successfully built cac-standalone-onboarding
+Successfully installed cac-standalone-onboarding-0.3.40.post2
+Installed import outside source tree: exit 0
