@@ -1,0 +1,87 @@
+Source: GitHub Actions job 123615780247, run 40921536251, head 741ee42471fea8c7a7a8780305eddcaeb9f72d31.
+Allowlisted execution excerpts; not a full job log. Full log and 18-file artifact linked in handoff.
+2026-10-29T17:28:04.1403297Z Successfully installed Django-5.2.18 asgiref-3.13.0 psycopg-3.3.6 psycopg-binary-3.3.6 sqlparse-0.6.0 typing-extensions-4.16.0
+2026-10-29T17:28:05.7717586Z   Applying foundation.0001_initial... OK
+2026-10-29T17:28:06.1619939Z test_actual_nonowner_roles_and_force_rls (tests.test_security.SecurityTests.test_actual_nonowner_roles_and_force_rls) ... FAIL
+2026-10-29T17:28:06.1635097Z FAILED (failures=1)
+2026-10-29T17:28:06.6019010Z   Applying foundation.0002_security... OK
+2026-10-29T17:28:06.9622521Z System check identified no issues (0 silenced).
+2026-10-29T17:28:07.4125787Z No changes detected
+2026-10-29T17:28:08.7004408Z test_actual_nonowner_roles_and_force_rls (test_security.SecurityTests.test_actual_nonowner_roles_and_force_rls) ... ok
+2026-10-29T17:28:08.7005725Z test_composite_grant_fk_rejects_wrong_store (test_security.SecurityTests.test_composite_grant_fk_rejects_wrong_store) ... ok
+2026-10-29T17:28:08.7006932Z test_composite_store_fk_rejects_wrong_tenant (test_security.SecurityTests.test_composite_store_fk_rejects_wrong_tenant) ... ok
+2026-10-29T17:28:08.7008459Z test_context_cleared_on_commit (test_security.SecurityTests.test_context_cleared_on_commit) ... ok
+2026-10-29T17:28:08.7009712Z test_context_cleared_on_rollback (test_security.SecurityTests.test_context_cleared_on_rollback) ... ok
+2026-10-29T17:28:08.7011012Z test_context_purpose_bound_to_login (test_security.SecurityTests.test_context_purpose_bound_to_login) ... ok
+2026-10-29T17:28:08.7012132Z test_expired_context (test_security.SecurityTests.test_expired_context) ... ok
+2026-10-29T17:28:08.7013179Z test_inactive_membership_denied (test_security.SecurityTests.test_inactive_membership_denied) ... ok
+2026-10-29T17:28:08.7014842Z test_independent_connections_and_token_replay (test_security.SecurityTests.test_independent_connections_and_token_replay) ... ok
+2026-10-29T17:28:08.7016092Z test_malformed_context (test_security.SecurityTests.test_malformed_context) ... ok
+2026-10-29T17:28:08.7017010Z test_membership_is_not_a_capability (test_security.SecurityTests.test_membership_is_not_a_capability) ... ok
+2026-10-29T17:28:08.7017970Z test_missing_context (test_security.SecurityTests.test_missing_context) ... ok
+2026-10-29T17:28:08.7018695Z test_old_token_cannot_replay_in_next_transaction (test_security.SecurityTests.test_old_token_cannot_replay_in_next_transaction) ... ok
+2026-10-29T17:28:08.7019459Z test_other_tenant_filtered (test_security.SecurityTests.test_other_tenant_filtered) ... ok
+2026-10-29T17:28:08.7020025Z test_own_scope_read (test_security.SecurityTests.test_own_scope_read) ... ok
+2026-10-29T17:28:08.7020655Z test_owner_force_rls_without_context (test_security.SecurityTests.test_owner_force_rls_without_context) ... ok
+2026-10-29T17:28:08.7021715Z test_provisioner_cannot_assume_owner_or_read_key (test_security.SecurityTests.test_provisioner_cannot_assume_owner_or_read_key) ... ok
+2026-10-29T17:28:08.7022582Z test_provisioner_cannot_cross_scope_insert (test_security.SecurityTests.test_provisioner_cannot_cross_scope_insert) ... ok
+2026-10-29T17:28:08.7023451Z test_provisioner_cannot_grant_to_another_principal (test_security.SecurityTests.test_provisioner_cannot_grant_to_another_principal) ... ok
+2026-10-29T17:28:08.7024304Z test_provisioner_cannot_update_or_delete (test_security.SecurityTests.test_provisioner_cannot_update_or_delete) ... ok
+2026-10-29T17:28:08.7025103Z test_provisioner_insert_scope_and_rollback (test_security.SecurityTests.test_provisioner_insert_scope_and_rollback) ... ok
+2026-10-29T17:28:08.7025891Z test_runtime_cannot_assume_provisioner (test_security.SecurityTests.test_runtime_cannot_assume_provisioner) ... ok
+2026-10-29T17:28:08.7026648Z test_runtime_cannot_change_privileges (test_security.SecurityTests.test_runtime_cannot_change_privileges) ... ok
+2026-10-29T17:28:08.7027714Z test_runtime_cannot_ddl (test_security.SecurityTests.test_runtime_cannot_ddl) ... ok
+2026-10-29T17:28:08.7028671Z test_runtime_cannot_disable_rls (test_security.SecurityTests.test_runtime_cannot_disable_rls) ... ok
+2026-10-29T17:28:08.7029832Z test_runtime_cannot_insert_grants (test_security.SecurityTests.test_runtime_cannot_insert_grants) ... ok
+2026-10-29T17:28:08.7031060Z test_runtime_cannot_read_issuer_key (test_security.SecurityTests.test_runtime_cannot_read_issuer_key) ... ok
+2026-10-29T17:28:08.7032415Z test_runtime_row_security_off_does_not_bypass (test_security.SecurityTests.test_runtime_row_security_off_does_not_bypass) ... ok
+2026-10-29T17:28:08.7033795Z test_same_tenant_other_store_filtered (test_security.SecurityTests.test_same_tenant_other_store_filtered) ... ok
+2026-10-29T17:28:08.7035200Z test_signed_context_missing_purpose_denied (test_security.SecurityTests.test_signed_context_missing_purpose_denied) ... ok
+2026-10-29T17:28:08.7036527Z test_unsigned_context_forgery (test_security.SecurityTests.test_unsigned_context_forgery) ... ok
+2026-10-29T17:28:08.7038191Z test_valid_signature_does_not_replace_membership (test_security.SecurityTests.test_valid_signature_does_not_replace_membership) ... ok
+2026-10-29T17:28:08.7039891Z Ran 32 tests in 0.439s
+2026-10-29T17:28:08.7040251Z OK
+2026-10-29T17:28:09.4214659Z   Unapplying foundation.0002_security... OK
+2026-10-29T17:28:09.4512223Z   Unapplying foundation.0001_initial... OK
+2026-10-29T17:28:09.9809286Z   Applying foundation.0001_initial... OK
+2026-10-29T17:28:09.9904429Z   Applying foundation.0002_security... OK
+2026-10-29T17:28:10.0653531Z ROUNDTRIP PASS: tables, columns, constraints, policies, owner, ACL and functions match; rollback removed experimental tables/functions.
+2026-10-29T17:28:10.8701322Z test_actual_nonowner_roles_and_force_rls (test_security.SecurityTests.test_actual_nonowner_roles_and_force_rls) ... ok
+2026-10-29T17:28:10.8703180Z test_composite_grant_fk_rejects_wrong_store (test_security.SecurityTests.test_composite_grant_fk_rejects_wrong_store) ... ok
+2026-10-29T17:28:10.8704560Z test_composite_store_fk_rejects_wrong_tenant (test_security.SecurityTests.test_composite_store_fk_rejects_wrong_tenant) ... ok
+2026-10-29T17:28:10.8705478Z test_context_cleared_on_commit (test_security.SecurityTests.test_context_cleared_on_commit) ... ok
+2026-10-29T17:28:10.8706285Z test_context_cleared_on_rollback (test_security.SecurityTests.test_context_cleared_on_rollback) ... ok
+2026-10-29T17:28:10.8707089Z test_context_purpose_bound_to_login (test_security.SecurityTests.test_context_purpose_bound_to_login) ... ok
+2026-10-29T17:28:10.8708067Z test_expired_context (test_security.SecurityTests.test_expired_context) ... ok
+2026-10-29T17:28:10.8708767Z test_inactive_membership_denied (test_security.SecurityTests.test_inactive_membership_denied) ... ok
+2026-10-29T17:28:10.8709658Z test_independent_connections_and_token_replay (test_security.SecurityTests.test_independent_connections_and_token_replay) ... ok
+2026-10-29T17:28:10.8710484Z test_malformed_context (test_security.SecurityTests.test_malformed_context) ... ok
+2026-10-29T17:28:10.8711204Z test_membership_is_not_a_capability (test_security.SecurityTests.test_membership_is_not_a_capability) ... ok
+2026-10-29T17:28:10.8711922Z test_missing_context (test_security.SecurityTests.test_missing_context) ... ok
+2026-10-29T17:28:10.8712664Z test_old_token_cannot_replay_in_next_transaction (test_security.SecurityTests.test_old_token_cannot_replay_in_next_transaction) ... ok
+2026-10-29T17:28:10.8713439Z test_other_tenant_filtered (test_security.SecurityTests.test_other_tenant_filtered) ... ok
+2026-10-29T17:28:10.8713989Z test_own_scope_read (test_security.SecurityTests.test_own_scope_read) ... ok
+2026-10-29T17:28:10.8715115Z test_owner_force_rls_without_context (test_security.SecurityTests.test_owner_force_rls_without_context) ... ok
+2026-10-29T17:28:10.8716015Z test_provisioner_cannot_assume_owner_or_read_key (test_security.SecurityTests.test_provisioner_cannot_assume_owner_or_read_key) ... ok
+2026-10-29T17:28:10.8716889Z test_provisioner_cannot_cross_scope_insert (test_security.SecurityTests.test_provisioner_cannot_cross_scope_insert) ... ok
+2026-10-29T17:28:10.8718049Z test_provisioner_cannot_grant_to_another_principal (test_security.SecurityTests.test_provisioner_cannot_grant_to_another_principal) ... ok
+2026-10-29T17:28:10.8718924Z test_provisioner_cannot_update_or_delete (test_security.SecurityTests.test_provisioner_cannot_update_or_delete) ... ok
+2026-10-29T17:28:10.8719732Z test_provisioner_insert_scope_and_rollback (test_security.SecurityTests.test_provisioner_insert_scope_and_rollback) ... ok
+2026-10-29T17:28:10.8720525Z test_runtime_cannot_assume_provisioner (test_security.SecurityTests.test_runtime_cannot_assume_provisioner) ... ok
+2026-10-29T17:28:10.8721289Z test_runtime_cannot_change_privileges (test_security.SecurityTests.test_runtime_cannot_change_privileges) ... ok
+2026-10-29T17:28:10.8721945Z test_runtime_cannot_ddl (test_security.SecurityTests.test_runtime_cannot_ddl) ... ok
+2026-10-29T17:28:10.8722547Z test_runtime_cannot_disable_rls (test_security.SecurityTests.test_runtime_cannot_disable_rls) ... ok
+2026-10-29T17:28:10.8723243Z test_runtime_cannot_insert_grants (test_security.SecurityTests.test_runtime_cannot_insert_grants) ... ok
+2026-10-29T17:28:10.8723936Z test_runtime_cannot_read_issuer_key (test_security.SecurityTests.test_runtime_cannot_read_issuer_key) ... ok
+2026-10-29T17:28:10.8724705Z test_runtime_row_security_off_does_not_bypass (test_security.SecurityTests.test_runtime_row_security_off_does_not_bypass) ... ok
+2026-10-29T17:28:10.8725498Z test_same_tenant_other_store_filtered (test_security.SecurityTests.test_same_tenant_other_store_filtered) ... ok
+2026-10-29T17:28:10.8726295Z test_signed_context_missing_purpose_denied (test_security.SecurityTests.test_signed_context_missing_purpose_denied) ... ok
+2026-10-29T17:28:10.8727544Z test_unsigned_context_forgery (test_security.SecurityTests.test_unsigned_context_forgery) ... ok
+2026-10-29T17:28:10.8728919Z test_valid_signature_does_not_replace_membership (test_security.SecurityTests.test_valid_signature_does_not_replace_membership) ... ok
+2026-10-29T17:28:10.8730855Z Ran 32 tests in 0.455s
+2026-10-29T17:28:10.8731376Z OK
+2026-10-29T17:28:11.3041839Z ORM PASS: Django transaction + signed context + actual cac_runtime login, scoped records only.
+2026-10-29T17:28:11.8932375Z SHA256 digest of uploaded artifact is b17b6d602688cb863d5b112d9669a44ba3ddf6333d7606acedd2bf5e63ec0397
+2026-10-29T17:28:12.3444624Z Artifact download URL: https://github.com/alireza-anari/cac-project/actions/runs/40921536251/artifacts/12918556691
+2026-10-29T17:28:12.7546886Z  2026-10-29 17:27:53.764 UTC [1] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-10-29T17:28:12.7557765Z  waiting for server to start....2026-10-29 17:27:53.452 UTC [48] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
