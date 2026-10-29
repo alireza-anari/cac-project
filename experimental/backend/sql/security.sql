@@ -32,7 +32,8 @@ BEGIN
     OR (claims->>'tx') IS DISTINCT FROM txid_current()::text
     OR (claims->>'pid')::integer IS DISTINCT FROM pg_backend_pid()
     OR session_user NOT IN ('cac_runtime','cac_provisioner')
-    OR (claims->>'purpose') IS DISTINCT FROM CASE session_user WHEN 'cac_runtime' THEN 'runtime' WHEN 'cac_provisioner' THEN 'provision' END THEN
+    OR NOT COALESCE((session_user='cac_runtime' AND claims->>'purpose'='runtime')
+         OR (session_user='cac_provisioner' AND claims->>'purpose'='provision'), false) THEN
    RAISE EXCEPTION 'Invalid request context' USING ERRCODE='42501';
  END IF;
  RETURN claims;
