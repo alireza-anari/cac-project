@@ -1,0 +1,133 @@
+name: Experimental backend security
+on:
+  pull_request:
+    paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
+  push:
+    branches: [work/s0-07-new-origin-backend-foundation]
+    paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: experimental-backend-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  postgres-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        # Official postgres:17.11-bookworm manifest digest verified from registry.
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s007_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s007-disposable-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s007_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGDATABASE: cac_s007_test
+      PGPASSWORD: synthetic-s007-disposable-only
+      CAC_EXPERIMENTAL_DISPOSABLE: '1'
+      CAC_DB_ROLE: cac_owner
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        working-directory: experimental/backend
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
+      - name: Prepare evidence and private configuration paths
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/evidence-s007"
+          echo "CAC_EVIDENCE_DIR=$GITHUB_WORKSPACE/evidence-s007" >> "$GITHUB_ENV"
+          echo "CAC_TEST_CONFIG=$RUNNER_TEMP/cac-s007-runtime.json" >> "$GITHUB_ENV"
+          git rev-parse HEAD > "$GITHUB_WORKSPACE/evidence-s007/tested-sha.txt"
+          printf '%s\n' "$PR_HEAD_SHA" > "$GITHUB_WORKSPACE/evidence-s007/pr-head-sha.txt"
+      - name: Install hash-locked wheels
+        run: python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+      - name: Bootstrap disposable roles and record versions
+        run: |
+          python scripts/bootstrap.py | tee "$CAC_EVIDENCE_DIR/bootstrap.log"
+          python -VV > "$CAC_EVIDENCE_DIR/environment.txt"
+          python -c 'import django,psycopg; print("Django",django.get_version()); print("psycopg",psycopg.__version__); print("libpq",psycopg.pq.version())' >> "$CAC_EVIDENCE_DIR/environment.txt"
+          python -c 'import psycopg; c=psycopg.connect(user="postgres"); print(c.execute("SELECT version()").fetchone()[0]); c.close()' >> "$CAC_EVIDENCE_DIR/environment.txt"
+      - name: Initial migration and expected red security regression
+        run: |
+          python manage.py migrate foundation 0001 --noinput | tee "$CAC_EVIDENCE_DIR/migrate-initial.log"
+          set +e
+          python -m unittest tests.test_security.SecurityTests.test_actual_nonowner_roles_and_force_rls -v > "$CAC_EVIDENCE_DIR/red-before-security.log" 2>&1
+          result=$?
+          set -e
+          cat "$CAC_EVIDENCE_DIR/red-before-security.log"
+          printf '%s\n' "$result" > "$CAC_EVIDENCE_DIR/red-exit.txt"
+          test "$result" -eq 1
+          grep -q 'FAIL: test_actual_nonowner_roles_and_force_rls' "$CAC_EVIDENCE_DIR/red-before-security.log"
+      - name: Apply security migration and Django checks
+        run: |
+          python manage.py migrate --noinput | tee "$CAC_EVIDENCE_DIR/migrate-security.log"
+          python manage.py check | tee "$CAC_EVIDENCE_DIR/django-check.log"
+          python manage.py makemigrations --check --dry-run | tee "$CAC_EVIDENCE_DIR/migration-drift.log"
+          python manage.py showmigrations --plan > "$CAC_EVIDENCE_DIR/migration-graph.log"
+      - name: Real PostgreSQL nonowner tests before rollback
+        run: |
+          set +e
+          python -m unittest discover -s tests -p 'test_*.py' -v > "$CAC_EVIDENCE_DIR/tests-before-roundtrip.log" 2>&1
+          result=$?
+          cat "$CAC_EVIDENCE_DIR/tests-before-roundtrip.log"
+          printf '%s\n' "$result" > "$CAC_EVIDENCE_DIR/tests-before-exit.txt"
+          exit "$result"
+      - name: Rollback to zero and reapply exact schema policies and grants
+        run: python scripts/roundtrip.py | tee "$CAC_EVIDENCE_DIR/roundtrip.log"
+      - name: Real PostgreSQL tests again and Django ORM
+        run: |
+          set +e
+          python -m unittest discover -s tests -p 'test_*.py' -v > "$CAC_EVIDENCE_DIR/unittest.log" 2>&1
+          result=$?
+          cat "$CAC_EVIDENCE_DIR/unittest.log"
+          printf '%s\n' "$result" > "$CAC_EVIDENCE_DIR/test-exit.txt"
+          test "$result" -eq 0 || exit "$result"
+          set -e
+          CAC_DB_ROLE=cac_runtime python scripts/orm_smoke.py | tee "$CAC_EVIDENCE_DIR/orm.log"
+      - name: Remove private credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/cac-s007-runtime.json"
+      - name: Upload explicit noncredential evidence only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: s007-postgres-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            evidence-s007/tested-sha.txt
+            evidence-s007/pr-head-sha.txt
+            evidence-s007/environment.txt
+            evidence-s007/bootstrap.log
+            evidence-s007/migrate-initial.log
+            evidence-s007/red-before-security.log
+            evidence-s007/red-exit.txt
+            evidence-s007/migrate-security.log
+            evidence-s007/django-check.log
+            evidence-s007/migration-drift.log
+            evidence-s007/migration-graph.log
+            evidence-s007/tests-before-roundtrip.log
+            evidence-s007/tests-before-exit.txt
+            evidence-s007/roundtrip.log
+            evidence-s007/schema-snapshot.json
+            evidence-s007/unittest.log
+            evidence-s007/test-exit.txt
+            evidence-s007/orm.log
+          include-hidden-files: false
+          retention-days: 30
+          if-no-files-found: error
