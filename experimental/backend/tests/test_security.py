@@ -119,7 +119,7 @@ class SecurityTests(unittest.TestCase):
     def test_composite_store_fk_rejects_wrong_tenant(self):
         self.denied('INSERT INTO foundation.membership(id,tenant_id,store_id,principal_id,active) VALUES (%s,%s,%s,%s,true) RETURNING id',(str(UUID(int=201)),T2,S1,P1),role='postgres',sqlstate='23503',scoped=False)
     def test_composite_grant_fk_rejects_wrong_store(self):
-        self.denied("INSERT INTO foundation.scoped_grant(id,tenant_id,store_id,membership_id,capability) VALUES (%s,%s,%s,%s,'store.view') RETURNING id",(str(UUID(int=202)),T1,S2,M1),role='postgres',sqlstate='23503',scoped=False)
+        self.denied("INSERT INTO foundation.scoped_grant(id,tenant_id,store_id,membership_id,capability) VALUES (%s,%s,%s,%s,'store.manage') RETURNING id",(str(UUID(int=202)),T1,S2,M1),role='postgres',sqlstate='23503',scoped=False)
     def test_provisioner_insert_scope_and_rollback(self):
         t,s,m=[str(UUID(int=i)) for i in [301,302,303]]
         with connect('cac_provisioner') as c:
