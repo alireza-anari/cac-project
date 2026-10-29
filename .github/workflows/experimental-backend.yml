@@ -82,6 +82,8 @@ jobs:
           python manage.py check | tee "$CAC_EVIDENCE_DIR/django-check.log"
           python manage.py makemigrations --check --dry-run | tee "$CAC_EVIDENCE_DIR/migration-drift.log"
           python manage.py showmigrations --plan > "$CAC_EVIDENCE_DIR/migration-graph.log"
+      - name: Prove new regressions detect weakened controls in disposable DB
+        run: python scripts/regression_sensitivity.py | tee "$CAC_EVIDENCE_DIR/regression-sensitivity.log"
       - name: Real PostgreSQL nonowner tests before rollback
         run: |
           set +e
@@ -111,6 +113,7 @@ jobs:
         with:
           name: s007-postgres-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            evidence-s007/regression-sensitivity.log
             evidence-s007/tested-sha.txt
             evidence-s007/pr-head-sha.txt
             evidence-s007/environment.txt

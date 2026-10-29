@@ -14,4 +14,6 @@ CREATE TABLE cac_private.context_key (singleton boolean PRIMARY KEY CHECK (singl
 ALTER TABLE cac_private.context_key OWNER TO cac_owner;
 REVOKE ALL ON SCHEMA cac_private FROM PUBLIC,cac_runtime,cac_provisioner;
 REVOKE ALL ON TABLE cac_private.context_key FROM PUBLIC,cac_runtime,cac_provisioner;
-ALTER DEFAULT PRIVILEGES FOR ROLE cac_owner IN SCHEMA foundation REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+-- Global within this database for future functions created by cac_owner, in any schema.
+-- A per-schema REVOKE cannot cancel the global builtin PUBLIC EXECUTE default.
+ALTER DEFAULT PRIVILEGES FOR ROLE cac_owner REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;

@@ -2,8 +2,14 @@
 import json
 import os
 from pathlib import Path
-# No sessions/tokens use this key. A deployment must supply its own secret/config.
-SECRET_KEY = os.environ.get('CAC_DJANGO_SECRET', 'synthetic-check-only-not-a-deployment-key')
+from django.core.exceptions import ImproperlyConfigured
+# No real identity/session integration is authorized by this experiment.
+SECRET_KEY = os.environ.get('CAC_DJANGO_SECRET')
+if not SECRET_KEY:
+    if os.environ.get('CAC_EXPERIMENTAL_DISPOSABLE') == '1':
+        SECRET_KEY = 'synthetic-check-only-not-a-deployment-key'
+    else:
+        raise ImproperlyConfigured('CAC_DJANGO_SECRET is required outside explicit disposable tests')
 DEBUG = False
 ALLOWED_HOSTS = []
 INSTALLED_APPS = ['foundation']
