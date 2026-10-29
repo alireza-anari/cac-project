@@ -58,6 +58,8 @@ Observed failures preserved for traceability: run 40817238531 rejected YAML colo
 
 ## Independent review and residual risks
 
+S0-07 historical findings below are preserved as the original review record. See [S0-07B closure evidence](S0_07B_HANDOFF.md) for subsequent closure of S007-REV-01, S007-REV-02 and S007-SEC-03; other residual risks remain open. Architecture #9 subsequently authorized continued isolated experimentation only, not merge or canonical baseline acceptance.
+
 An independent read-only code-review agent reviewed the initial implementation, parsed 14 Python files and inspected 32 test definitions. It reported no Critical/Important defect found; it did **not** execute PostgreSQL or validate CI, and its review preceded the syntax/fixture fixes. It is an AI-assisted code review, not external security certification. Actual CI evidence above is separate.
 
 | ID | Severity / status | Finding, impact, mitigation / owner |

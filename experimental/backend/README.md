@@ -60,3 +60,9 @@ The test harness intentionally has the synthetic signing key and postgres fixtur
 ## Work evidence
 
 See [S0-07 handoff](../../docs/S0_07_HANDOFF.md) for verified commit, actual PostgreSQL CI, rollback/ORM results, independent review limitations and open findings. Draft PR #11 remains experimental; no historical or product gate is cleared.
+
+## S0-07B configuration and evidence
+
+Without `CAC_EXPERIMENTAL_DISPOSABLE=1`, a missing/empty `CAC_DJANGO_SECRET` now refuses settings import. The synthetic fallback is only for explicitly disposable tests. Future functions created by `cac_owner` have no PUBLIC EXECUTE by default in any schema of that database; grants must be explicit. Bootstrap is fresh-database-only, not an upgrade of existing environments.
+
+[Hardening handoff](../../docs/S0_07B_HANDOFF.md) supersedes the three S0-07 regression/default-privilege findings. CI also runs `python scripts/regression_sensitivity.py` in the disposable service: it temporarily weakens three controls, requires targeted assertion failures, restores catalog definitions in `finally`, then runs the full suite and rollback/reapply. Never use this harness against an existing or production database. Startup subprocess tests are configuration-only; security/ACL tests use actual PostgreSQL, not SQLite or mocks.

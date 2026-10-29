@@ -63,3 +63,13 @@ The reviewed, docs/audit-only source inventory was merged via [PR #8](https://gi
 ## S0-07 experimental new-origin foundation — 2026-10-29
 
 Source ID **CAC-NEW-ORIGIN-S0-07 / NEW_IMPLEMENTATION_EXPERIMENTAL**; implementation commit `741ee42471fea8c7a7a8780305eddcaeb9f72d31`, based on main `025931e0a612ff95c8165dec7c82af0d922b181a`. New Django/PostgreSQL code under `experimental/backend/`; no historical source archive imported or reconstructed. Draft [PR #11](https://github.com/alireza-anari/cac-project/pull/11) and [Work evidence/limitations](S0_07_HANDOFF.md). Real PostgreSQL foundation tests do not establish historical provenance or product integration. **SOURCE-001 and GATE-SOURCE remain BLOCKED**; Architecture #9 approval and security review are required before promotion.
+
+## S0-07 new-origin experimental source — Management review 2026-10-29
+
+- Source ID: `CAC-NEW-ORIGIN-S0-07`; status: `NEW_IMPLEMENTATION_EXPERIMENTAL`. Implementation branch `work/s0-07-new-origin-backend-foundation`; current PR head `ba8a2d8ce0aa0dc825b2a55c02f7f6d5c9278e16`; base `main` inspected at `025931e0a612ff95c8165dec7c82af0d922b181a`. See [Draft PR #11](https://github.com/alireza-anari/cac-project/pull/11) and [handoff](https://github.com/alireza-anari/cac-project/blob/ba8a2d8ce0aa0dc825b2a55c02f7f6d5c9278e16/docs/S0_07_HANDOFF.md).
+- Architecture ruling approved continuing isolated experimentation only; no canonical baseline, no merge/promotion and no historical provenance claim. [#9](https://github.com/alireza-anari/cac-project/issues/9) remains open as baseline acceptance gate.
+- Actual CI success at exact head: [push run 40922077422](https://github.com/alireza-anari/cac-project/actions/runs/40922077422); [PR synthetic-merge run 40922090129](https://github.com/alireza-anari/cac-project/actions/runs/40922090129). Work reports 32 distinct PostgreSQL tests executed twice with rollback/reapply, plus Django check, migration drift and nonowner ORM checks.
+- Management follow-up: [S0-07 security issue #12](https://github.com/alireza-anari/cac-project/issues/12). Open gaps include direct grant-to-other-principal regression, signed malformed-claim and max-TTL tests, function privilege regression, and fail-closed secret configuration. Real issuer/key custody, MFA/CSRF/session revocation, pooling, onboarding concurrency/audit remain future gates.
+- This source is **new code**, not recovered or reconstructed v3.37/v3.38/v3.39. `SOURCE-001 / GATE-SOURCE` remains **BLOCKED** and this experiment cannot clear it.
+
+S0-07B follow-up: the above Management review is a historical snapshot. See [hardening handoff](S0_07B_HANDOFF.md) for subsequent regression/default-privilege closure; all baseline/source gates remain unchanged.

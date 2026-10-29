@@ -1,6 +1,6 @@
 # NEW_IMPLEMENTATION_EXPERIMENTAL — contract inventory and proposed design
 
-Source identity: CAC-NEW-ORIGIN-S0-07. Issue #10 execution; Issue #9 Architecture acceptance pending. Historical SOURCE-001 remains BLOCKED. No legacy source is reconstructed.
+Source identity: CAC-NEW-ORIGIN-S0-07. Issue #10 execution; Issue #9 permits continued isolated experimentation; canonical baseline acceptance remains blocked. Historical SOURCE-001 remains BLOCKED. No legacy source is reconstructed.
 
 ## Definite requirements from available summaries
 
@@ -20,3 +20,13 @@ Tenant/store isolation, composite FKs, ENABLE/FORCE RLS, nonowner runtime withou
 Requester Work; approver CAC Architecture via #9. Schema diff: four new experimental tables, composite FK/unique constraints, active membership, two capability values and RLS roles/context function (see models and migrations). API diff: no endpoints; new internal DB/context interface only. Historical schema comparison is impossible without SOURCE-001 bytes.
 Security impact: separates login privileges and prevents unsigned SQL-context spoofing; trusted issuer/migration superuser remain powerful boundaries. Compatibility with missing Freeze and legacy schemas is unknown. Rejected alternatives: trusting unsigned GUC, shared owner/runtime account, treating SQLite behavior as PostgreSQL evidence.
 Acceptance proposal: nonowner isolation and role denial tests, context forgery/expiry/replay tests, constraint SQLSTATEs, rollback/reapply equality, review of key/issuer threat model, and Architecture signoff before any baseline promotion. This CR is implemented only as the user-authorized experiment, not approved for main/product use.
+
+## S0-07B hardening — #12
+
+No model, HTTP API, migration graph or business capability semantics changed. Existing role/context authorization rules are retained. The following fixes enforce their intended boundaries:
+
+- `cac_owner` default function EXECUTE privileges revoke PUBLIC **globally within the current disposable database**, for future functions created by that role in any schema. This does not change defaults for other creators/databases, nor retroactively change existing functions. `verified_context()` continues its explicit PUBLIC revoke and explicit runtime/provisioner grants. Future functions need explicit grants. Fresh bootstrap only; no existing environment is silently upgraded.
+- `CAC_DJANGO_SECRET` is required unless `CAC_EXPERIMENTAL_DISPOSABLE` is exactly `1`; missing/empty key otherwise raises ImproperlyConfigured. The fixed synthetic fallback is restricted to explicit disposable execution. Supplying a key does not authorize deployment or establish identity/session security.
+- Direct cross-principal grant denial, signed missing/null/malformed claims, expiry limit, PUBLIC verifier ACL, future-function default ACL and startup configuration now have regressions. No unsigned-context or tenant/store assertion was weakened.
+
+See [S0-07B handoff](../../../docs/S0_07B_HANDOFF.md) for exact implementation/tested commit and evidence. The final-head receipt in [Issue #12](https://github.com/alireza-anari/cac-project/issues/12) records both push and synthetic-merge SHAs/runs after the documentation commit (avoiding a self-referential commit SHA). Architecture #9 approves experiments only; canonical baseline, historical source and product gates remain blocked. All issuer/key, MFA/CSRF/session revocation, pooling, provisioning/audit and concurrency decisions above remain PROPOSED/unimplemented.
