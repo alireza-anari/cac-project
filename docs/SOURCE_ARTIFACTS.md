@@ -75,3 +75,10 @@ The reviewed, docs/audit-only source inventory was merged via [PR #8](https://gi
 - Management verified final-head [push CI 40925350556](https://github.com/alireza-anari/cac-project/actions/runs/40925350556) and [PR synthetic-merge CI 40925362772](https://github.com/alireza-anari/cac-project/actions/runs/40925362772); 43 distinct tests twice, role-scoped negative tests, 3 deliberately weakened security controls detected, rollback/reapply equality and nonowner ORM PASS. 39 are PostgreSQL authorization tests; 4 are configuration subprocess tests.
 - [S0-07B handoff at exact head](https://github.com/alireza-anari/cac-project/blob/a27eab0e978c6c60d54fab45b9f467ebd7ddff56/docs/S0_07B_HANDOFF.md). Security regression follow-up [#12](https://github.com/alireza-anari/cac-project/issues/12) is completed in narrow scope; review recorded on PR #11.
 - **No merge to main, no accepted canonical backend baseline**. [#9](https://github.com/alireza-anari/cac-project/issues/9) remains the architecture acceptance gate; [S0-08 #13](https://github.com/alireza-anari/cac-project/issues/13) is a docs-only trusted-identity/context/onboarding architecture mission. Historical `SOURCE-001 / GATE-SOURCE` remains BLOCKED.
+
+
+## S0-08 governance-only source record — 2026-10-30
+
+- The reviewed docs-only [PR #14](https://github.com/alireza-anari/cac-project/pull/14) was merged at `b0fdfad80a7ccc470a70cf3ed855b18282dc7dda`. Content: eight `docs/s0-08/` Markdown design files, **not executable product source**, no migration/API/schema change.
+- The authoritative [scoped S0-08 Architecture decision](architecture/S0_08_ARCHITECTURE_RULING.md) approves only the stated experimental directions/invariants; the S0-08 proposals are not automatically canonical contracts. A synthetic test-only protocol evaluation is tracked at [#15](https://github.com/alireza-anari/cac-project/issues/15).
+- Historical `v3.37/v3.38/v3.39` source is still unrecovered; new-origin experimental PR #11 remains Draft and unmerged. `SOURCE-001 / GATE-SOURCE` remains BLOCKED, `NEW_BASELINE_ACCEPTED` is **not** granted, and no deployment is authorized.
