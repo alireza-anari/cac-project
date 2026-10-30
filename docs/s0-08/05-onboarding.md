@@ -1,0 +1,49 @@
+# Provisioning, invitation, revocation and audit contracts
+
+**PROPOSED — ADR-08-04 / CR-08-04/05. No integration is implemented.** Preserve standalone SEC-REV-001 observable behavior while separating actor from target. Existing experimental provisioner only allows own-principal insert, so simply copying standalone calls into it is forbidden.
+
+## Command and schema inventory
+
+Conceptual commands (not new public routes): `provision_first_store`, `issue_invitation`, `accept_invitation`, `cancel_invitation`, `revoke_capability`. Inputs include requested scope, normalized payload, opaque idempotency key and resource precondition where applicable. Actor/session/MFA come exclusively from trusted context. All commands use the [transaction/guard order](04-transactions-pooling.md).
+
+| Proposed records / invariant | Difference from available code |
+|---|---|
+| Explicit protected owner relationship, principal UUID mapping, active membership, revocable grants | Standalone integer IDs and tenant-level membership differ from experimental UUID/store membership; conversion unresolved |
+| Principal/session/Store authorization guards and epochs | Absent from PR #11; required for proposed revocation ordering |
+| Invitation id, tenant/store/target/inviter FKs, canonical capabilities, token digest, expiry, issued/accepted/revoked timestamps, version | Absent in experimental schema; preserve immutable target/scope and mutually exclusive terminal transitions |
+| Idempotency record with actor, scope, command, key hash, normalized request digest, status/result reference | Unique `(actor,scope,command,key_hash)`; no secret result stored in plaintext |
+| Audit event and outbox rows with event/idempotency correlation, monotonic scoped sequence | Absent experimentally; business success must commit with both |
+
+Require composite tenant/store/principal/membership constraints for every scoped relationship and indexes supporting exact revoke selection. Do not infer nullable actor/target meanings. Target UUID can differ from actor only through an approved onboarding command, with current authority checked; direct provisioner cross-principal INSERT remains denied. Owner capability revocation/transfer remains denied in this proposal. New capability vocabulary must be reconciled with standalone `OWNER_CAPABILITIES`, `HIGH_RISK`, `MANAGER_DELEGABLE`; no blind mapping of `store.manage` to all member-management privileges.
+
+## First-store provisioning
+
+Verified active principal, fresh MFA and explicit enrollment eligibility precede provisioning. Under principal/session guards, uniquely create or lock a provisioning-intent key; generate IDs server-side, then create Tenant, Store, protected owner relationship, membership, reviewed owner capabilities, Store guard, audit and outbox in one transaction. Any constraint/audit/outbox failure rolls back all. Public Live remains disabled; owner registration does not pass contact/domain/knowledge gates. Duplicate same key/body returns original committed resource after current authorization; same key/different body conflicts. Concurrent different keys cannot bypass the product first-store eligibility invariant (propose unique completed first-store enrollment per principal; multi-store entitlement requires a separate decision). No network provider call in this transaction.
+
+## Invitations and acceptance
+
+Issue only to an already verified active immutable principal, as the standalone V1 requires; email-only invitation and automatic principal creation are not included. Require actor's current members-management authority and permitted delegated subset. High-risk operations require fresh MFA and owner/delegability rules. Canonicalize capabilities server-side; no unreviewed capability string accepted. Proposed TTL retains standalone 1..72 hours, default 24, subject to Architecture confirmation.
+
+Generate at least 256 random token bits; store cryptographic digest, never plaintext in invitation/audit logs. Token is single-use authorization *evidence*, not identity. Deliver once after commit via authorized channel; no raw token in response/idempotency replay. This differs from standalone's returned token and requires CR-08-04. To survive crashes before delivery, outbox may hold a separately encrypted token envelope accessible only to delivery worker, erased on delivery or expiry; if approved secure custody is absent, delivery stays BLOCKED. Retries reuse the same event/envelope, not mint replacement tokens silently.
+
+Acceptance authenticates verified target principal, checks CSRF, binds token and invitation target/scope, locks relevant principal/session guards and Store guard, then invitation. Recheck digest, expiry, pending state, current inviter active status/authority/delegable subset and actor session. Inviter's issuance-time MFA is recorded; do not require inviter to stay logged in until acceptance. Proposed addition: target must have fresh MFA when accepting high-risk capabilities (explicit behavioral CR). Create/reactivate only intended membership/grants and mark accepted atomically with audit/outbox. A revoked/deactivated principal is not reactivated by an invitation. Existing unrelated grants remain unchanged.
+
+Already accepted token with a different idempotency key is denied generically. Same accepted request key may return its previous result after current target/session authorization, with no fresh grant creation and no token disclosure. Thus a prior successful response cannot resurrect later revoked grants. If client response was lost, this replay confirms history, not present authority; current capability query is separate.
+
+## SEC-REV-001 semantics and linearization
+
+`revoke_capability(actor, Store, target, cap)` must preserve ownership/delegability/fresh-MFA checks. Under Store guard, deactivate active matching grants **and revoke all pending invitations for the same target and Store containing cap**, including zero-active-grant case. Multi-capability invitations are invalidated as whole invitations; do not partially rewrite their capabilities. Preserve unrelated target/Store/cap invitations and other existing grants. Match pending as accepted_at and revoked_at both null; expired-but-pending matching rows may be marked revoked as in the standalone behavior.
+
+One effective CAPABILITY_REVOKED business event if grants or invitations changed, including pending-only revocation. No effective change: no duplicate success event and no timestamp churn; a separate attempt/security record may exist and is not a business success. Repeated revoke never restores an invitation. Failure of business audit/outbox insert rolls back grant and invitation changes. Accepted invitation history is preserved; a subsequent revoke deactivates its resulting grant without rewriting it as a pending invitation.
+
+Revoke and accept share the Store guard even when no grant row exists; locking grants alone cannot fix pending-only races. If accept commits first, revoke removes its grant; if revoke commits first, accept fails on the old invitation. New authorized issue **after** revoke remains allowed. Concurrent issue/revoke is ordered by that same Store guard: issue-first invitation is included in revoke; revoke-first issue may create a new invitation. This ordering is a new explicit proposal, not a permanent ban/tombstone on future invitations. Authorization changes of the inviter use the same guard; all paths recheck after waiting.
+
+## Idempotency, errors, audit and outbox
+
+Propose 24-hour minimum idempotency retention for browser mutations, coordinated with maximum retry horizon; final retention is D-06. Expiring a key never makes an old invitation valid. First-store uniqueness and accepted/revoked state provide permanent business dedupe. Persist canonical request digest/result reference atomically, compare after locks; reject changed payload or precondition. `If-Match` is required for versioned management changes (issue/cancel/revoke as applicable); exact resource version and initial-provision semantics require CR. Replayed stale precondition may return the recorded same-request result only after current authorization, not execute again.
+
+Error proposal, not OpenAPI edits: unauthenticated 401; CSRF/unauthorized 403; malformed input 400; uniform invalid/unavailable invite 404 for callers without entitlement; same-key changed-body/version conflict 409/412; rate limit 429; transient dependency failure 503. Do not distinguish wrong tenant, token mismatch, unknown invite or target existence to an unauthorized caller. Review these mappings with pending CR-S0-05-001; no route or success status is redefined by this document. Log internal reason codes without revealing them in public errors.
+
+Business audit fields: unique event id, scoped tenant/store, actor/target opaque IDs, operation, affected capability/invitation references, effective counts, request/idempotency correlation, committed sequence and server timestamp. No session/token/signature, secret, transcript or unnecessary email. App roles cannot UPDATE/DELETE audit. Sanitized denied-attempt security events are separate and may survive business rollback; they must not say success. An audit write failure fails the mutation closed.
+
+Outbox delivery is at-least-once with event-id dedupe at consumer, claim lease/attempt count/backoff/dead-letter policy and scoped worker permissions. A crash after sending before acknowledgment may duplicate delivery; do not promise exactly-once email. Recheck invitation validity before dispatch where practical, and always on acceptance; delivery of a subsequently revoked link cannot restore authority. Business commit is not delivery success. Logs, encrypted delivery payload, security audit and backup retention each require explicit retention approval (D-06); visitor transcript 30-day rule must not be copied indiscriminately to security records.
