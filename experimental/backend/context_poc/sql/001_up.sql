@@ -91,7 +91,7 @@ EXCEPTION WHEN SQLSTATE 'PZ001' THEN RAISE; WHEN OTHERS THEN RAISE EXCEPTION 'de
 END $$;
 CREATE FUNCTION poc.authorize(action_arg text,target_arg uuid,body_arg jsonb) RETURNS bool LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,poc_private AS $$
 DECLARE c jsonb;
-BEGIN c=poc.verify();IF c->>'action'<>action_arg OR c->>'target'<>target_arg::text OR c->>'digest'<>encode(public.digest(body_arg::text,'sha256'),'hex') THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;RETURN true;END $$;
+BEGIN c=poc.verify();IF action_arg IS NULL OR target_arg IS NULL OR body_arg IS NULL OR c->>'action'<>action_arg OR c->>'target'<>target_arg::text OR c->>'digest'<>encode(public.digest(body_arg::text,'sha256'),'hex') THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;RETURN true;END $$;
 CREATE FUNCTION poc.read_scope() RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,poc_private AS $$
 DECLARE c jsonb;
 BEGIN c=poc.verify();IF c->>'action'<>'read' OR c->>'digest'<>encode(public.digest('{}'::jsonb::text,'sha256'),'hex') THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;RETURN (c->>'store')::uuid;END $$;
