@@ -1,0 +1,2 @@
+DROP SCHEMA poc CASCADE;
+DROP SCHEMA poc_private CASCADE;
