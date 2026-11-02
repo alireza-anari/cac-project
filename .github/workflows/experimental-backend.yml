@@ -108,6 +108,8 @@ jobs:
         run: |
           python -m context_poc.migrate bootstrap
           python -m context_poc.migrate up | tee "$CAC_EVIDENCE_DIR/poc-migrate.log"
+          python -m unittest context_poc.tests.test_context.ContextTests.test_action_target_digest_binding -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-binding.log"
+          python -m context_poc.sensitivity | tee "$CAC_EVIDENCE_DIR/poc-sensitivity.log"
           python -m unittest discover -s context_poc/tests -p 'test_*.py' -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-tests-before.log"
           python -m context_poc.roundtrip | tee "$CAC_EVIDENCE_DIR/poc-roundtrip.log"
           python -m unittest discover -s context_poc/tests -p 'test_*.py' -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-tests-after.log"
@@ -120,6 +122,8 @@ jobs:
         with:
           name: s007-postgres-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            evidence-s007/poc-binding.log
+            evidence-s007/poc-sensitivity.log
             evidence-s007/poc-migrate.log
             evidence-s007/poc-tests-before.log
             evidence-s007/poc-tests-after.log

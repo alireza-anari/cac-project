@@ -12,6 +12,7 @@ root=Path(__file__).parent/'sql'
 mode=sys.argv[1]
 with connect('postgres') as c:
     if mode=='bootstrap':
+        c.execute('ALTER DATABASE cac_s007_test SET log_parameter_max_length_on_error=0')
         for role in ['cac_ctx_owner','cac_ctx_guard','cac_ctx_runtime','cac_ctx_issuer','cac_ctx_identity']:
             login=role not in ['cac_ctx_owner','cac_ctx_guard']
             c.execute(sql.SQL('CREATE ROLE {} {} NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS').format(sql.Identifier(role),sql.SQL('LOGIN' if login else 'NOLOGIN')))

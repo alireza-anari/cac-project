@@ -34,10 +34,10 @@ class ContextTests(unittest.TestCase):
                 with self.subTest(kw=kw),self.assertRaises(psycopg.errors.InsufficientPrivilege):issue(h,**kw)
             self.deny(c,'SELECT poc.issue(%s,%s,%s,%s,%s,%s)',(h,'invalid',S1,'read',P1,Jsonb({})))
     def test_action_target_digest_binding(self):
-        for args in [('read',P1,{}),('probe',P2,{'x':1}),('probe',P1,{'x':2})]:
+        for args in [(None,None,None),(None,P1,{'x':1}),('probe',None,{'x':1}),('probe',P1,None),('read',P1,{}),('probe',P2,{'x':1}),('probe',P1,{'x':2})]:
             with self.subTest(args=args),connect() as c:
                 self.token(c,action='probe',body={'x':1})
-                self.deny(c,'SELECT poc.authorize(%s,%s,%s)',(args[0],args[1],Jsonb(args[2])))
+                self.deny(c,'SELECT poc.authorize(%s,%s,%s)',(args[0],args[1],Jsonb(args[2]) if args[2] is not None else None))
         with connect() as c:
             self.token(c,action='probe',body={'x':1})
             self.assertEqual(c.execute('SELECT poc.authorize(%s,%s,%s)',('probe',P1,Jsonb({'x':1}))).fetchone(),(True,))
@@ -149,9 +149,73 @@ class ContextTests(unittest.TestCase):
             self.token(c,store=S2);self.assertEqual([str(r[0]) for r in c.execute('SELECT store FROM poc.records')],[S2]);c.rollback();self.deny(c)
     def test_retention_real_elapsed_savepoint_attack(self):
         with connect() as c:
-            c.execute('SAVEPOINT original');h=challenge(c);self.token(c);c.execute('ROLLBACK TO SAVEPOINT original')
+            c.execute('SAVEPOINT original');h=challenge(c);old=self.token(c);c.execute('ROLLBACK TO SAVEPOINT original')
             print('RETENTION real120s interval started',flush=True)
             time.sleep(121)
             with connect('cac_ctx_issuer') as issuer:self.assertEqual(issuer.execute('SELECT poc.purge_ledger()').fetchone(),(1,))
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):issue(h,store=S2)
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):issue(challenge(c),store=S2)
+            install(c,old);self.deny(c)
+    def sign_fixture(self,claims,kind='context'):
+        # Trusted administrator fault injection only, never exposed to web/issuer roles.
+        with connect('postgres') as r:return r.execute('SELECT poc_private.pack(%s,%s)',(Jsonb(claims),kind)).fetchone()[0]
+    def test_signed_malformed_expiry_and_bindings(self):
+        for field,value in [('v',3),('aud','other'),('principal',P2),('store',S2),('action','probe'),('target',P2),('digest','00'),('pid',0),('tx','0'),('session',U2),('pe',None),('exp',0),('iat',10**20)]:
+            with self.subTest(field=field),connect() as c:
+                token=self.token(c);claims=json.loads(bytes.fromhex(token.split('.')[0]));claims[field]=value
+                install(c,self.sign_fixture(claims));self.deny(c)
+        with connect() as c:
+            token=self.token(c);claims=json.loads(bytes.fromhex(token.split('.')[0]));claims['exp']=claims['iat']+61
+            install(c,self.sign_fixture(claims));self.deny(c)
+    def test_duplicate_claims_and_key_separation(self):
+        with connect() as c:
+            token=self.token(c);raw=bytes.fromhex(token.split('.')[0]).decode();raw=raw[:-1]+', "principal": "'+P2+'"}'
+            with connect('postgres') as r:
+                forged=r.execute("SELECT encode(convert_to(%s,'UTF8'),'hex')||'.'||encode(public.hmac(convert_to(%s,'UTF8'),secret,'sha256'),'hex') FROM poc_private.keys WHERE kind='context' AND state='active'",(raw,raw)).fetchone()[0]
+            install(c,forged);self.deny(c)
+        with connect() as c:
+            token=self.token(c);claims=json.loads(bytes.fromhex(token.split('.')[0]))
+            install(c,self.sign_fixture(claims,'challenge'));self.deny(c)
+    def test_challenge_forgery_and_revocation(self):
+        with connect() as c:
+            h=challenge(c)
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):issue(h[:-1]+('0' if h[-1]!='0' else '1'))
+            t=issue(h)
+            with connect('postgres') as r:r.execute("UPDATE poc_private.keys SET state='revoked' WHERE kind='challenge'")
+            install(c,t);self.deny(c)
+    def test_ledger_timeout_fails_closed(self):
+        with connect() as c,connect('postgres') as locker:
+            h=challenge(c);locker.execute('LOCK TABLE poc_private.ledger IN ACCESS EXCLUSIVE MODE')
+            with connect('cac_ctx_issuer') as issuer:
+                issuer.execute("SET LOCAL lock_timeout='100ms'")
+                with self.assertRaises(psycopg.Error):issuer.execute('SELECT poc.issue(%s,%s,%s,%s,%s,%s)',(h,CFG['poc_proofs'][0],S1,'read',P1,Jsonb({})))
+            locker.rollback()
+            with connect('postgres') as r:self.assertEqual(r.execute('SELECT count(*) FROM poc_private.ledger').fetchone(),(0,))
+            self.token(c);self.assertEqual(c.execute('SELECT count(*) FROM poc.records').fetchone(),(1,))
+    def test_active_principal_session_epoch_only_denied(self):
+        for table in ['principals','sessions']:
+            seed()
+            with self.subTest(table=table),connect() as c:
+                self.token(c)
+                with connect('postgres') as r:r.execute('UPDATE poc_private.'+table+' SET epoch=epoch+1')
+                self.deny(c);c.rollback()
+                self.token(c);self.assertEqual(c.execute('SELECT count(*) FROM poc.records').fetchone(),(1,))
+    def test_principal_and_store_guard_blocking(self):
+        for kind,id in [('principal',P1),('store',S1)]:
+            seed()
+            with self.subTest(kind=kind),connect() as c:
+                self.token(c);c.execute('SELECT * FROM poc.records').fetchall();pid=c.info.backend_pid
+                with connect('cac_ctx_identity') as r,concurrent.futures.ThreadPoolExecutor(1) as pool:
+                    future=pool.submit(r.execute,'SELECT poc.revoke(%s,%s)',(kind,id))
+                    try:
+                        with connect('postgres') as observer:
+                            deadline=time.monotonic()+2
+                            while pid not in observer.execute('SELECT pg_blocking_pids(%s)',(r.info.backend_pid,)).fetchone()[0]:
+                                if time.monotonic()>deadline:raise AssertionError('Missing '+kind+' lock witness')
+                                time.sleep(.01)
+                        print('LOCK WITNESS',kind,pid,'blocks',r.info.backend_pid,flush=True)
+                    finally:c.commit()
+                    future.result(timeout=2);r.commit()
+                if kind=='principal':
+                    with self.assertRaises(psycopg.errors.InsufficientPrivilege):issue(challenge(c))
+                else:self.token(c);self.assertEqual(c.execute('SELECT count(*) FROM poc.records').fetchone(),(1,))
