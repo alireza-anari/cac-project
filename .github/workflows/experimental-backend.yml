@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
   push:
-    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc]
+    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc, work/s0-09b-issuer-pool-recovery-poc]
     paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
   workflow_dispatch:
 permissions:
@@ -14,7 +14,7 @@ concurrency:
 jobs:
   postgres-security:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       postgres:
         # Official postgres:17.11-bookworm manifest digest verified from registry.
@@ -113,15 +113,34 @@ jobs:
           python -m unittest discover -s context_poc/tests -p 'test_*.py' -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-tests-before.log"
           python -m context_poc.roundtrip | tee "$CAC_EVIDENCE_DIR/poc-roundtrip.log"
           python -m unittest discover -s context_poc/tests -p 'test_*.py' -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-tests-after.log"
+      - name: Install pinned experimental PgBouncer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pgbouncer=1.22.0-1build4
+          test "$(dpkg-query -W -f='${Version}' pgbouncer)" = '1.22.0-1build4'
+          /usr/sbin/pgbouncer --version | tee "$CAC_EVIDENCE_DIR/s009b-versions.log"
+      - name: Process pool recovery adversarial proof
+        env:
+          CAC_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          sudo --preserve-env=CAC_TEST_CONFIG,CAC_EVIDENCE_DIR,CAC_EXPERIMENTAL_DISPOSABLE,CAC_POSTGRES_CONTAINER,PYTHONPATH,PYTHONDONTWRITEBYTECODE,PATH "$(which python)" -m pool_recovery.run 2>&1 | tee "$CAC_EVIDENCE_DIR/s009b.log"
+      - name: Scan explicit evidence before upload
+        id: credential-scan
+        if: always()
+        env:
+          CAC_SCAN_PATH: ${{ env.CAC_EVIDENCE_DIR }}
+        run: python -m pool_recovery.scan_evidence
       - name: Remove private credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/cac-s007-runtime.json"
       - name: Upload explicit noncredential evidence only
-        if: always()
+        if: always() && steps.credential-scan.outputs.safe == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: s007-postgres-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            evidence-s007/s009b.log
+            evidence-s007/s009b-versions.log
             evidence-s007/poc-binding.log
             evidence-s007/poc-sensitivity.log
             evidence-s007/poc-migrate.log
