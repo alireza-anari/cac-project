@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
   push:
-    branches: [work/s0-07-new-origin-backend-foundation]
+    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc]
     paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
   workflow_dispatch:
 permissions:
@@ -104,6 +104,15 @@ jobs:
           test "$result" -eq 0 || exit "$result"
           set -e
           CAC_DB_ROLE=cac_runtime python scripts/orm_smoke.py | tee "$CAC_EVIDENCE_DIR/orm.log"
+      - name: Synthetic context PoC migration and attacks
+        run: |
+          python -m context_poc.migrate bootstrap
+          python -m context_poc.migrate up | tee "$CAC_EVIDENCE_DIR/poc-migrate.log"
+          python -m unittest context_poc.tests.test_context.ContextTests.test_action_target_digest_binding -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-binding.log"
+          python -m context_poc.sensitivity | tee "$CAC_EVIDENCE_DIR/poc-sensitivity.log"
+          python -m unittest discover -s context_poc/tests -p 'test_*.py' -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-tests-before.log"
+          python -m context_poc.roundtrip | tee "$CAC_EVIDENCE_DIR/poc-roundtrip.log"
+          python -m unittest discover -s context_poc/tests -p 'test_*.py' -v 2>&1 | tee "$CAC_EVIDENCE_DIR/poc-tests-after.log"
       - name: Remove private credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/cac-s007-runtime.json"
@@ -113,6 +122,13 @@ jobs:
         with:
           name: s007-postgres-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            evidence-s007/poc-binding.log
+            evidence-s007/poc-sensitivity.log
+            evidence-s007/poc-migrate.log
+            evidence-s007/poc-tests-before.log
+            evidence-s007/poc-tests-after.log
+            evidence-s007/poc-roundtrip.log
+            evidence-s007/poc-schema.json
             evidence-s007/regression-sensitivity.log
             evidence-s007/tested-sha.txt
             evidence-s007/pr-head-sha.txt
