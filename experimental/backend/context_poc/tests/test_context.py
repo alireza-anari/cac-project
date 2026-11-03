@@ -111,13 +111,15 @@ class ContextTests(unittest.TestCase):
             with connect('cac_ctx_identity') as revoker,concurrent.futures.ThreadPoolExecutor(1) as pool:
                 rp=revoker.info.backend_pid
                 future=pool.submit(revoker.execute,'SELECT poc.revoke(%s,%s)',('session',U1))
-                with connect('postgres') as observer:
-                    deadline=time.monotonic()+2
-                    while pid not in observer.execute('SELECT pg_blocking_pids(%s)',(rp,)).fetchone()[0]:
-                        if time.monotonic()>deadline:raise AssertionError('No blocking witness')
-                        time.sleep(.01)
-                print('LOCK WITNESS runtime',pid,'blocks identity',rp,flush=True)
-                c.commit();future.result(timeout=2);revoker.commit()
+                try:
+                    with connect('postgres') as observer:
+                        deadline=time.monotonic()+2
+                        while pid not in observer.execute('SELECT pg_blocking_pids(%s)',(rp,)).fetchone()[0]:
+                            if time.monotonic()>deadline:raise AssertionError('No blocking witness')
+                            time.sleep(.01)
+                    print('LOCK WITNESS runtime',pid,'blocks identity',rp,flush=True)
+                finally:c.commit()
+                future.result(timeout=2);revoker.commit()
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):issue(challenge(c))
     def test_key_rotation_revoke_and_generation(self):
         with connect() as c:

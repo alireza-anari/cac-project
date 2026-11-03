@@ -73,3 +73,7 @@ Source ID **CAC-NEW-ORIGIN-S0-07 / NEW_IMPLEMENTATION_EXPERIMENTAL**; implementa
 - This source is **new code**, not recovered or reconstructed v3.37/v3.38/v3.39. `SOURCE-001 / GATE-SOURCE` remains **BLOCKED** and this experiment cannot clear it.
 
 S0-07B follow-up: the above Management review is a historical snapshot. See [hardening handoff](S0_07B_HANDOFF.md) for subsequent regression/default-privilege closure; all baseline/source gates remain unchanged.
+
+## S0-09A experimental provenance (not historical source recovery)
+
+`work/s0-09a-trusted-context-poc`, stacked Draft PR #16, derives from PR #11 commit `a27eab0e978c6c60d54fab45b9f467ebd7ddff56`. Added `experimental/backend/context_poc/` is new synthetic code under `CAC-NEW-ORIGIN-S0-07 / NEW_IMPLEMENTATION_EXPERIMENTAL`; no v3.37/v3.38/v3.39 bytes were recovered. SOURCE-001 / GATE-SOURCE remain BLOCKED. See the PoC README and PR #16 evidence receipt for actual tested commit/run references. No historical ZIP hash is claimed for this Git-origin experiment.

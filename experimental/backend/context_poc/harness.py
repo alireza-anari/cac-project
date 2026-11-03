@@ -11,8 +11,12 @@ def connect(role='cac_ctx_runtime'):
 def challenge(c): return c.execute('SELECT poc.challenge()').fetchone()[0]
 def issue(h,store=S1,action='read',target=P1,body=None,proof=None):
     # Dedicated login and independent COMMIT before returning any envelope.
-    with connect('cac_ctx_issuer') as c:
+    c=connect('cac_ctx_issuer')
+    try:
+      with c:
         token=c.execute('SELECT poc.issue(%s,%s,%s,%s,%s,%s)',(h,proof or CFG['poc_proofs'][0],store,action,target,Jsonb(body or {}))).fetchone()[0]
+    finally:
+        c.close()  # Also close when a deferred constraint rejects COMMIT.
     return token
 
 def install(c,token): c.execute("SELECT set_config('cac.poc_context',%s,true)",(token,))
