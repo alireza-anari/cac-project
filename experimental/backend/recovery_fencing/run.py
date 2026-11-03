@@ -6,10 +6,10 @@ from recovery_fencing.lab import Lab,ROOT
 
 def suite():
     tests=unittest.defaultTestLoader.discover('recovery_fencing/tests','test_*.py')
-    assert tests.countTestCases()==19
+    assert tests.countTestCases()==20
     r=unittest.TextTestRunner(verbosity=2).run(tests)
     if not r.wasSuccessful() or r.skipped:raise SystemExit(1)
-    print('S009C SUITE PASS 19 distinct; no skip',flush=True)
+    print('S009C SUITE PASS 20 distinct; no skip',flush=True)
 
 def snapshot(lab):
     with lab.connect() as c:

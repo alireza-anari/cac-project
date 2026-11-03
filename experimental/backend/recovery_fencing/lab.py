@@ -41,6 +41,7 @@ def bootstrap():
             c.execute('GRANT USAGE ON SCHEMA public TO cac_ctx_guard')
             c.execute('CREATE EXTENSION dblink WITH SCHEMA public')
             node['sid']=c.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0]
+            print('HBA self-link witness',name,c.execute("SELECT type,address,auth_method FROM pg_hba_file_rules WHERE address='127.0.0.1'").fetchall(),flush=True)
         path.unlink()
     anchor={'connection':dict(host='127.0.0.1',port=5434,dbname='cac_s009c_anchor'),'password':secrets.token_urlsafe(48),'container':os.environ['CAC_C_C_CONTAINER']}
     with psycopg.connect(**anchor['connection'],user='postgres',password='synthetic-s009c-disposable-only') as c:
@@ -123,7 +124,7 @@ class Lab:
     def bind(self,name):
         n=self.cfg[name]
         anchor=make_conninfo(host='anchor',port=5432,dbname='cac_s009c_anchor',user=n['anchor_role'],password=n['anchor_password'],connect_timeout=2,options='-c statement_timeout=1500 -c lock_timeout=1000')
-        ack=make_conninfo(host='127.0.0.1',port=5432,dbname='cac_s007_test',user='cac_fence_ack',password=n['passwords']['cac_fence_ack'],connect_timeout=2,options='-c statement_timeout=1500')
+        ack=make_conninfo(host='primary' if name=='A' else 'restore',port=5432,dbname='cac_s007_test',user='cac_fence_ack',password=n['passwords']['cac_fence_ack'],connect_timeout=2,options='-c statement_timeout=1500')
         with self.connect(name) as c:
             c.execute('DELETE FROM fence_private.config')
             c.execute('INSERT INTO fence_private.config VALUES(true,%s,%s,%s,%s,%s,%s)',(n['instance'],n['sid'],self.cfg['C']['sid'],anchor,ack,bytes.fromhex(n['fence_secret'])))

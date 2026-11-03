@@ -66,6 +66,17 @@ class FencingTests(unittest.TestCase):
         with self.assertRaises(FenceDenied):self.a.activate(2,req)
         self.assertEqual(self.b.status()['epoch'],2);self.assertEqual(r['epoch'],1)
 
+    def test_self_link_must_use_authenticated_bridge_not_trust_loopback(self):
+        r=self.a.reserve(0,str(uuid4()))
+        with self.a.local('cac_fence_activator') as c:c.execute('SELECT fence.apply(%s,%s,%s)',(r['epoch'],r['generation'],r['request']))
+        with self.lab.connect() as c:
+            conn=c.execute('SELECT ack_conn FROM fence_private.config').fetchone()[0]
+            c.execute("SET LOCAL ROLE cac_ctx_guard")
+            bad=conn.replace('host=primary','host=127.0.0.1')
+            with self.assertRaises(psycopg.Error) as error:c.execute("SELECT * FROM public.dblink(%s,'SELECT fence.committed_state()') AS response(r jsonb)",(bad,)).fetchall()
+            print('ACK self-link rejected unsafe trust authentication SQLSTATE',error.exception.sqlstate,flush=True)
+        with self.a.local('cac_fence_activator') as c:self.assertTrue(c.execute('SELECT fence.ack(%s,%s)',(r['epoch'],r['request'])).fetchone()[0])
+
     def test_apply_ack_requires_independently_committed_state(self):
         r=self.a.reserve(0,str(uuid4()))
         with self.a.local('cac_fence_activator') as c:
