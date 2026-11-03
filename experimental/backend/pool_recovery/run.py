@@ -16,6 +16,8 @@ def suite():
 
 assert os.geteuid()==0 and os.environ.get('CAC_EXPERIMENTAL_DISPOSABLE')=='1'
 assert CFG['connection']['dbname']=='cac_s007_test'
+from pool_recovery.rotate_admin import rotate
+rotate()
 with connect('postgres') as c:
     print(c.execute('SELECT version()').fetchone()[0],flush=True)
     rows=c.execute("SELECT n.nspname,p.proname,p.prosecdef,p.proconfig,pg_get_userbyid(p.proowner),p.proacl::text FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('poc','poc_private') ORDER BY 1,2").fetchall()

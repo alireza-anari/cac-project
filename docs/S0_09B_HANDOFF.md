@@ -1,4 +1,4 @@
-# S0-09B architecture handoff — evidence in progress
+# S0-09B architecture handoff
 
 **NEW_IMPLEMENTATION_EXPERIMENTAL / PROTOCOL_PROPOSED**. Issue #17,
 [stacked Draft PR #18](https://github.com/alireza-anari/cac-project/pull/18),
@@ -23,7 +23,7 @@ See [reproduction and test matrix](../experimental/backend/pool_recovery/README.
 [residual P0/P1 risks](../experimental/backend/pool_recovery/RISKS.md), and
 [proposed CR/ADR decisions](changes/CR-S0-09B-001-recovery-pool-contract.md).
 
-## Initial evidence (not final acceptance)
+## Reproduction and failure history
 
 [Initial push 41581543249](https://github.com/alireza-anari/cac-project/actions/runs/41581543249)
 on `f22dd2556fa24cd087bd790b0d8faf98cff74d46` failed at child process startup.
@@ -70,4 +70,68 @@ missed; no TTL was extended. General service admission/DoS stays a residual P1.
 The independent review was static; fixes are validated by execution, with no
 claim of external security certification or independent database execution.
 
-Final-head receipts and acceptance status remain pending actual green CI.
+## Administrator-boundary regression
+
+[Focused green 41582991340](https://github.com/alireza-anari/cac-project/actions/runs/41582991340)
+on `914a46d078928c7b252caa7da5a0f0313c2dc6bd` executed all 26 cases successfully,
+including the EOF regression; known-credential artifact scan passed. It is
+superseded by the expanded 27-case final matrix.
+
+Self-review then added the runtime adversary's known public bootstrap password.
+[Focused RED 41583393073](https://github.com/alireza-anari/cac-project/actions/runs/41583393073)
+on `6d0ef24f2d4be28c2158f6a09369c566a94fccbb` executed 27 cases: 26 passed and
+one assertion failed because a runtime process could use the public disposable
+administrator credential to query guard keys. No key bytes were emitted.
+
+The fix randomizes the disposable postgres password **before adversarial UIDs
+start**, keeps it only in the existing private all-role configuration, and
+requires the same old-password/key-access attack to fail. This also prevents
+claiming that source-file ACL isolation alone establishes a credential boundary.
+The separate processes still receive only their individual random role password.
+
+## Final acceptance receipt and concrete findings
+
+The authoritative **final head/base SHA, exact Push and PR run IDs, synthetic
+merge SHA, artifact links and execution outcome** are recorded in the
+[Draft PR #18 receipt](https://github.com/alireza-anari/cac-project/pull/18).
+A SHA cannot name its own tree; use that maintained receipt and the per-run
+`tested-sha.txt` / `pr-head-sha.txt` evidence to bind these documents to execution.
+
+The full workflow requires this matrix, zero failures/errors/skips, and exit 0:
+
+| Suite | Distinct cases | Verification |
+|---|---:|---|
+| Retained foundation | 43 = 39 PostgreSQL + 4 configuration subprocess | before/after foundation zero/down/up; ORM and schema/ACL equality |
+| Retained S0-09A | 24 PostgreSQL | before/after PoC down/up; original sensitivity controls |
+| Added S0-09B | 27 = 8 process + 9 pool/locks + 3 recovery + 7 timing/encoding | before/after another PoC structural down/up; transaction/MFA/window mutation assertion RED then restoration |
+
+**94 distinct cases total**; repeats are not new tests. Added cases combine
+actual PostgreSQL, Linux process and infrastructure evidence; do not describe
+all 94 as independent SQL tests. A supplemental focused workflow executes only
+the 27 added cases once for faster feedback; it does not replace the full floor.
+
+Observed findings within the measured scope:
+
+- Root-owned read-only entrypoints, private role files, scrubbed child env and
+  kernel peer credentials separate the unprivileged runtime/issuer processes.
+  Public bootstrap authority must first be removed, as the regression proves.
+- Transaction pooling reuses a backend PID across different xids. Deliberately
+  persistent session context is denied by transaction binding; four simultaneous
+  Store transactions are isolated in the measured schedule.
+- Backend cancellation, aborted SQL, injected deadlock, rollback and savepoint
+  paths retain fail-closed authorization. Issuer COMMIT failure returns no token.
+- Controlled PostgreSQL restart preserves committed ledger rows but kills the
+  old transaction. Logical restore preserves signing authority until explicit
+  generation fencing; no automated fencing/HA/PITR protocol is delivered.
+- Exact clock-fixture edge predicates and separate elapsed expiry/MFA checks
+  have distinct evidence. No timing SLA or product TTL approval follows.
+- Python MAC calculation over exact PostgreSQL bytes works for the examples;
+  naive Python JSON serialization differs for at least one typed vector.
+  Canonical v2 bytes and constant-time MAC validation remain open P0 questions.
+
+These findings are conditional on the exact run receipt; they grant no
+production readiness, source-baseline acceptance or permission to integrate
+identity/onboarding. Proposed decisions and all unsupported scenarios remain
+in CR-S0-09B-001 and the residual risk matrix. General admission/DoS remains P1;
+physical recovery, external key custody, valid bearer-proof theft, split-brain
+fencing and the protocol remain P0 integration gates.

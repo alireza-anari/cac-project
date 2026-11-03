@@ -7,7 +7,11 @@ SOURCE-001/GATE-SOURCE BLOCKED; architecture #9 OPEN; APR-033/034/035/036 unchan
 
 ## Execution boundary
 
-The root CI **test orchestrator** alone has all-role fixture access. It creates
+The root CI **test orchestrator** alone has all-role fixture access.
+Before any adversarial UID starts, the public disposable bootstrap administrator
+password is replaced with a private random value, saved only to the mode-0600
+all-role fixture file. An actual runtime login probe must fail with the old
+public password; UID/file ACL tests alone do not establish this boundary. It creates
 three unprivileged Linux processes, with no supplementary groups:
 
 | Process | UID | Credentials | Interface |
@@ -55,7 +59,7 @@ sudo --preserve-env=CAC_TEST_CONFIG,CAC_EVIDENCE_DIR,CAC_EXPERIMENTAL_DISPOSABLE
 
 The workflow runs all inherited 43 cases (39 PostgreSQL + 4 settings subprocess)
 and all 24 S0-09A PostgreSQL cases unchanged before/after their rollback paths.
-S0-09B adds **26 distinct cases** (7 process, 9 pool/lock, 3 recovery, 7 timing/encoding).
+S0-09B adds **27 distinct cases** (8 process, 9 pool/lock, 3 recovery, 7 timing/encoding).
 Its runner checks the exact test inventory, forbids skips, runs its suite,
 requires assertion RED for deliberately removed transaction binding/MFA/window
 checks, restores exact definitions in `finally`, performs PoC SQL down/up with
@@ -122,3 +126,14 @@ it remains a RED run, not an overall passing receipt. Restore logs distinguish
 the five-second unfenced probe window; clone token denial also depends on
 PID/xid, while the live-transaction generation test isolates the generation check.
 Known fixture credential and key-hex scans now gate artifact upload fail closed.
+
+
+Self-review added an administrator-credential adversary after the 26-case green
+run. Focused RED 41583393073 at 6d0ef24f proved that the known public bootstrap
+password still allowed a runtime process to read the guard key table: **27
+cases, 26 passed, one assertion failure**. The fix randomizes that disposable
+admin credential once before process testing, not once per Lab (subprocesses
+must share a consistent private fixture). This is test-infrastructure isolation,
+not a new product key-custody contract. The final exact-head receipt is maintained
+in Draft PR #18 after Push and PR execution, rather than self-referencing a
+commit SHA inside its own tree.

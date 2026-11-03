@@ -58,6 +58,8 @@ jobs:
           python scripts/bootstrap.py
           python -m context_poc.migrate bootstrap
           python -m context_poc.migrate up
+      - name: Remove public bootstrap authority before adversarial UIDs
+        run: python -m pool_recovery.rotate_admin
       - name: Focused process pool recovery tests
         env:
           CAC_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}

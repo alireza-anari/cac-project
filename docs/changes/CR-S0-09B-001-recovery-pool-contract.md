@@ -8,7 +8,7 @@ Review parent: S0_09A_ARCHITECTURE_RULING.md on main, reviewed head f351e26.
 
 | Area | Existing experiment | Proposed decision for separate review | Delta delivered here |
 |---|---|---|---|
-| Process | issuer role callable in a Python test process | runtime deployment principal must not read issuer credential or invoke unrestricted signing | isolated UID, minimal file/env, kernel peer checked local RPC, SQL authorizer retained |
+| Process | issuer role callable in a Python test process | runtime deployment principal must not read issuer credential or invoke unrestricted signing | isolated UID, minimal file/env, kernel peer checked local RPC, SQL authorizer retained; private randomized fixture admin credential closes public-bootstrap bypass |
 | Pool | no actual PgBouncer evidence in S0-09A | transaction context must be installed/used in the pinned transaction; check login+xid+PID on every use; no reliance on reset | one/four backend pools, hostile session SET, cancellation and reuse tests |
 | Restore | ledger/key/generation restored together | new generation must be fenced before restored service accepts requests, with single-authority recovery procedure | measured unfenced clone behavior, manual fixture generation change; **no automatic recovery protocol** |
 | Time | proposed 5/60/120/300 second values | decide inclusive issue/MFA and exclusive token/purge edges, clock/skew behavior and long-transaction policy | controlled exact SQL clocks and separate elapsed tests; values unchanged |

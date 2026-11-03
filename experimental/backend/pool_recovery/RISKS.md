@@ -6,7 +6,7 @@ not a production certification or CVSS score.
 
 | Priority | Residual risk / limitation | Required follow-up |
 |---|---|---|
-| P0 | PostgreSQL admin/guard/issuer and host root remain trusted; keys live in DB | approve custody/rotation/blast radius and hardened deployment boundary |
+| P0 | PostgreSQL admin/guard/issuer and host root remain trusted; keys live in DB (public bootstrap admin password is randomized before process tests) | approve custody/rotation/blast radius and hardened deployment boundary |
 | P0 | Valid stolen bearer proof can request its own authorized scope | design actual identity/session/proof delivery and theft response; no real IdP integration here |
 | P0 | Restoring keys+generation+ledger does not automatically fence old authority | durable externally coordinated generation fencing before traffic; reject unfenced/split-brain recovery |
 | P0 | No PITR, promotion, replication consistency or crash-at-COMMIT proof | separate HA/recovery acceptance plan; verify RPO/RTO and uniqueness after timeline changes |
