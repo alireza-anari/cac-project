@@ -25,7 +25,7 @@ def validate(r):
         raise ValueError('denied')
     return r
 
-def serve(cfg_path, socket_path, runtime_uid):
+def serve(cfg_path, runtime_uid, listener_fd):
     cfg = json.loads(Path(cfg_path).read_text())
     assert set(cfg) == {'connection', 'role', 'password'}
     assert cfg['role'] == 'cac_ctx_issuer'
@@ -58,12 +58,11 @@ def serve(cfg_path, socket_path, runtime_uid):
                 response = {'ok': False, 'error': 'denied'}
             try: conn.sendall(json.dumps(response).encode() + b'\n')
             except OSError: pass  # lost response cannot undo the committed ledger
-    with socket.socket(socket.AF_UNIX) as s:
-        s.bind(socket_path)
-        os.chmod(socket_path, 0o666)  # authentication is kernel SO_PEERCRED, directory is root-owned
-        s.listen(16)
+    # Root test orchestrator prebinds the socket in its nonwritable directory.
+    # Issuer receives only this listening FD; runtime cannot replace the path.
+    with socket.socket(fileno=listener_fd) as s:
         while True:
             conn, _ = s.accept()
             threading.Thread(target=handle, args=(conn,), daemon=True).start()
 
-if __name__ == '__main__': serve(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+if __name__ == '__main__': serve(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))

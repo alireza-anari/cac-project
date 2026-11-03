@@ -63,11 +63,17 @@ jobs:
           CAC_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           sudo --preserve-env=CAC_TEST_CONFIG,CAC_EXPERIMENTAL_DISPOSABLE,CAC_POSTGRES_CONTAINER,PYTHONPATH,PYTHONDONTWRITEBYTECODE,PATH "$(which python)" -m unittest discover -s pool_recovery/tests -p 'test_*.py' -v 2>&1 | tee "$GITHUB_WORKSPACE/s009b-focus.log"
+      - name: Scan focused evidence before upload
+        id: credential-scan
+        if: always()
+        env:
+          CAC_SCAN_PATH: ${{ github.workspace }}/s009b-focus.log
+        run: python -m pool_recovery.scan_evidence
       - name: Cleanup private fixtures
         if: always()
         run: rm -f "$CAC_TEST_CONFIG"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        if: always()
+        if: always() && steps.credential-scan.outputs.safe == 'true'
         with:
           name: s009b-focus-${{ github.run_id }}
           path: s009b-focus.log

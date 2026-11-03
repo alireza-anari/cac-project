@@ -67,7 +67,11 @@ class Lab:
             role = 'cac_ctx_issuer'
             self.private('issuer.json', dict(connection=CFG['connection'],role=role,password=CFG['passwords'][role]), ISSUER)
             sock = str(self.directory/'issuer.sock')
-            self.issuer = self.start([sys.executable, str(self.directory/'issuer.py'), str(self.directory/'issuer.json'), sock, str(RUNTIME)], ISSUER)
+            with socket.socket(socket.AF_UNIX) as listener:
+                listener.bind(sock); listener.listen(16); os.chmod(sock,0o666)
+                self.issuer = self.start([sys.executable, str(self.directory/'issuer.py'),
+                    str(self.directory/'issuer.json'), str(RUNTIME),str(listener.fileno())],
+                    ISSUER,pass_fds=(listener.fileno(),))
             role = 'cac_ctx_runtime'
             for many, alias in [(False,'one'),(True,'many')]:
                 connection = dict(CFG['connection'],port=6543,dbname=alias)
@@ -110,6 +114,8 @@ pidfile = {self.directory}/pool.pid
                 except OSError:
                     if self.pool.poll() is not None or time.monotonic()>deadline: raise AssertionError('pool startup')
                     time.sleep(.05)
+            time.sleep(.2)
+            if self.issuer.poll() is not None: raise AssertionError('issuer startup after prebind')
             print('PROCESS WITNESS issuer_uid',ISSUER,'runtime_uid',RUNTIME,'pool_uid',POOL,flush=True)
             print(subprocess.check_output(['/usr/sbin/pgbouncer','--version'],text=True).strip(),flush=True)
         except BaseException:
@@ -124,11 +130,11 @@ pidfile = {self.directory}/pool.pid
         p=self.directory/name
         p.write_text(value if isinstance(value,str) else json.dumps(value))
         p.chmod(0o600); os.chown(p,uid,uid)
-    def start(self,args,uid):
+    def start(self,args,uid,pass_fds=()):
         # No sensitive environment inherited by either child. Logs are transient,
         # never uploaded: a failed DB request must not expose its proof to artifacts.
         log=tempfile.TemporaryFile(); self.logs.append(log)
-        p=subprocess.Popen(args,user=uid, group=uid, extra_groups=[],env=safe_env(),stdout=log,stderr=log)
+        p=subprocess.Popen(args,user=uid, group=uid, extra_groups=[],env=safe_env(),stdout=log,stderr=log,pass_fds=pass_fds)
         self.children.append(p); return p
     def __enter__(self): return self
     def __exit__(self,*a): self.close()

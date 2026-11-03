@@ -124,11 +124,17 @@ jobs:
           CAC_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           sudo --preserve-env=CAC_TEST_CONFIG,CAC_EVIDENCE_DIR,CAC_EXPERIMENTAL_DISPOSABLE,CAC_POSTGRES_CONTAINER,PYTHONPATH,PYTHONDONTWRITEBYTECODE,PATH "$(which python)" -m pool_recovery.run 2>&1 | tee "$CAC_EVIDENCE_DIR/s009b.log"
+      - name: Scan explicit evidence before upload
+        id: credential-scan
+        if: always()
+        env:
+          CAC_SCAN_PATH: ${{ env.CAC_EVIDENCE_DIR }}
+        run: python -m pool_recovery.scan_evidence
       - name: Remove private credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/cac-s007-runtime.json"
       - name: Upload explicit noncredential evidence only
-        if: always()
+        if: always() && steps.credential-scan.outputs.safe == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: s007-postgres-${{ github.run_id }}-${{ github.run_attempt }}
