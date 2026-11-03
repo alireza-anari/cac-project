@@ -137,3 +137,16 @@ must share a consistent private fixture). This is test-infrastructure isolation,
 not a new product key-custody contract. The final exact-head receipt is maintained
 in Draft PR #18 after Push and PR execution, rather than self-referencing a
 commit SHA inside its own tree.
+
+
+Activity observers use autocommit: PostgreSQL caches pg_stat_activity snapshots
+within a transaction. A full post-roundtrip run exposed that observer defect at
+candidate d27c479a (Push41583861223), while its PR run passed. The corrected
+race test primes an empty activity view before starting issuer requests and
+requires the actual revoker PID among the observed blockers; it keeps the same
+authorization/ledger/no-retry-resurrection assertions and timing bounds.
+
+An additional observer-control sensitivity run compiles an in-memory copy of the
+same race test with autocommit deliberately disabled. It must assert-fail after
+priming the empty activity snapshot; the working-tree source and SQL are not
+modified. This is reported separately from the three security-predicate REDs.

@@ -135,3 +135,23 @@ identity/onboarding. Proposed decisions and all unsupported scenarios remain
 in CR-S0-09B-001 and the residual risk matrix. General admission/DoS remains P1;
 physical recovery, external key custody, valid bearer-proof theft, split-brain
 fencing and the protocol remain P0 integration gates.
+
+
+## Fresh-observer regression
+
+At `d27c479a`, full PR CI
+[41583867122](https://github.com/alireza-anari/cac-project/actions/runs/41583867122)
+passed the complete 94-case before/after matrix, all sensitivity and scans.
+Full Push [41583861223](https://github.com/alireza-anari/cac-project/actions/runs/41583861223)
+passed the first 27-case run, all three assertion RED mutations and structural
+roundtrip, but the second run failed its issuance/revoke lock witness. It is
+not reported as green or hidden by rerunning unchanged code.
+
+The observer had queried pg_stat_activity inside one transaction: PostgreSQL
+retains that activity snapshot until transaction end. Observer connections now
+use autocommit so every poll obtains a fresh snapshot. The race test deliberately
+primes an empty view before starting issuers and requires an actual
+`pg_blocking_pids` witness containing the particular revoker PID. No clock,
+issuer lock timeout, security predicate or negative assertion is relaxed.
+See [PostgreSQL 17 statistics snapshot semantics](https://www.postgresql.org/docs/17/monitoring-stats.html#MONITORING-STATS-VIEWS).
+The final exact-head receipt in PR #18 supersedes both of these candidate runs.

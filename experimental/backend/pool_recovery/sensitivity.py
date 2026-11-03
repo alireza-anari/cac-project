@@ -21,3 +21,22 @@ for name,old,new,test in mutations:
     finally:
         with connect('postgres') as c:c.execute(original)
 print('S009B SQL restored exactly; full green required',flush=True)
+
+# A separate observer-control RED: prime an empty pg_stat_activity snapshot,
+# then deliberately keep the observer in one transaction. No SQL control changes.
+script = r'''
+from pathlib import Path
+import unittest
+source=Path('pool_recovery/tests/test_pool.py').read_text()
+old='observer.autocommit=True  # fresh activity snapshot per polling statement'
+assert source.count(old)==1
+namespace={'__name__':'snapshot_mutation'}
+exec(compile(source.replace(old,'observer.autocommit=False'),'<snapshot-mutation>','exec'),namespace)
+suite=unittest.TestSuite([namespace['PoolTests']('test_issuance_racing_principal_revoke_has_no_revived_authority')])
+result=unittest.TextTestRunner(verbosity=2).run(suite)
+raise SystemExit(0 if result.wasSuccessful() else 1)
+'''
+r=subprocess.run([sys.executable,'-c',script],capture_output=True,text=True,timeout=20)
+print(r.stdout+r.stderr,flush=True)
+assert r.returncode==1 and 'FAIL:' in r.stderr and 'ERROR:' not in r.stderr and 'missing issuance/revoke race witness' in r.stderr
+print('S009B OBSERVER EXPECTED RED: cached activity snapshot is detected; source unchanged',flush=True)

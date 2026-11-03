@@ -105,6 +105,7 @@ class PoolTests(unittest.TestCase):
                 future=pool.submit(r.execute,'SELECT poc.revoke(%s,%s)',('store',S1))
                 try:
                     with connect('postgres') as observer:
+                        observer.autocommit=True  # refresh pg_stat_activity on every polling statement
                         end=time.monotonic()+3
                         while pid not in observer.execute('SELECT pg_blocking_pids(%s)',(rp,)).fetchone()[0]:
                             if time.monotonic()>end:self.fail('missing store epoch lock witness')
@@ -124,6 +125,7 @@ class PoolTests(unittest.TestCase):
             with concurrent.futures.ThreadPoolExecutor(1) as pool:
                 future=pool.submit(w.reply,'records')
                 with connect('postgres') as observer:
+                    observer.autocommit=True  # refresh pg_stat_activity on every polling statement
                     end=time.monotonic()+3
                     while not observer.execute('SELECT pg_blocking_pids(pid) FROM pg_stat_activity WHERE usename=%s AND wait_event_type=%s',('cac_ctx_runtime','Lock')).fetchall():
                         if time.monotonic()>end:self.fail('missing deadlock precursor')
@@ -144,13 +146,20 @@ class PoolTests(unittest.TestCase):
             try:
                 hs=[w.call('challenge') for w in workers]
                 revoker.execute('SELECT poc.revoke(%s,%s)',('principal',P1))
-                futures=[pool.submit(w.call,'issue',h=h) for w,h in zip(workers,hs)]
                 with connect('postgres') as observer:
+                    observer.autocommit=True  # fresh activity snapshot per polling statement
+                    query="SELECT pid,pg_blocking_pids(pid) FROM pg_stat_activity WHERE usename='cac_ctx_issuer' AND wait_event_type='Lock'"
+                    # Deliberately read before starting issuers. A cached transaction
+                    # snapshot would stay empty and reproduce the observed CI defect.
+                    self.assertEqual(observer.execute(query).fetchall(),[])
+                    futures=[pool.submit(w.call,'issue',h=h) for w,h in zip(workers,hs)]
                     end=time.monotonic()+2
-                    while not observer.execute("SELECT pid,pg_blocking_pids(pid) FROM pg_stat_activity WHERE usename='cac_ctx_issuer' AND wait_event_type='Lock'").fetchall():
+                    while True:
+                        witnesses=observer.execute(query).fetchall()
+                        if any(revoker.info.backend_pid in blockers for _,blockers in witnesses):break
                         if time.monotonic()>end:self.fail('missing issuance/revoke race witness')
                         time.sleep(.01)
-                    print('REVOKE RACE WITNESS issuer blocked by uncommitted principal revocation',flush=True)
+                    print('REVOKE RACE WITNESS issuer_pid/blockers',witnesses,'revoker',revoker.info.backend_pid,flush=True)
                 revoker.commit()
                 for w,future in zip(workers,futures):
                     self.assertEqual(future.result(timeout=3),{'ok':False,'error':'denied'})
