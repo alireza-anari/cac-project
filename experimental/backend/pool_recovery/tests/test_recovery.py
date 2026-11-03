@@ -38,6 +38,7 @@ class RecoveryTests(unittest.TestCase):
     def test_logical_restore_requires_explicit_generation_fence(self):
         container=os.environ['CAC_POSTGRES_CONTAINER'];dbname='cac_s009b_restore'
         with Lab() as lab,lab.worker() as w:
+            started=time.monotonic()
             h=w.call('challenge');t=w.call('issue',h=h)['token']
             with connect('postgres') as r:
                 r.autocommit=True
@@ -58,6 +59,9 @@ class RecoveryTests(unittest.TestCase):
                 args=(h,CFG['poc_proofs'][0],S1,'read',P1,Jsonb({}))
                 # Restore preserves signing authority and a still-current challenge!
                 # This is a measured limitation, not success of automatic recovery fencing.
+                elapsed=time.monotonic()-started
+                print('RESTORE WINDOW WITNESS elapsed_seconds',round(elapsed,6),flush=True)
+                self.assertLess(elapsed,5,'Restore probe exceeded original challenge window; no unfenced replay result established')
                 with restored('cac_ctx_issuer') as r:
                     same=r.execute('SELECT poc.issue(%s,%s,%s,%s,%s,%s)',args).fetchone()[0]
                     self.assertTrue(same==t)

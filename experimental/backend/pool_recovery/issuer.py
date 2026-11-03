@@ -37,8 +37,10 @@ def serve(cfg_path, runtime_uid, listener_fd):
                 conn.settimeout(4)
                 data = b''
                 while not data.endswith(b'\n'):
-                    data += conn.recv(4096)
-                    if not data or len(data) > LIMIT: raise ValueError('denied')
+                    part = conn.recv(4096)
+                    if not part: raise ValueError('denied')
+                    data += part
+                    if len(data) > LIMIT: raise ValueError('denied')
                 # Duplicate keys and nonfinite numbers are rejected at the RPC boundary.
                 def unique(pairs):
                     d = {}

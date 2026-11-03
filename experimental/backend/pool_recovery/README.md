@@ -28,7 +28,9 @@ Issuer validates exact request fields, sizes, UUIDs, action and JSON body;
 rejects duplicate keys/nonfinite JSON; authenticates the peer UID; performs
 parameterized fixed SQL; commits and closes its independent DB transaction
 before returning a token. SQL remains the final proof/Store/target authorizer.
-A stolen *invalid or differently scoped* proof is rejected. A stolen valid
+The socket is prebound by the root orchestrator and passed as a listening FD
+to the issuer. Only credential-free entrypoint copies are exposed outside the
+runner home. A stolen *invalid or differently scoped* proof is rejected. A stolen valid
 bearer proof for its own authority is NOT solved by UID isolation. No real
 identity, proof distribution or MFA provider is implemented.
 
@@ -53,7 +55,8 @@ sudo --preserve-env=CAC_TEST_CONFIG,CAC_EVIDENCE_DIR,CAC_EXPERIMENTAL_DISPOSABLE
 
 The workflow runs all inherited 43 cases (39 PostgreSQL + 4 settings subprocess)
 and all 24 S0-09A PostgreSQL cases unchanged before/after their rollback paths.
-S0-09B runner checks its exact test inventory, forbids skips, runs its suite,
+S0-09B adds **26 distinct cases** (7 process, 9 pool/lock, 3 recovery, 7 timing/encoding).
+Its runner checks the exact test inventory, forbids skips, runs its suite,
 requires assertion RED for deliberately removed transaction binding/MFA/window
 checks, restores exact definitions in `finally`, performs PoC SQL down/up with
 structural equality, and runs its suite again. Inherited test and SQL files
@@ -108,3 +111,14 @@ READ COMMITTED; higher isolation and every retry schedule remain unsupported.
 
 No public socket, HTTP API, production identity/MFA, customer data, business
 writes, onboarding, live deployment or production secret is introduced.
+
+
+Independent static review identified a truncated-EOF CPU loop and startup
+reproducibility gaps. Focused CI 41582586448 at 6a688850 exercised all 26 cases:
+25 passed and the EOF regression failed with an assertion (no test errors).
+The receiver now rejects an empty recv immediately, before accumulation. That
+run also measured real pool/restart/restore, exact/elapsed timing and OS denial;
+it remains a RED run, not an overall passing receipt. Restore logs distinguish
+the five-second unfenced probe window; clone token denial also depends on
+PID/xid, while the live-transaction generation test isolates the generation check.
+Known fixture credential and key-hex scans now gate artifact upload fail closed.

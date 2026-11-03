@@ -49,5 +49,25 @@ explicitly disposable database and restores exact function definitions, then
 requires structural down/up equality. No persistent schema or public API diff.
 v2 bytes and 5s/60s/120s/300s numbers are test inputs, not ratified contracts.
 
-Final-head receipts, results, independent review and concrete findings will
-replace this in-progress status after actual verification.
+## Independent review and reproduced defect
+
+Independent read-only static review of 42ba141 identified no critical privilege
+bypass, but reported the truncated-EOF CPU loop and unverified process startup.
+CI diagnostics proved private runner-home traversal denial; root-owned copied
+entrypoints and a root-prebound listening socket fixed the process setup without
+making the socket directory writable to runtime.
+
+[Focused RED 41582586448](https://github.com/alireza-anari/cac-project/actions/runs/41582586448)
+on `6a688850e4c2595e1b538eafbccef496e862f95f` ran **26 cases: 25 passed,
+1 assertion failure, 0 errors**. It reproduced the EOF receiver defect; the
+receiver is fixed to reject empty recv immediately. This is actual test-first
+RED evidence, not an import/startup failure relabeled as a security regression.
+
+The reviewer noted that clone token denial is also PID/xid-confounded; the
+separate live-runtime generation test isolates generation invalidation. Restore
+now logs/probes the original five-second window explicitly and fails if it is
+missed; no TTL was extended. General service admission/DoS stays a residual P1.
+The independent review was static; fixes are validated by execution, with no
+claim of external security certification or independent database execution.
+
+Final-head receipts and acceptance status remain pending actual green CI.
