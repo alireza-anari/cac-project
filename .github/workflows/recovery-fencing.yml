@@ -1,0 +1,87 @@
+name: S009C independent recovery fencing
+on:
+  push:
+    branches: [work/s0-09c-recovery-fencing-poc]
+    paths: ['experimental/backend/**', '.github/workflows/recovery-fencing.yml']
+  pull_request:
+    paths: ['experimental/backend/**', '.github/workflows/recovery-fencing.yml']
+permissions:
+  contents: read
+concurrency:
+  group: s009c-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  independent-fencing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      primary:
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s007_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s009c-disposable-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s007_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+      restore:
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s007_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s009c-disposable-only
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s007_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+      anchor:
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s009c_anchor
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s009c-disposable-only
+        ports: ['5434:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s009c_anchor"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      CAC_EXPERIMENTAL_DISPOSABLE: '1'
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: '1'
+      CAC_C_A_CONTAINER: ${{ job.services.primary.id }}
+      CAC_C_B_CONTAINER: ${{ job.services.restore.id }}
+      CAC_C_C_CONTAINER: ${{ job.services.anchor.id }}
+    defaults:
+      run:
+        working-directory: experimental/backend
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.15'
+      - name: Private config and exact revision
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "CAC_C_CONFIG=$RUNNER_TEMP/cac-s009c.json" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/evidence-s009c"
+          git rev-parse HEAD > "$GITHUB_WORKSPACE/evidence-s009c/tested-sha.txt"
+          printf '%s\n' "$PR_HEAD" > "$GITHUB_WORKSPACE/evidence-s009c/pr-head-sha.txt"
+          python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+      - name: Independent cluster bootstrap
+        run: python -m recovery_fencing.lab | tee "$GITHUB_WORKSPACE/evidence-s009c/topology.log"
+      - name: Reproduce parent unsafe restore with assertion RED
+        run: python -m recovery_fencing.parent_red 2>&1 | tee "$GITHUB_WORKSPACE/evidence-s009c/parent-red.log"
+      - name: Remove private fixtures
+        if: always()
+        run: rm -f "$CAC_C_CONFIG" "$CAC_C_CONFIG.A" "$CAC_C_CONFIG.B"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: s009c-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence-s009c/
+          retention-days: 30

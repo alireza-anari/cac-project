@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
   push:
-    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc, work/s0-09b-issuer-pool-recovery-poc]
+    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc, work/s0-09b-issuer-pool-recovery-poc, work/s0-09c-recovery-fencing-poc]
     paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
   workflow_dispatch:
 permissions:
