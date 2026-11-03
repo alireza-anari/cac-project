@@ -49,9 +49,6 @@ jobs:
       CAC_EXPERIMENTAL_DISPOSABLE: '1'
       PYTHONPATH: .
       PYTHONDONTWRITEBYTECODE: '1'
-      CAC_C_A_CONTAINER: ${{ job.services.primary.id }}
-      CAC_C_B_CONTAINER: ${{ job.services.restore.id }}
-      CAC_C_C_CONTAINER: ${{ job.services.anchor.id }}
     defaults:
       run:
         working-directory: experimental/backend
@@ -73,6 +70,10 @@ jobs:
           printf '%s\n' "$PR_HEAD" > "$GITHUB_WORKSPACE/evidence-s009c/pr-head-sha.txt"
           python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
       - name: Independent cluster bootstrap
+        env:
+          CAC_C_A_CONTAINER: ${{ job.services.primary.id }}
+          CAC_C_B_CONTAINER: ${{ job.services.restore.id }}
+          CAC_C_C_CONTAINER: ${{ job.services.anchor.id }}
         run: python -m recovery_fencing.lab | tee "$GITHUB_WORKSPACE/evidence-s009c/topology.log"
       - name: Reproduce parent unsafe restore with assertion RED
         run: python -m recovery_fencing.parent_red 2>&1 | tee "$GITHUB_WORKSPACE/evidence-s009c/parent-red.log"
