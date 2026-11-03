@@ -22,7 +22,7 @@ def safe_env(): return {'PATH': os.environ['PATH'], 'LANG': 'C.UTF-8', 'PYTHONDO
 class Worker:
     def __init__(self, lab, many=False):
         cfg = lab.directory / ('runtime-many.json' if many else 'runtime.json')
-        self.p = subprocess.Popen([sys.executable, str(Path(__file__).with_name('worker.py')), str(cfg),
+        self.p = subprocess.Popen([sys.executable, str(lab.directory/'worker.py'), str(cfg),
             str(lab.directory/'issuer.json'), str(lab.issuer.pid), S1, P1],
             user=RUNTIME, group=RUNTIME, extra_groups=[], env=safe_env(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, text=True)
@@ -58,10 +58,16 @@ class Lab:
         self.logs = []
         try:
             seed()
+            # Runtime cannot traverse runner's home. Copy only the two credential-free
+            # entrypoints to a root-owned read-only execution directory.
+            for script in ['issuer.py','worker.py']:
+                target=self.directory/script
+                target.write_text(Path(__file__).with_name(script).read_text())
+                target.chmod(0o644)
             role = 'cac_ctx_issuer'
             self.private('issuer.json', dict(connection=CFG['connection'],role=role,password=CFG['passwords'][role]), ISSUER)
             sock = str(self.directory/'issuer.sock')
-            self.issuer = self.start([sys.executable, str(Path(__file__).with_name('issuer.py')), str(self.directory/'issuer.json'), sock, str(RUNTIME)], ISSUER)
+            self.issuer = self.start([sys.executable, str(self.directory/'issuer.py'), str(self.directory/'issuer.json'), sock, str(RUNTIME)], ISSUER)
             role = 'cac_ctx_runtime'
             for many, alias in [(False,'one'),(True,'many')]:
                 connection = dict(CFG['connection'],port=6543,dbname=alias)
