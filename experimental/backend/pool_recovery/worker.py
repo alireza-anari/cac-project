@@ -14,6 +14,7 @@ def rpc(r=None, raw=None):
         s.settimeout(5)
         s.connect(cfg['socket'])
         s.sendall(raw.encode() if raw is not None else json.dumps(r).encode() + b'\n')
+        s.shutdown(socket.SHUT_WR)
         b = b''
         while not b.endswith(b'\n'):
             part = s.recv(4096)

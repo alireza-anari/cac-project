@@ -107,6 +107,12 @@ pidfile = {self.directory}/pool.pid
             print('PROCESS WITNESS issuer_uid',ISSUER,'runtime_uid',RUNTIME,'pool_uid',POOL,flush=True)
             print(subprocess.check_output(['/usr/sbin/pgbouncer','--version'],text=True).strip(),flush=True)
         except BaseException:
+            for log in self.logs:
+                log.seek(0)
+                output=log.read().decode(errors='replace')
+                for secret in [*CFG['passwords'].values(),*CFG['poc_proofs'],CFG['issuer_key']]:
+                    output=output.replace(secret,'[REDACTED]')
+                print('SANITIZED CHILD STARTUP DIAGNOSTIC',output[-2000:],flush=True)
             self.close(); raise
     def private(self, name, value, uid):
         p=self.directory/name

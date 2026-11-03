@@ -137,3 +137,28 @@ class PoolTests(unittest.TestCase):
                 if outcome=='runtime-victim': self.assertEqual(result,{'ok':False,'state':'42501'})
                 else: self.assertEqual(result,{'ok':True,'value':[S1]})
                 w.call('rollback'); self.assertEqual(w.call('scope'),[S1]); w.call('commit')
+
+    def test_issuance_racing_principal_revoke_has_no_revived_authority(self):
+        with connect('cac_ctx_identity') as revoker, concurrent.futures.ThreadPoolExecutor(4) as pool:
+            workers=[self.lab.worker(many=True) for _ in range(4)]
+            try:
+                hs=[w.call('challenge') for w in workers]
+                revoker.execute('SELECT poc.revoke(%s,%s)',('principal',P1))
+                futures=[pool.submit(w.call,'issue',h=h) for w,h in zip(workers,hs)]
+                with connect('postgres') as observer:
+                    end=time.monotonic()+2
+                    while not observer.execute("SELECT pid,pg_blocking_pids(pid) FROM pg_stat_activity WHERE usename='cac_ctx_issuer' AND wait_event_type='Lock'").fetchall():
+                        if time.monotonic()>end:self.fail('missing issuance/revoke race witness')
+                        time.sleep(.01)
+                    print('REVOKE RACE WITNESS issuer blocked by uncommitted principal revocation',flush=True)
+                revoker.commit()
+                for w,future in zip(workers,futures):
+                    self.assertEqual(future.result(timeout=3),{'ok':False,'error':'denied'})
+                    w.deny();w.call('rollback')
+                    self.assertEqual(w.call('issue'),{'ok':False,'error':'denied'})
+            finally:
+                revoker.rollback()
+                for w in workers:w.close()
+        with connect('postgres') as r:
+            self.assertEqual(r.execute('SELECT active,epoch FROM poc_private.principals WHERE id=%s',(P1,)).fetchone(),(False,2))
+            self.assertEqual(r.execute('SELECT count(*) FROM poc_private.ledger').fetchone(),(0,))

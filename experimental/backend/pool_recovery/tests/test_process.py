@@ -74,3 +74,8 @@ class ProcessTests(unittest.TestCase):
                 self.assertFalse(w.reply('issue')['ok'])
                 w.deny()
         finally: os.kill(self.lab.issuer.pid, signal.SIGCONT)
+
+    def test_truncated_rpc_eof_returns_denial(self):
+        with self.lab.worker() as w:
+            self.assertEqual(w.call('raw', raw='{'), {'ok':False,'error':'denied'})
+            self.assertEqual(w.call('scope'), [self.lab.S1])
