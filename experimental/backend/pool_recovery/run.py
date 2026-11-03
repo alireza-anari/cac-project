@@ -9,7 +9,7 @@ from context_poc.harness import CFG, connect
 def suite():
     tests=unittest.defaultTestLoader.discover('pool_recovery/tests','test_*.py')
     count=tests.countTestCases()
-    assert count==26, ('Unexpected S009B test inventory',count)
+    assert count==27, ('Unexpected S009B test inventory',count)
     result=unittest.TextTestRunner(verbosity=2).run(tests)
     if not result.wasSuccessful() or result.skipped: raise SystemExit(1)
     print('S009B SUITE PASS',count,'distinct tests; no skip',flush=True)

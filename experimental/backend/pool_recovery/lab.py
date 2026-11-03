@@ -10,6 +10,9 @@ import tempfile
 import time
 from context_poc.harness import CFG, connect, seed, P1, P2, S1, S2, S3, U1
 
+if os.environ.get('CAC_EXPERIMENTAL_DISPOSABLE') != '1' or CFG['connection']['dbname'] != 'cac_s007_test':
+    raise RuntimeError('S009B test modules refuse non-disposable configuration')
+
 ISSUER, RUNTIME, POOL = 62001, 62002, 62003
 
 def drop(uid):

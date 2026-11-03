@@ -35,6 +35,14 @@ def run(op, a):
             except PermissionError: denied.append(True)
         return dict(different_uid=os.stat(sys.argv[2]).st_uid != os.getuid(),
                     issuer_file_denied=denied[0], issuer_proc_denied=denied[1], keys=sorted(cfg))
+    if op == 'bootstrap_probe':
+        # Attacker knows the repository's public disposable service bootstrap password.
+        try:
+            with psycopg.connect(**a['connection'],user='postgres',
+                    password='synthetic-s007-disposable-only',connect_timeout=2) as other:
+                other.execute('SELECT count(*) FROM poc_private.keys').fetchone()
+                return {'can_read_keys':True}
+        except psycopg.Error: return {'can_read_keys':False}
     if op == 'challenge': return c.execute('SELECT poc.challenge()').fetchone()[0]
     if op == 'request': return request(a.pop('h'), **a)
     if op == 'rpc': return rpc(a['request'])

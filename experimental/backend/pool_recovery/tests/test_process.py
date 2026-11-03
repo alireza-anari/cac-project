@@ -79,3 +79,9 @@ class ProcessTests(unittest.TestCase):
         with self.lab.worker() as w:
             self.assertEqual(w.call('raw', raw='{'), {'ok':False,'error':'denied'})
             self.assertEqual(w.call('scope'), [self.lab.S1])
+
+    def test_public_bootstrap_password_cannot_bypass_isolation(self):
+        from context_poc.harness import CFG
+        with self.lab.worker() as w:
+            self.assertFalse(w.call('bootstrap_probe',connection=CFG['connection'])['can_read_keys'])
+            self.assertEqual(w.call('scope'),[self.lab.S1])
