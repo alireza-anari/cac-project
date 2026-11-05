@@ -104,7 +104,7 @@ class PoolFencingTests(unittest.TestCase):
         self.stale_on_same_backend(old, token, ticket, 'rollback-after-takeover')
 
     def test_real_query_cancel_rolls_back_gate_and_reuses_backend(self):
-        with self.assertRaises(psycopg.errors.QueryCanceled):
+        with self.assertRaises(psycopg.errors.QueryCanceled) as cancelled:
             with self.a.runtime() as g:
                 token = self.scope(g)
                 old = self.witness(g.c, 'before-cancel')
@@ -127,6 +127,9 @@ class PoolFencingTests(unittest.TestCase):
                             'SELECT pg_cancel_backend(%s)', (old[0],)).fetchone(), (True,))
                         print('S009D CANCEL WITNESS PgSleep -> pg_cancel_backend', old[0], flush=True)
                     future.result(timeout=3)
+        self.assertEqual(cancelled.exception.diag.message_primary,
+                         'canceling statement due to user request')
+        print('S009D CANCEL DIAGNOSTIC user request (not statement timeout)', flush=True)
         self.no_open()
         self.stale_on_same_backend(old, token, ticket, 'after-cancel')
         self.takeover()
