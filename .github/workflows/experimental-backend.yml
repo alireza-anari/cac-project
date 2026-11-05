@@ -1,10 +1,10 @@
 name: Experimental backend security
 on:
   pull_request:
-    paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
+    paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml', 'docs/S0_09D*.md', 'docs/security/S0_09D*.md', 'docs/changes/CR-S0-09D*.md']
   push:
-    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc, work/s0-09b-issuer-pool-recovery-poc, work/s0-09c-recovery-fencing-poc]
-    paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml']
+    branches: [work/s0-07-new-origin-backend-foundation, work/s0-09a-trusted-context-poc, work/s0-09b-issuer-pool-recovery-poc, work/s0-09c-recovery-fencing-poc, work/s0-09d-fencing-proof-gaps]
+    paths: ['experimental/backend/**', '.github/workflows/experimental-backend.yml', 'docs/S0_09D*.md', 'docs/security/S0_09D*.md', 'docs/changes/CR-S0-09D*.md']
   workflow_dispatch:
 permissions:
   contents: read
