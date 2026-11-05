@@ -1,0 +1,133 @@
+{
+  "reviewed_sha": "3a1138885a5c73e0b427a25b858fa399ff56cd24",
+  "date": "2026-11-05",
+  "pr_merge_checkout": "0ad97582f90ab23a2ecc1b9b02519c32c707c970",
+  "artifact_digest_provenance": "GitHub metadata; archive digests not independently recomputed",
+  "runs": [
+    {
+      "id": 42046511769,
+      "url": "https://github.com/alireza-anari/cac-project/actions/runs/42046511769",
+      "event": "push",
+      "head_sha": "3a1138885a5c73e0b427a25b858fa399ff56cd24",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 127310795997,
+          "name": "independent-fencing",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 13425316231,
+          "name": "s009c-42046511769-1",
+          "digest": "sha256:3e62807d91be3befba98ebeb2f47789310361e5e86046052d8d9e80889733fb0",
+          "expires_at": "2026-12-05T14:37:58Z"
+        }
+      ],
+      "job_log_sha256": "f7e1998587cd5d6423afad72bbc764c8f4c16bd42992dfd5fa6830b23b5401ec"
+    },
+    {
+      "id": 42046521552,
+      "url": "https://github.com/alireza-anari/cac-project/actions/runs/42046521552",
+      "event": "pull_request",
+      "head_sha": "3a1138885a5c73e0b427a25b858fa399ff56cd24",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 127310829341,
+          "name": "independent-fencing",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 13424462732,
+          "name": "s009c-42046521552-1",
+          "digest": "sha256:58d09b1181a4d2cd55572b2bdea469f7e8d7f99054b87f1bc63373accc17f09f",
+          "expires_at": "2026-12-05T14:37:48Z"
+        }
+      ],
+      "job_log_sha256": "028f4d26944eecc9e4ad5f1b0bf0c2cd368ea3b7911f9303d4ed7b9872e42281"
+    },
+    {
+      "id": 42046511716,
+      "url": "https://github.com/alireza-anari/cac-project/actions/runs/42046511716",
+      "event": "push",
+      "head_sha": "3a1138885a5c73e0b427a25b858fa399ff56cd24",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 127310795558,
+          "name": "postgres-security",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 13424657881,
+          "name": "s007-postgres-42046511716-1",
+          "digest": "sha256:bd3215568e0de026291154e2f724a975a6e62c91ec30b4712bfcd7631bcfcb5a",
+          "expires_at": "2026-12-05T14:43:29Z"
+        }
+      ],
+      "job_log_sha256": "aa7929959502cf19a7861a03db4df697f7c16eeff2c2effce8bbf181fd5af81e"
+    },
+    {
+      "id": 42046521752,
+      "url": "https://github.com/alireza-anari/cac-project/actions/runs/42046521752",
+      "event": "pull_request",
+      "head_sha": "3a1138885a5c73e0b427a25b858fa399ff56cd24",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 127310830825,
+          "name": "postgres-security",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 13425717129,
+          "name": "s007-postgres-42046521752-1",
+          "digest": "sha256:aa9d3de95177a096c129637549a1ca842d6be84a0e66ab0a7775e290d05ad854",
+          "expires_at": "2026-12-05T14:44:30Z"
+        }
+      ],
+      "job_log_sha256": "b22933471da3d22e0de11852a5c5122ce75588701b6854c46580ed9bd7b8943b"
+    },
+    {
+      "id": 42046521525,
+      "url": "https://github.com/alireza-anari/cac-project/actions/runs/42046521525",
+      "event": "pull_request",
+      "head_sha": "3a1138885a5c73e0b427a25b858fa399ff56cd24",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 127310830413,
+          "name": "s009b-focus",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 13425491197,
+          "name": "s009b-focus-42046521525",
+          "digest": "sha256:833a9fd8240cbc26dda86eb7627fcd87505ec2ccd91b619a539135b82ab75003",
+          "expires_at": "2026-12-05T14:38:18Z"
+        }
+      ],
+      "job_log_sha256": "8831cd2c3aa84b833bce82d1cebac64f168c99872fc7caaf99cbe03539f5b96c"
+    }
+  ]
+}
