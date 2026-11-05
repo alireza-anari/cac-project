@@ -148,13 +148,54 @@ class FencingTests(unittest.TestCase):
 
     def test_missing_bootstrap_and_wrong_acl_never_ready(self):
         self.activate_a();self.restore_b()
-        with self.lab.connect('B') as c:c.execute('REVOKE EXECUTE ON FUNCTION pg_control_system() FROM cac_ctx_guard')
-        with self.assertRaises(FenceDenied):self.b.activate(1,str(uuid4()))
-        self.assertFalse(self.b.ready());self.assertFalse(self.a.ready())
-        with self.lab.connect('B') as c:c.execute('GRANT EXECUTE ON FUNCTION pg_control_system() TO cac_ctx_guard')
-        status=self.b.status();self.b.activate(1,status['request']);self.positive(self.b)
-        with self.lab.connect('B') as c:c.execute('GRANT EXECUTE ON FUNCTION poc_private.issue_unfenced(text,text,uuid,text,uuid,jsonb) TO cac_ctx_issuer')
-        self.assertFalse(self.b.ready())
+        # Missing mandatory local fence bootstrap must reject activation, even if
+        # the external anchor already reserved this restored instance's epoch.
+        # REVOKE pg_control_system() FROM cac_ctx_guard is NOT a valid fault:
+        # the effective permission can still come from PUBLIC or role membership.
+        with self.lab.connect('B') as c:
+            config=c.execute('SELECT * FROM fence_private.config').fetchone()
+            self.assertIsNotNone(config)
+            c.execute('DELETE FROM fence_private.config')
+        request=str(uuid4())
+        try:
+            with self.assertRaises(FenceDenied):self.b.activate(1,request)
+            self.assertFalse(self.b.ready());self.assertFalse(self.a.ready())
+        finally:
+            with self.lab.connect('B') as c:
+                c.execute('INSERT INTO fence_private.config VALUES (%s,%s,%s,%s,%s,%s,%s)',config)
+
+        # A real permission-boundary failure: the issuer can directly execute
+        # the unfenced issue function. bootstrap_ok() must reject this grant.
+        issue_func='poc_private.issue_unfenced(text,text,uuid,text,uuid,jsonb)'
+        with self.lab.connect('B') as c:
+            c.execute(f'GRANT EXECUTE ON FUNCTION {issue_func} TO cac_ctx_issuer')
+            self.assertTrue(c.execute(
+                "SELECT has_function_privilege('cac_ctx_issuer',%s,'EXECUTE')",
+                (issue_func,)).fetchone()[0])
+        try:
+            with self.assertRaises(FenceDenied):self.b.activate(1,request)
+            self.assertFalse(self.b.ready());self.assertFalse(self.a.ready())
+        finally:
+            with self.lab.connect('B') as c:
+                c.execute(f'REVOKE EXECUTE ON FUNCTION {issue_func} FROM cac_ctx_issuer')
+                self.assertFalse(c.execute(
+                    "SELECT has_function_privilege('cac_ctx_issuer',%s,'EXECUTE')",
+                    (issue_func,)).fetchone()[0])
+
+        status=self.b.status()
+        self.assertEqual(status['phase'],'reserved')
+        self.assertEqual(status['request'],request)
+        self.b.activate(1,request);self.positive(self.b)
+
+        # Even after activation, introducing an unsafe grant must invalidate
+        # readiness. Keep that regression, and restore the test fixture.
+        with self.lab.connect('B') as c:c.execute(f'GRANT EXECUTE ON FUNCTION {issue_func} TO cac_ctx_issuer')
+        try:
+            self.assertFalse(self.b.ready())
+            with self.assertRaises(FenceDenied):self.positive(self.b)
+        finally:
+            with self.lab.connect('B') as c:c.execute(f'REVOKE EXECUTE ON FUNCTION {issue_func} FROM cac_ctx_issuer')
+        self.assertTrue(self.b.ready())
 
     def test_bad_loopback_reader_prevents_confirmation(self):
         self.activate_a();self.restore_b()
