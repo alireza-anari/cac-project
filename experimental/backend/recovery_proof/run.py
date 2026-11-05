@@ -53,7 +53,7 @@ if __name__ == '__main__':
     from recovery_proof.tests.test_authority import AuthorityTests
     authority = unittest.defaultTestLoader.loadTestsFromTestCase(AuthorityTests)
     assert authority.countTestCases() == 8
-    green(unittest.TextTestRunner(verbosity=2).run(authority))
+    green(unittest.TextTestRunner(verbosity=2, failfast=True).run(authority))
     print('S009D AUTHORITY GREEN 8 bounded cases; physical/clone/partition limits in handoff', flush=True)
 
     from recovery_proof.authority_red import RollbackInvariant
