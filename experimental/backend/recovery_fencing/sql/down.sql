@@ -1,0 +1,11 @@
+DROP FUNCTION poc.challenge(),poc.issue(text,text,uuid,text,uuid,jsonb),poc.verify();
+ALTER FUNCTION poc_private.challenge_unfenced() RENAME TO challenge;
+ALTER FUNCTION poc_private.challenge() SET SCHEMA poc;
+ALTER FUNCTION poc_private.issue_unfenced(text,text,uuid,text,uuid,jsonb) RENAME TO issue;
+ALTER FUNCTION poc_private.issue(text,text,uuid,text,uuid,jsonb) SET SCHEMA poc;
+ALTER FUNCTION poc_private.verify_unfenced() RENAME TO verify;
+ALTER FUNCTION poc_private.verify() SET SCHEMA poc;
+GRANT EXECUTE ON FUNCTION poc.challenge(),poc.verify() TO cac_ctx_runtime;
+GRANT EXECUTE ON FUNCTION poc.issue(text,text,uuid,text,uuid,jsonb) TO cac_ctx_issuer;
+DROP SCHEMA fence CASCADE;
+DROP SCHEMA fence_private CASCADE;
