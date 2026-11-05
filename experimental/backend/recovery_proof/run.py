@@ -49,3 +49,19 @@ if __name__ == '__main__':
     green(unittest.TextTestRunner(verbosity=2).run(pooled))
     retained_c_suite()
     print('S009D PHASE2 COMPLETE 4 distinct real pooled C-fencing cases; retained C20 GREEN', flush=True)
+
+    from recovery_proof.tests.test_authority import AuthorityTests
+    authority = unittest.defaultTestLoader.loadTestsFromTestCase(AuthorityTests)
+    assert authority.countTestCases() == 8
+    green(unittest.TextTestRunner(verbosity=2).run(authority))
+    print('S009D AUTHORITY GREEN 8 bounded cases; physical/clone/partition limits in handoff', flush=True)
+
+    from recovery_proof.authority_red import RollbackInvariant
+    unsafe = unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite([
+        RollbackInvariant('test_anchor_rollback_must_not_revive_previous_owner')]))
+    assert unsafe.testsRun == 1 and len(unsafe.failures) == 1
+    assert not unsafe.errors and not unsafe.skipped and not unsafe.unexpectedSuccesses
+    assert 'Rolled-back anchor revived previous-owner authority' in unsafe.failures[0][1]
+    print('S009D SECURITY FAIL/BLOCKED anchor rollback: expected safety assertion RED; NOT an approved recovery mode', flush=True)
+    retained_c_suite()
+    print('S009D PHASE3 COMPLETE bounded evidence; anti-rollback + orphan recovery BLOCKED; retained C20 GREEN', flush=True)

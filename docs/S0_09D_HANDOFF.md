@@ -23,15 +23,23 @@ Additional C PR42058448915 and B focused42058448866 PASS. PR checkout merge943de
 
 [Independent read-only Phase1 review](security/S0_09D_PHASE1_READ_ONLY_REVIEW.md): no blocking source finding, one low documentation-path trigger gap; no independent DB rerun.
 
-## Phase2 — CANDIDATE / execution pending
+## Phase2 — COMPLETE at 5a5ddda96a6a034bd6396735fde292f3b9ee8e53
 
 Four new tests compose unchanged C Gate/SQL with actual PgBouncer 1.22.0, package1.22.0-1build4. Runtime SQL and RLS go through a size-one transaction pool. Readiness and issuer/activation connections retain original direct online SQL to avoid a readiness query queuing behind the held single runtime backend. This is a test-only transport, not a new production broker or UID isolation proof.
 
-Planned evidence: equal backend PID with different fullxids; intentionally persistent hostile session GUCs; commit/rollback reuse; actual pg_cancel_backend while PgSleep observed; lock-witnessed blocked takeover and stale-context denial on the reused backend afterward. No PASS claimed until actual logs. No SQL/check/TTL changes.
+[Verified Phase2 checkpoint](https://github.com/alireza-anari/cac-project/pull/22#issuecomment-6662962158). D push42060774098 and PR42060783634 PASS; full94 push42060774149 and PR42060783711 PASS; additional C PR42060783731 and B focused42060783918 PASS. PR checkout18f5973; push exact head.
 
-## Phase3 — NOT_RUN / pending
+Four new cases PASS. Push PID/fullxid witnesses: commit197 /1973->1978->1980; cancel219 /1989->1994->1996; rollback249 /2005->2010->2012; held takeover167 /1958->1963. Same PID, changed fullxid, stale context/ticket denied, known outcomes leave zero OPEN. Actual PgSleep observed and pg_cancel_backend succeeds; diagnostic explicitly says user request, not statement timeout. Hostile session context deliberately persists through pool release but cannot authorize the new transaction. Positive scoped RLS controls precede denial.
 
-Bounded rollback/clone/invalid-identity authority, invalid response/read-only/channel faults, deterministic races and safe orphan recovery are not yet delivered. Physical PITR, same-identity clone, asymmetric network partition, multisite HA and externally witnessed orphan reconciliation are NOT_RUN. Never infer anti-rollback authority or safe orphan clearing from Phase1/2. Orphan reconciliation remains BLOCKED; timeout never revives authority.
+Independent Phase2 source review found no blocking defect; its nonblocking cancellation ambiguity was addressed by the diagnostic assertion in5a5ddda9 and verified in CI. Review did not itself execute databases. 121 distinct GREEN cases across separate workflows at this stage (114 floor +3 Phase1 +4 pool), not a combined run under C wrappers. No SQL/check/TTL changes.
+
+## Phase3 — CANDIDATE / actual execution pending
+
+Eight new bounded denial/retry/race targets are prepared: actual authenticated logical anchor clone at another endpoint/cluster ID; read-only actor sessions; malformed signed response; SQL channel refusal while broker channel remains healthy; lock-witnessed two-contender CAS; crashed issuer orphan across anchor restart; discarded reserve receipt/disconnect retry; missing dblink extension and exact function/owner/ACL reapply.
+
+A separate unchanged safety assertion tests logical rollback of C's actual anchor schema from epoch2 to its earlier epoch1 dump, with same physical C identity. The hypothesis is previous-owner revival: if observed, it is SECURITY FAIL/BLOCKED, not a passing recovery mode. The runner requires the intended assertion RED and exact restoration of the latest C state/data/sequence/functions/ACL/RLS flags before proceeding. Expected unsafe observations are reported separately from GREEN cases.
+
+Physical PITR, same-identity physical clone with two live anchors, asymmetric network partition/firewall loss, actual standby promotion, wire-level lost COMMIT acknowledgment, complete missing-role matrix, multihost HA and externally witnessed orphan reconciliation remain NOT_RUN. Logical restore is not physical restore. Read-only role session is not standby. Discarding an application receipt is not injected wire packet loss. Bad per-channel port is not a network partition. Never infer anti-rollback authority or safe clearing from this experiment. Orphan reconciliation remains BLOCKED; no clearing API or timeout revival is introduced.
 
 ## Restrictions and current risks
 
