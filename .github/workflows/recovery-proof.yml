@@ -69,6 +69,12 @@ jobs:
           git rev-parse HEAD > "$GITHUB_WORKSPACE/evidence-s009c/tested-sha.txt"
           printf '%s\n' "$PR_HEAD" > "$GITHUB_WORKSPACE/evidence-s009c/pr-head-sha.txt"
           python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+      - name: Install pinned transaction pooler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pgbouncer=1.22.0-1build4
+          test "$(dpkg-query -W -f='${Version}' pgbouncer)" = '1.22.0-1build4'
+          /usr/sbin/pgbouncer --version | tee "$GITHUB_WORKSPACE/evidence-s009c/pool-versions.log"
       - name: Independent cluster bootstrap
         env:
           CAC_C_A_CONTAINER: ${{ job.services.primary.id }}

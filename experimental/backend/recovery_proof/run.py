@@ -42,3 +42,10 @@ if __name__ == '__main__':
     green(run_tests())
     retained_c_suite()
     print('S009D PHASE1 COMPLETE 3 independent SQL mutation receipts; restored probes + retained C20 GREEN', flush=True)
+
+    from recovery_proof.tests.test_pool import PoolFencingTests
+    pooled = unittest.defaultTestLoader.loadTestsFromTestCase(PoolFencingTests)
+    assert pooled.countTestCases() == 4
+    green(unittest.TextTestRunner(verbosity=2).run(pooled))
+    retained_c_suite()
+    print('S009D PHASE2 COMPLETE 4 distinct real pooled C-fencing cases; retained C20 GREEN', flush=True)
