@@ -1,0 +1,547 @@
+{
+  "updated_date": "2026-11-06",
+  "timezone": "Asia/Tehran",
+  "repository": "alireza-anari/cac-project",
+  "issue": 21,
+  "pr": 22,
+  "branch": "work/s0-09d-fencing-proof-gaps",
+  "parent_sha": "8bd81906f6edbf1732e22c46ca8925c7dec1a595",
+  "reviewed_executable_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+  "security_outcome": {
+    "green_distinct_cases": 129,
+    "inherited_floor": 114,
+    "new_green_cases": 15,
+    "separate_security_goal": "anchor rollback must not revive previous owner",
+    "separate_security_goal_result": "FAIL_SECURITY / BLOCKED",
+    "ci_success_is_protocol_acceptance": false,
+    "orphan_reconciliation": "BLOCKED; no clearing/timeout revival implemented"
+  },
+  "artifact_digest_provenance": "GitHub service metadata; ZIP digests not independently recomputed. Scans apply to uploaded evidence files and known fixture material.",
+  "stages": [
+    {
+      "stage": "phase1",
+      "sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+      "pr_checkout": "943de6b (checkout log abbreviation)",
+      "runs": [
+        {
+          "id": 42058440127,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42058440127",
+          "name": "S009D recovery proof gaps",
+          "event": "push",
+          "head_sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T15:46:51Z",
+          "updated_at": "2026-11-05T15:50:17Z",
+          "jobs": [
+            {
+              "id": 127353125532,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13430735465,
+              "name": "s009d-42058440127-1",
+              "digest": "sha256:c78cd8191b996b8c4b5f005b8b7ce64b6eb63bc1bc40983159bc99bbfb304b3a",
+              "size_in_bytes": 4419,
+              "expires_at": "2026-12-05T15:50:11Z"
+            }
+          ]
+        },
+        {
+          "id": 42058448878,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42058448878",
+          "name": "S009D recovery proof gaps",
+          "event": "pull_request",
+          "head_sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T15:46:54Z",
+          "updated_at": "2026-11-05T15:50:05Z",
+          "jobs": [
+            {
+              "id": 127353156416,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13431360015,
+              "name": "s009d-42058448878-1",
+              "digest": "sha256:706cbb1329412adacdc35d32239e0c53da8eca27156c5e88c97ba6bb1a64471a",
+              "size_in_bytes": 4459,
+              "expires_at": "2026-12-05T15:50:00Z"
+            }
+          ]
+        },
+        {
+          "id": 42058439858,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42058439858",
+          "name": "Experimental backend security",
+          "event": "push",
+          "head_sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T15:46:51Z",
+          "updated_at": "2026-11-05T15:55:36Z",
+          "jobs": [
+            {
+              "id": 127353124574,
+              "name": "postgres-security",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13430676271,
+              "name": "s007-postgres-42058439858-1",
+              "digest": "sha256:4b6a85b20891854099c44292f54a6acb0ac0ac8b785313cb8edb375f9cc826df",
+              "size_in_bytes": 17725,
+              "expires_at": "2026-12-05T15:55:31Z"
+            }
+          ]
+        },
+        {
+          "id": 42058448933,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42058448933",
+          "name": "Experimental backend security",
+          "event": "pull_request",
+          "head_sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T15:46:54Z",
+          "updated_at": "2026-11-05T15:56:00Z",
+          "jobs": [
+            {
+              "id": 127353156459,
+              "name": "postgres-security",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13430431719,
+              "name": "s007-postgres-42058448933-1",
+              "digest": "sha256:638548eb6b425db8210fa9505c9461c7cb13926a5a314d18d6aef5e140270591",
+              "size_in_bytes": 17765,
+              "expires_at": "2026-12-05T15:55:53Z"
+            }
+          ]
+        },
+        {
+          "id": 42058448915,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42058448915",
+          "name": "S009C independent recovery fencing",
+          "event": "pull_request",
+          "head_sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T15:46:54Z",
+          "updated_at": "2026-11-05T15:49:09Z",
+          "jobs": [
+            {
+              "id": 127353157279,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13429469674,
+              "name": "s009c-42058448915-1",
+              "digest": "sha256:469777fa6c06b58ad41248ebe381cba5c85481e4856f7b89f8b083a993c86ca7",
+              "size_in_bytes": 2575,
+              "expires_at": "2026-12-05T15:49:02Z"
+            }
+          ]
+        },
+        {
+          "id": 42058448866,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42058448866",
+          "name": "S009B focused adversarial feedback",
+          "event": "pull_request",
+          "head_sha": "65006f4b6d7a94751f077c865094c9acf3d2d6fd",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T15:46:54Z",
+          "updated_at": "2026-11-05T15:49:23Z",
+          "jobs": [
+            {
+              "id": 127353156584,
+              "name": "s009b-focus",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13429379791,
+              "name": "s009b-focus-42058448866",
+              "digest": "sha256:e5f4037a9e53beaa2735be07ef2d308258576b0f06099ca503674d4068cf1480",
+              "size_in_bytes": 1591,
+              "expires_at": "2026-12-05T15:49:16Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "phase2",
+      "sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+      "pr_checkout": "18f5973 (checkout log abbreviation)",
+      "runs": [
+        {
+          "id": 42060774098,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42060774098",
+          "name": "S009D recovery proof gaps",
+          "event": "push",
+          "head_sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:01:16Z",
+          "updated_at": "2026-11-05T16:05:56Z",
+          "jobs": [
+            {
+              "id": 127362010399,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13431657750,
+              "name": "s009d-42060774098-1",
+              "digest": "sha256:bae983aa5eec44eb1ec950c859e94867e75be6649886d1980c5acfdeacc8d732",
+              "size_in_bytes": 5123,
+              "expires_at": "2026-12-05T16:05:51Z"
+            }
+          ]
+        },
+        {
+          "id": 42060783634,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42060783634",
+          "name": "S009D recovery proof gaps",
+          "event": "pull_request",
+          "head_sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:01:22Z",
+          "updated_at": "2026-11-05T16:06:26Z",
+          "jobs": [
+            {
+              "id": 127362017824,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13432491587,
+              "name": "s009d-42060783634-1",
+              "digest": "sha256:7f323518e2853974990d2746ce3357f6665fd538db8579cf7478eb7b6e55cf0c",
+              "size_in_bytes": 5167,
+              "expires_at": "2026-12-05T16:06:22Z"
+            }
+          ]
+        },
+        {
+          "id": 42060774149,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42060774149",
+          "name": "Experimental backend security",
+          "event": "push",
+          "head_sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:01:16Z",
+          "updated_at": "2026-11-05T16:11:01Z",
+          "jobs": [
+            {
+              "id": 127361983017,
+              "name": "postgres-security",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13431188005,
+              "name": "s007-postgres-42060774149-1",
+              "digest": "sha256:c8fc49de8a4fe131d7765ca83403e7cd40ae49003974a3b38372cd25ea10d4df",
+              "size_in_bytes": 17728,
+              "expires_at": "2026-12-05T16:10:57Z"
+            }
+          ]
+        },
+        {
+          "id": 42060783711,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42060783711",
+          "name": "Experimental backend security",
+          "event": "pull_request",
+          "head_sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:01:22Z",
+          "updated_at": "2026-11-05T16:11:22Z",
+          "jobs": [
+            {
+              "id": 127362010323,
+              "name": "postgres-security",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13431583183,
+              "name": "s007-postgres-42060783711-1",
+              "digest": "sha256:1834f8045d5a63d979b10d6bed1bebd41974ac09c66f821ed4ac8653a146827a",
+              "size_in_bytes": 17757,
+              "expires_at": "2026-12-05T16:11:16Z"
+            }
+          ]
+        },
+        {
+          "id": 42060783731,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42060783731",
+          "name": "S009C independent recovery fencing",
+          "event": "pull_request",
+          "head_sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:01:22Z",
+          "updated_at": "2026-11-05T16:03:30Z",
+          "jobs": [
+            {
+              "id": 127361566971,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13431496735,
+              "name": "s009c-42060783731-1",
+              "digest": "sha256:bd4c1b9988f4f7dcadfd2de8751ab2ebdb83fb94deabe991b6c882ca81f1b738",
+              "size_in_bytes": 2575,
+              "expires_at": "2026-12-05T16:03:25Z"
+            }
+          ]
+        },
+        {
+          "id": 42060783918,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42060783918",
+          "name": "S009B focused adversarial feedback",
+          "event": "pull_request",
+          "head_sha": "5a5ddda96a6a034bd6396735fde292f3b9ee8e53",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:01:22Z",
+          "updated_at": "2026-11-05T16:04:13Z",
+          "jobs": [
+            {
+              "id": 127361786990,
+              "name": "s009b-focus",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13430927381,
+              "name": "s009b-focus-42060783918",
+              "digest": "sha256:0fac177791c6cdc4065513d9628b7614e3c3d674b7cd181cc05007a5e8da427a",
+              "size_in_bytes": 1590,
+              "expires_at": "2026-12-05T16:04:07Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "phase3",
+      "sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+      "pr_checkout": "8ba3fc931bae546092a44f8d9864c974ed1aa9bf",
+      "runs": [
+        {
+          "id": 42063170761,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42063170761",
+          "name": "S009D recovery proof gaps",
+          "event": "push",
+          "head_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:19:12Z",
+          "updated_at": "2026-11-05T16:23:15Z",
+          "jobs": [
+            {
+              "id": 127370401094,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13432019071,
+              "name": "s009d-42063170761-1",
+              "digest": "sha256:7dc157faf55adb0d9a3f1c06f232c9876637a6ee0e64c537835a8221c2afbb93",
+              "size_in_bytes": 6070,
+              "expires_at": "2026-12-05T16:23:10Z"
+            }
+          ]
+        },
+        {
+          "id": 42063182389,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42063182389",
+          "name": "S009D recovery proof gaps",
+          "event": "pull_request",
+          "head_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:19:16Z",
+          "updated_at": "2026-11-05T16:25:08Z",
+          "jobs": [
+            {
+              "id": 127370740759,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13432673337,
+              "name": "s009d-42063182389-1",
+              "digest": "sha256:bd9ebe9ef200b6c960cd09fef946f7c3769c89ee4831633ac89a7406c163af98",
+              "size_in_bytes": 6117,
+              "expires_at": "2026-12-05T16:25:02Z"
+            }
+          ]
+        },
+        {
+          "id": 42063170143,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42063170143",
+          "name": "Experimental backend security",
+          "event": "push",
+          "head_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:19:12Z",
+          "updated_at": "2026-11-05T16:28:36Z",
+          "jobs": [
+            {
+              "id": 127370453990,
+              "name": "postgres-security",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13434585253,
+              "name": "s007-postgres-42063170143-1",
+              "digest": "sha256:56551fdbb1c64a8046438ac64aa1de99ee209bba9c14d6febd0f23fe2dd15dd7",
+              "size_in_bytes": 17713,
+              "expires_at": "2026-12-05T16:28:30Z"
+            }
+          ]
+        },
+        {
+          "id": 42063182278,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42063182278",
+          "name": "Experimental backend security",
+          "event": "pull_request",
+          "head_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:19:16Z",
+          "updated_at": "2026-11-05T16:28:29Z",
+          "jobs": [
+            {
+              "id": 127370712108,
+              "name": "postgres-security",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13433541002,
+              "name": "s007-postgres-42063182278-1",
+              "digest": "sha256:eae35eb017e7b69ba8919f8743b0fb9e0a373d62052bf4614dfc4694eda8635a",
+              "size_in_bytes": 17747,
+              "expires_at": "2026-12-05T16:28:23Z"
+            }
+          ]
+        },
+        {
+          "id": 42063181989,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42063181989",
+          "name": "S009C independent recovery fencing",
+          "event": "pull_request",
+          "head_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:19:16Z",
+          "updated_at": "2026-11-05T16:20:59Z",
+          "jobs": [
+            {
+              "id": 127370091163,
+              "name": "independent-fencing",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13432825308,
+              "name": "s009c-42063181989-1",
+              "digest": "sha256:ffa3df42bb2d48c37107d04ded61ab1b84c5f303a4c4e10474dc51ea6ae44406",
+              "size_in_bytes": 2574,
+              "expires_at": "2026-12-05T16:20:53Z"
+            }
+          ]
+        },
+        {
+          "id": 42063182367,
+          "url": "https://github.com/alireza-anari/cac-project/actions/runs/42063182367",
+          "name": "S009B focused adversarial feedback",
+          "event": "pull_request",
+          "head_sha": "8b490bfe5a64ac62c0a8382e77ce6a45486b4f04",
+          "status": "completed",
+          "conclusion": "success",
+          "run_attempt": 1,
+          "created_at": "2026-11-05T16:19:16Z",
+          "updated_at": "2026-11-05T16:21:48Z",
+          "jobs": [
+            {
+              "id": 127370092364,
+              "name": "s009b-focus",
+              "conclusion": "success"
+            }
+          ],
+          "artifacts": [
+            {
+              "id": 13432229642,
+              "name": "s009b-focus-42063182367",
+              "digest": "sha256:73677bf21b5fbe8d8e7e52ef2fb640d3d0765b7fe660dda499a7c477b46d0c8d",
+              "size_in_bytes": 1590,
+              "expires_at": "2026-12-05T16:21:42Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
