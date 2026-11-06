@@ -8,8 +8,9 @@ if __name__=='__main__':
     from h_quorum.tests.test_quorum import QuorumTests
     from h_quorum.tests.test_transport import TransportTests
     from h_quorum.tests.test_lifecycle import LifecycleTests
-    suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RootTests,QuorumTests,TransportTests,LifecycleTests))
+    from h_quorum.tests.test_guard import GuardTests
+    suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RootTests,QuorumTests,TransportTests,LifecycleTests,GuardTests))
     count=suite.countTestCases()
     result=unittest.TextTestRunner(verbosity=2,failfast=True).run(suite)
     if not result.wasSuccessful() or result.skipped:raise SystemExit(1)
-    print(BANNER,'H ROOT + LIFECYCLE OBSERVED_PASS',count,'distinct; no skips; remaining H scope NOT_RUN',flush=True)
+    print(BANNER,'H ROOT + LIFECYCLE + TRANSCRIPT OBSERVED_PASS',count,'distinct; no skips; remaining H scope NOT_RUN',flush=True)

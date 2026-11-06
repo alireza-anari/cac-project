@@ -5,7 +5,7 @@ from recovery_fencing.lab import Lab
 from h_quorum.common import config,Denied,BANNER
 from h_quorum.rpc import Client
 
-class LifecycleTests(unittest.TestCase):
+class LifecycleFixture(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.cfg=config();cls.pg=Lab()
     @classmethod
@@ -22,6 +22,8 @@ class LifecycleTests(unittest.TestCase):
         self.pid,self.tx=self.c.execute('SELECT pg_backend_pid(),txid_current()::text').fetchone()
         self.binding=dict(sid=self.actors['A']['sid'],pid=self.pid,tx=self.tx,kind='runtime',login='cac_ctx_runtime',digest='b'*64,incarnation=self.actors['A']['incarnation'],manifest=self.actors['A']['manifest'],policy=1)
     def admit(self,request=None):return self.a.call('admit',dict(self.binding,request=request or str(uuid4()),operation=str(uuid4())))
+
+class LifecycleTests(LifecycleFixture):
     def test_open_ack_is_committed_before_first_use(self):
         receipt=self.admit();self.assertTrue(receipt['ticket']);view=self.control.call('inspect',{})
         self.assertEqual(view['open'],1);self.assertEqual(view['granted'],0);self.assertEqual(receipt['revision'],view['state_revision'])
