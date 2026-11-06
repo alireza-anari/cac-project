@@ -6,6 +6,7 @@ CREATE TABLE h_guard.config(singleton bool PRIMARY KEY CHECK(singleton),root uui
 CREATE FUNCTION h_guard.runtime_digest(st uuid,act text,target uuid,body_hash text) RETURNS text LANGUAGE sql IMMUTABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
  SELECT encode(public.digest(jsonb_build_object('domain','cac-s009h-runtime','store',st,'action',act,'target',target,'body_digest',body_hash)::text,'sha256'),'hex')
 $$;
+CREATE FUNCTION h_guard.body_digest(body jsonb) RETURNS text LANGUAGE sql IMMUTABLE SECURITY DEFINER SET search_path=pg_catalog AS $$ SELECT encode(public.digest(body::text,'sha256'),'hex') $$;
 CREATE FUNCTION h_guard.issuer_digest(h text,proof text,st uuid,act text,target uuid,body jsonb) RETURNS text LANGUAGE sql IMMUTABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
  SELECT encode(public.digest(jsonb_build_object('domain','cac-s009h-issuer','challenge',h,'proof_hash',encode(public.digest(proof,'sha256'),'hex'),'store',st,'action',act,'target',target,'body',body)::text,'sha256'),'hex')
 $$;
@@ -34,6 +35,13 @@ DECLARE cfg h_guard.config;n text;sid text;pid int;tx text;man text;intent text;
  r=h_guard.rpc('verify',a||jsonb_build_object('answer',answer));
  IF r->'valid' IS DISTINCT FROM 'true'::jsonb THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
 EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END $$;
+CREATE FUNCTION h_guard.set_epoch(ep bigint) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,h_guard AS $$
+DECLARE cfg h_guard.config;s jsonb;BEGIN
+ IF session_user<>'cac_fence_activator' THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
+ SELECT * INTO STRICT cfg FROM h_guard.config;s=h_guard.rpc('status','{}'::jsonb);
+ IF ep IS NULL OR s->>'epoch' IS DISTINCT FROM ep::text OR s->>'owner' IS DISTINCT FROM cfg.node OR s->>'phase' IS DISTINCT FROM 'RESERVED' OR s->>'root_id' IS DISTINCT FROM cfg.root::text OR s->>'namespace' IS DISTINCT FROM cfg.namespace::text OR s->>'policy' IS DISTINCT FROM cfg.policy::text THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
+ UPDATE h_guard.config SET epoch=ep;
+END $$;
 CREATE FUNCTION h_guard.final_check() RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN PERFORM h_guard.require();END $$;
 RESET ROLE;
 ALTER FUNCTION fence_private.check_guard() RENAME TO check_guard_c;
@@ -76,3 +84,6 @@ GRANT EXECUTE ON FUNCTION h_guard.scope(),h_guard.is_probe(),h_guard.write_body(
 GRANT EXECUTE ON FUNCTION fence.is_ready() TO cac_ctx_runtime,cac_ctx_issuer,cac_fence_activator;
 GRANT EXECUTE ON FUNCTION poc.issue(text,text,uuid,text,uuid,jsonb) TO cac_ctx_issuer;
 GRANT EXECUTE ON FUNCTION poc.verify() TO cac_ctx_runtime;
+
+GRANT EXECUTE ON FUNCTION h_guard.body_digest(jsonb) TO cac_ctx_runtime;
+GRANT EXECUTE ON FUNCTION h_guard.set_epoch(bigint) TO cac_fence_activator;
