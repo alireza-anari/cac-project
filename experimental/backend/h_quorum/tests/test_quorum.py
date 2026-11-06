@@ -71,7 +71,14 @@ class QuorumTests(unittest.TestCase):
             with self.assertRaises(Denied):client.range('/cac-h/'+self.ns+'/state',endpoint=endpoint)
             deadline=time.monotonic()+15
             while True:
-                local=client.range('/cac-h/'+self.ns+'/state',serializable=True,endpoint=endpoint)
+                try:local=client.range('/cac-h/'+self.ns+'/state',serializable=True,endpoint=endpoint)
+                except Denied:
+                    # A just-added learner may not yet have the authentication
+                    # entry. The generic client's attempted learner refresh is
+                    # rejected; explicitly mint at the still-current voter, then
+                    # retry the actual learner read within the catch-up bound.
+                    if time.monotonic()>deadline:self.fail('Learner authentication/current state did not catch up')
+                    client._authenticate(self.q.cfg['members']['r1']['endpoint']);time.sleep(.1);continue
                 if local.get('kvs') and json.loads(unb64(local['kvs'][0]['value']))['head']==inspector['head']:break
                 if time.monotonic()>deadline:self.fail('Learner did not catch up current root state')
                 time.sleep(.1)

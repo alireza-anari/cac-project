@@ -32,7 +32,14 @@ class RecoveryTests(unittest.TestCase):
         with self.lab.connect('C') as c:self.assertEqual(c.execute('SELECT epoch FROM anchor.state').fetchone(),(1,))
         status=b.command('status',{});self.assertEqual((status['epoch'],status['owner']),(2,'B'))
         with self.lab.connect() as c:self.assertTrue(c.execute('SELECT h_guard.c_is_ready()').fetchone()[0],'Legacy cache precondition must actually allow old A')
-        self.assertFalse(a.ready(),'Restored old W revived old-owner readiness under current R')
+        accepted=a.ready()
+        if accepted:
+            # Narrow current-head sensitivity: stale readiness alone is wrong.
+            # Keep current durable ADMIT enforced; do not claim a data bypass.
+            with self.assertRaises(Denied):
+                with a.runtime():self.fail('Current Root ADMIT also accepted old owner')
+            print(BANNER,'STALE HEAD READINESS WITNESS old A ready despite R2/B; independent current Root ADMIT still denied',flush=True)
+        self.assertFalse(accepted,'Restored old W revived old-owner readiness under current R')
         for role,query in [('cac_ctx_runtime','SELECT poc.challenge()'),('cac_ctx_runtime','SELECT store FROM poc.records'),('cac_ctx_runtime',"UPDATE poc.records SET body='synthetic-forbidden-old-owner'")]:
             with self.subTest(role=role,query=query):
                 with self.lab.connect('A',role) as c:
@@ -60,3 +67,21 @@ class RecoveryTests(unittest.TestCase):
         with self.lab.connect() as c:self.assertEqual(c.execute("SELECT rolcanlogin FROM pg_roles WHERE rolname IN ('cac_ctx_runtime','cac_ctx_issuer') ORDER BY rolname").fetchall(),[(False,),(False,)])
         with self.assertRaises(psycopg.OperationalError):self.lab.connect('A','cac_ctx_runtime')
         self.lab.install('A');self.lab.admit('A');a=Broker(self.lab);a.activate(1,str(uuid4()));self.scope(a)
+    def test_03_actual_w_restore_and_service_restart_cannot_forget_live_open(self):
+        a=self.start();old=self.lab.dump_w();self.lab.restore();b=Broker(self.lab,'B');cuts=[]
+        body={'body':'synthetic-open-survives-w-restore'}
+        def hook(label):
+            if label!='before_local_commit':return
+            before=a.inspect();self.assertEqual(before['open'],1);self.assertEqual(before['granted'],1)
+            self.lab.restore_w(old);self.lab.restart_service()
+            self.assertEqual(a.inspect(),before,'W restore/service restart forgot actual current R OPEN')
+            with self.assertRaises(Denied):b.activate(1,str(uuid4()))
+            self.assertFalse(b.ready());self.assertEqual(b.command('status',{})['owner'],'A');cuts.append(label)
+        with a.runtime(action='probe',body=body) as g:
+            g.install(a.issue(g.challenge(),action='probe',body=body));self.assertEqual(g.records(),[S1])
+            self.assertEqual(g.c.execute('UPDATE poc.records SET body=%s WHERE store=%s',(body['body'],S1)).rowcount,1)
+            a.hook=hook # Runtime-only cut, after independent issuer already closed.
+        self.assertEqual(cuts,['before_local_commit']);self.assertEqual(a.inspect()['open'],0)
+        self.lab.restore();b=Broker(self.lab,'B');b.activate(1,str(uuid4()));self.scope(b)
+        with self.lab.connect('B') as observer:self.assertEqual(observer.execute('SELECT body FROM poc.records WHERE store=%s',(S1,)).fetchone(),(body['body'],))
+        print(BANNER,'ACTUAL W restore forgot public OPEN but current-R hold survived restart; successor blocked through old protected COMMIT until known CLOSE',flush=True)

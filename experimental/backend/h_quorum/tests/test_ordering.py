@@ -21,7 +21,13 @@ class OrderingTests(unittest.TestCase):
     def successor(self):
         self.lab.restore();return Broker(self.lab,'B')
     def blocked(self,b,label):
-        with self.assertRaises(Denied):b.activate(1,str(uuid4()))
+        with self.assertRaises(Denied):
+            b.activate(1,str(uuid4()))
+            # Only reached on a real unsafe result (or intentional hold mutant).
+            with b.runtime() as successor:
+                successor.install(b.issue(successor.challenge()));self.assertEqual(successor.records(),[S1])
+            if hasattr(self,'held_gate') and label=='before_local_commit':self.held_gate.c.commit()
+            print(BANNER,'UNSAFE HOLD WITNESS successor READY and fresh scoped SQL while old protected COMMIT possible; cut',label,flush=True)
         state=b.command('status',{});view=b.inspect()
         self.assertEqual((state['epoch'],state['owner'],state['phase']),(1,'A','REVOKING'))
         self.assertGreater(view['open']+view['unknown'],0)
@@ -37,6 +43,7 @@ class OrderingTests(unittest.TestCase):
         with self.a.runtime(action='probe',body=body) as g:
             self.scope(g,'probe',body)
             self.assertEqual(g.c.execute('UPDATE poc.records SET body=%s WHERE store=%s',(body['body'],S1)).rowcount,1)
+            self.held_gate=g
             # Issuer's independent COMMIT has already completed. Only the
             # protected runtime transaction below is the intended crash cut.
             self.a.hook=hook
@@ -56,7 +63,10 @@ class OrderingTests(unittest.TestCase):
                 b.command('revoke',dict(expected=1));cuts.append(label)
         self.a.hook=hook
         with self.assertRaises(Denied):
-            with self.a.runtime():self.fail('Revoked ungranted operation reached application code')
+            with self.a.runtime() as g:
+                self.assertEqual(self.a.inspect()['granted'],1)
+                print(BANNER,'UNSAFE FIRST USE WITNESS actual SQL final_check accepted a grant ordered after REVOKE',g.pid,g.tx,flush=True)
+                self.fail('Revoked ungranted operation reached application code')
         self.assertEqual(cuts,['after_durable_open']);self.assertEqual(self.a.inspect()['unknown'],1)
         self.blocked(b,'revoked-before-first-use')
     def test_02_actual_delayed_receipt_cannot_enter_replaced_transaction(self):
@@ -96,7 +106,11 @@ class OrderingTests(unittest.TestCase):
             self.assertEqual(observer.execute('SHOW max_prepared_transactions').fetchone(),('0',))
             self.assertEqual(observer.execute('SHOW fsync').fetchone(),('on',))
             self.assertEqual(observer.execute('SHOW synchronous_commit').fetchone(),('on',))
-        with self.assertRaises(psycopg.errors.ObjectNotInPrerequisiteState):
+        with self.assertRaises(Denied):
             with self.a.runtime() as g:
-                self.scope(g);g.c.execute("PREPARE TRANSACTION 'synthetic-h-denied'")
+                self.scope(g)
+                with self.assertRaises(psycopg.errors.ObjectNotInPrerequisiteState) as rejected:
+                    g.c.execute("PREPARE TRANSACTION 'synthetic-h-denied'")
+                self.assertEqual(rejected.exception.sqlstate,'55000')
+                print(BANNER,'ACTUAL PREPARE denied SQLSTATE55000; local status',g.c.info.transaction_status.name,'coordinator must deny ambiguous exit',flush=True)
         self.assertEqual(self.a.inspect()['unknown'],1)

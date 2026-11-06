@@ -13,7 +13,8 @@ if __name__=='__main__':
     from h_quorum.tests.test_recovery import RecoveryTests
     from h_quorum.tests.test_ordering import OrderingTests
     from h_quorum.tests.test_pool import PoolTests
-    suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RootTests,QuorumTests,TransportTests,LifecycleTests,GuardTests,IntegrationTests,RecoveryTests,OrderingTests,PoolTests))
+    from h_quorum.tests.test_faults import FaultTests
+    suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RootTests,QuorumTests,TransportTests,LifecycleTests,GuardTests,IntegrationTests,RecoveryTests,OrderingTests,PoolTests,FaultTests))
     count=suite.countTestCases()
     result=unittest.TextTestRunner(verbosity=2,failfast=True).run(suite)
     if not result.wasSuccessful() or result.skipped:raise SystemExit(1)
