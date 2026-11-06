@@ -1,10 +1,10 @@
 name: S009D recovery proof gaps
 on:
   push:
-    branches: [work/s0-09d-fencing-proof-gaps, work/s0-09f-w-oracle-deny-only-poc]
-    paths: ['experimental/backend/**', '.github/workflows/recovery-proof.yml', 'docs/S0_09D*.md', 'docs/S0_09F*.md', 'docs/security/S0_09F*.md', 'docs/changes/CR-S0-09F*.md', 'docs/security/S0_09D*.md', 'docs/changes/CR-S0-09D*.md']
+    branches: [work/s0-09d-fencing-proof-gaps, work/s0-09f-w-oracle-deny-only-poc, work/s0-09h-quorum-survival-poc]
+    paths: ['docs/S0_09H*.md', 'docs/security/S0_09H*.md', 'experimental/backend/**', '.github/workflows/recovery-proof.yml', 'docs/S0_09D*.md', 'docs/S0_09F*.md', 'docs/security/S0_09F*.md', 'docs/changes/CR-S0-09F*.md', 'docs/security/S0_09D*.md', 'docs/changes/CR-S0-09D*.md']
   pull_request:
-    paths: ['experimental/backend/**', '.github/workflows/recovery-proof.yml', 'docs/S0_09D*.md', 'docs/S0_09F*.md', 'docs/security/S0_09F*.md', 'docs/changes/CR-S0-09F*.md', 'docs/security/S0_09D*.md', 'docs/changes/CR-S0-09D*.md']
+    paths: ['docs/S0_09H*.md', 'docs/security/S0_09H*.md', 'experimental/backend/**', '.github/workflows/recovery-proof.yml', 'docs/S0_09D*.md', 'docs/S0_09F*.md', 'docs/security/S0_09F*.md', 'docs/changes/CR-S0-09F*.md', 'docs/security/S0_09D*.md', 'docs/changes/CR-S0-09D*.md']
 permissions:
   contents: read
 concurrency:
