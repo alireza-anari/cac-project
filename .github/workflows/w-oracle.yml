@@ -87,13 +87,13 @@ jobs:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           git fetch --no-tags --depth=1 origin ca043e2751ea1dbcb7aed3c1ed3d171a9bb1f0e2
-          git diff --exit-code ca043e2751ea1dbcb7aed3c1ed3d171a9bb1f0e2 HEAD -- experimental/backend ':(exclude)experimental/backend/w_oracle/**'
+          git -C "$GITHUB_WORKSPACE" diff --exit-code ca043e2751ea1dbcb7aed3c1ed3d171a9bb1f0e2 HEAD -- experimental/backend ':(exclude)experimental/backend/w_oracle/**'
           printf '%s\n' "$W_ORACLE_BANNER" > "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
           git rev-parse HEAD:experimental/backend/w_oracle >> "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
           if [ -n "$PR_HEAD" ]; then
             test "${#PR_HEAD}" = 40
             git fetch --no-tags --depth=1 origin "$PR_HEAD"
-            git diff --exit-code "$PR_HEAD" HEAD -- experimental/backend .github/workflows/w-oracle.yml
+            git -C "$GITHUB_WORKSPACE" diff --exit-code "$PR_HEAD" HEAD -- experimental/backend .github/workflows/w-oracle.yml
             git rev-parse "$PR_HEAD":experimental/backend/w_oracle >> "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
           fi
           printf '%s\n' 'Inherited backend source unchanged; current head and synthetic merge target source identical where applicable.' >> "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
