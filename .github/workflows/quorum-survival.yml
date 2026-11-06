@@ -138,7 +138,9 @@ jobs:
       - name: Scan safe evidence
         id: scan
         if: always()
-        run: python -m h_quorum.scan
+        run: |
+          python -m unittest -v h_quorum.tests.test_scan
+          python -m h_quorum.scan
       - name: Stop owned root processes and remove private fixtures
         if: always()
         run: |

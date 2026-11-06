@@ -70,9 +70,13 @@ class FaultTests(unittest.TestCase):
         with self.assertRaises(Denied):b.activate(1,str(uuid4()))
         self.assertFalse(b.ready())
     def test_02_live_open_survives_actual_minority_learner_replacement(self):
-        a,b=self.start();cluster=Cluster(config());before=cluster.snapshot('live-open-before-replacement')
+        a,b=self.start();old_w=self.lab.dump_w();cluster=Cluster(config());before=cluster.snapshot('live-open-before-replacement')
         with a.runtime() as g:
             self.scope(a,g);held=a.inspect()
+            self.lab.restore_w(old_w)
+            self.assertEqual(a.inspect(),held,'W rollback forgot current replicated OPEN before minority recovery')
+            with self.lab.connect('C') as c:self.assertEqual(c.execute("SELECT (body::jsonb->'ops') ? %s FROM h_w.cache WHERE namespace=%s",(g.operation,self.lab.namespace)).fetchone(),(False,))
+            self.lab.replay();self.assertEqual(a.inspect(),held);self.assertEqual(g.records(),[S1])
             for name in ('r4','r5'):
                 fresh=cluster.replace(name);phase=cluster.snapshot('live-open-learner-'+name)
                 self.assertTrue(phase['members'][name]['isLearner']);self.assertNotEqual(fresh,before['members'][name]['id'])
@@ -100,3 +104,4 @@ class FaultTests(unittest.TestCase):
                 self.assertEqual(g.records(),[S1])
                 print(BANNER,'ACTUAL LIVE OPEN LEARNER JOURNAL',json.dumps(dict(phase=phase,promoted=after,revision=revision,head=held['head']),sort_keys=True),flush=True)
         self.assertEqual(a.inspect()['open'],0)
+        print(BANNER,'COMBINED ACTUAL W rollback omitting live OPEN + two fresh minority learners; complete replay retained Root hold and legitimate SQL; known close only afterwards',flush=True)

@@ -8,12 +8,14 @@ def main():
     directory=Path(os.environ['GITHUB_WORKSPACE'])/'evidence-s009h'
     allowed={'tested-sha.txt','pr-head-sha.txt','source-receipt.log','topology.log','quorum.log','proof.log','service.log'}
     secrets=[]
-    def collect(value,key=''):
+    credential_fields={'password','passwords','anchor_password','fence_secret','proof','poc_proofs','signing_keys'}
+    def collect(value,key='',sensitive=False):
+        sensitive=sensitive or key in credential_fields
         if isinstance(value,dict):
-            for k,v in value.items():collect(v,k)
+            for k,v in value.items():collect(v,k,sensitive)
         elif isinstance(value,list):
-            for v in value:collect(v,key)
-        elif isinstance(value,str) and (key in ('password','fence_secret') or key in ('1','2')) and len(value)>12:secrets.append(value)
+            for v in value:collect(v,key,sensitive)
+        elif isinstance(value,str) and sensitive and value:secrets.append(value)
     for name in ('CAC_C_CONFIG','CAC_H_CONFIG'):
         path=Path(os.environ[name])
         if path.exists():collect(json.loads(path.read_text()))
