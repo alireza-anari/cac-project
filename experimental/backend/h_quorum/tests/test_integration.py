@@ -70,3 +70,16 @@ class IntegrationTests(unittest.TestCase):
             with a.runtime() as g:
                 self.scope(a,g);g.c.commit();g.c.execute('SELECT txid_current()');raise ValueError('synthetic replaced transaction')
         self.assertEqual(a.inspect()['unknown'],1)
+
+    def test_05_external_manifest_covers_nonview_rewrite_rules(self):
+        self.lab.reset();a=self.broker();a.activate(0,str(uuid4()))
+        with a.runtime() as g:self.scope(a,g)
+        expected=self.lab.rootcfg['approved_manifest']
+        self.lab.quarantine('A')
+        try:
+            with self.lab.connect() as c:c.execute('CREATE RULE h_rewrite_probe AS ON UPDATE TO poc.records DO INSTEAD NOTHING')
+            self.assertNotEqual(self.lab.measure('A'),expected,'External manifest ignored non-view DML rewrite rule')
+            with self.lab.connect() as c:self.assertEqual(c.execute("SELECT rolcanlogin FROM pg_roles WHERE rolname IN ('cac_ctx_runtime','cac_ctx_issuer') ORDER BY rolname").fetchall(),[(False,),(False,)])
+        finally:
+            with self.lab.connect() as c:c.execute('DROP RULE IF EXISTS h_rewrite_probe ON poc.records')
+        self.assertEqual(self.lab.measure('A'),expected,'Rule probe did not restore exact catalog manifest')
