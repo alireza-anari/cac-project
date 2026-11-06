@@ -25,10 +25,11 @@ class FaultTests(IntegrationFixture):
         with self.assertRaises(FenceDenied):
             with self.a.runtime() as runtime:
                 args=[runtime.challenge(),self.a.cfg['proof'],S1,'read',P1,Jsonb({})]
+                # Runtime may use a context only after issuer ledger COMMIT.
+                token=self.a.issue(args[0]);runtime.install(token)
+                self.assertEqual(runtime.records(),[S1])
                 with Gate(self.a,'cac_ctx_issuer',args=args) as issuer:
                     query='SELECT poc.issue(%s,%s,%s,%s,%s,%s)'
-                    token=issuer.c.execute(query,args).fetchone()[0]
-                    runtime.install(token);self.assertEqual(runtime.records(),[S1])
                     # Same live issuer ticket + exact arguments succeed before
                     # fault; missing ticket/invalid NULL args cannot mask it.
                     self.assertTrue(issuer.c.execute(query,args).fetchone()[0] is not None)
