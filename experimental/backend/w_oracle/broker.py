@@ -70,6 +70,7 @@ class Gate:
                 (str(uuid4()),str(uuid4()),digest,self.sid,self.pid,self.tx,
                  'runtime' if self.role=='cac_ctx_runtime' else 'issuer',self.role,
                  oracle.namespace,oracle.cfg['policy'],actor['incarnation'],actor['manifest'])).fetchone()[0]
+            self.broker.hook('before_open_commit')
             self.w.commit() # Durable OPEN acknowledged before any permit/hold.
             self.broker.hook('after_durable_open')
             self.w.execute('SELECT w.hold(%s)',(self.wticket,))
@@ -114,11 +115,14 @@ class Gate:
                     raise FenceDenied('Unexpected local outcome')
                 binding=self.c.execute('SELECT pg_backend_pid(),txid_current()::text,fence.system_id()').fetchone()
                 if binding!=(self.pid,self.tx,self.sid):raise FenceDenied('Local transaction changed')
-                self.c.rollback();outcome='abort'
+                self.c.rollback();outcome='abort';self.broker.hook('after_local_abort_before_close')
             if self.c.info.transaction_status!=psycopg.pq.TransactionStatus.IDLE:raise FenceDenied('Missing local ACK')
             # C may cause additional denial, never early W release. W CLOSE last.
             self.a.execute('SELECT anchor.finish(%s)',(self.ticket,));self.a.commit()
-            self.w.execute('SELECT w.close(%s,%s,%s,%s,%s)',(self.wticket,outcome,self.pid,self.tx,self.sid));self.w.commit()
+            self.broker.hook('after_c_finish_before_w_close')
+            self.w.execute('SELECT w.close(%s,%s,%s,%s,%s)',(self.wticket,outcome,self.pid,self.tx,self.sid))
+            self.broker.hook('after_w_close_before_commit');self.w.commit()
+            self.broker.hook('after_close_ack')
         except BaseException:
             self._unknown()
             raise FenceDenied('denied') from None

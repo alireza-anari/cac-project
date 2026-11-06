@@ -82,6 +82,21 @@ jobs:
           printf '%s\n' "$W_ORACLE_BANNER" >> "$GITHUB_WORKSPACE/evidence-s009f/tested-sha.txt"
           printf '%s\n%s\n' "$PR_HEAD" "$W_ORACLE_BANNER" > "$GITHUB_WORKSPACE/evidence-s009f/pr-head-sha.txt"
           python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+      - name: Exact source and unchanged inherited implementation
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin ca043e2751ea1dbcb7aed3c1ed3d171a9bb1f0e2
+          git diff --exit-code ca043e2751ea1dbcb7aed3c1ed3d171a9bb1f0e2 HEAD -- experimental/backend ':(exclude)experimental/backend/w_oracle/**'
+          printf '%s\n' "$W_ORACLE_BANNER" > "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
+          git rev-parse HEAD:experimental/backend/w_oracle >> "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
+          if [ -n "$PR_HEAD" ]; then
+            test "${#PR_HEAD}" = 40
+            git fetch --no-tags --depth=1 origin "$PR_HEAD"
+            git diff --exit-code "$PR_HEAD" HEAD -- experimental/backend .github/workflows/w-oracle.yml
+            git rev-parse "$PR_HEAD":experimental/backend/w_oracle >> "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
+          fi
+          printf '%s\n' 'Inherited backend source unchanged; current head and synthetic merge target source identical where applicable.' >> "$GITHUB_WORKSPACE/evidence-s009f/source-receipt.log"
       - name: Install pinned transaction pooler
         run: |
           sudo apt-get update -qq
@@ -103,6 +118,10 @@ jobs:
         run: python -m w_oracle.lab | tee "$GITHUB_WORKSPACE/evidence-s009f/oracle-bootstrap.log"
       - name: Assumed oracle contract tests
         run: python -m w_oracle.run 2>&1 | tee "$GITHUB_WORKSPACE/evidence-s009f/proof.log"
+      - name: Targeted security sensitivity with exact restoration
+        run: python -m w_oracle.sensitivity 2>&1 | tee "$GITHUB_WORKSPACE/evidence-s009f/sensitivity.log"
+      - name: Full new suite after mutations restored
+        run: python -m w_oracle.run 2>&1 | tee "$GITHUB_WORKSPACE/evidence-s009f/post-sensitivity.log"
       - name: Scan safe evidence
         id: scan
         if: always()

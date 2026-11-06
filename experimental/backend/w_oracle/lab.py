@@ -42,6 +42,7 @@ def bootstrap():
                 c.execute(sql.SQL('CREATE ROLE {} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS PASSWORD {}').format(sql.Identifier(role),sql.Literal(password)))
                 c.execute(sql.SQL('GRANT CONNECT ON DATABASE cac_s009f_oracle TO {}').format(sql.Identifier(role)))
             cfg['actors'][node] = actor
+    assert len({cfg['sid'],*[n['sid'] for n in parent.cfg.values()]})==4,'Not four independent clusters'
     private(Path(os.environ['CAC_F_CONFIG']), cfg)
     print(BANNER, 'oracle SID', cfg['sid'], 'durability controls ON; prepared disabled; same-host model; authenticated channel ASSUMED', flush=True)
     parent.close()

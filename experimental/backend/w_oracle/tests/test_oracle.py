@@ -63,6 +63,16 @@ class OracleContractTests(unittest.TestCase):
             self.admit(c,args);c.commit();args[2]='c'*64
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):self.admit(c,args)
 
+    def test_same_key_retry_cannot_rebind_original_holder(self):
+        self.activate();args=self.binding()
+        with self.lab.connect('A') as original:ticket=self.admit(original,args)
+        with self.lab.connect('A') as retry:
+            self.assertTrue(self.admit(retry,args)==ticket,'Retry changed original idempotent outcome')
+            retry.commit()
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):retry.execute('SELECT w.hold(%s)',(ticket,))
+        with self.lab.connect('B') as rival:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):rival.execute('SELECT w.reserve(1,%s)',(str(uuid4()),))
+
     def test_known_local_read_commit_ack_closes_exact_bound_hold(self):
         # Trusted coordinator observes actual PG COMMIT ACK; no guessed outcome.
         with self.lab.parent.connect() as admin:

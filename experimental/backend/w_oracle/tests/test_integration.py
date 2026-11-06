@@ -39,6 +39,7 @@ class IntegrationFixture(unittest.TestCase):
     def takeover(self):
         self.lab.restore();self.assertEqual(self.b.activate(1,str(uuid4()))['epoch'],2)
         self.assertFalse(self.a.ready());self.assertTrue(self.b.ready());self.positive(self.b)
+    def after_c_rollback(self):pass # Disposable sensitivity hook; no assertions changed.
 
 
 class IntegrationTests(IntegrationFixture):
@@ -64,9 +65,17 @@ class IntegrationTests(IntegrationFixture):
         self.takeover();latest=dump_anchor(self.lab.parent)
         self.addCleanup(restore_anchor,self.lab.parent,latest)
         restore_anchor(self.lab.parent,old)
+        self.after_c_rollback()
         with self.lab.connect('C') as c:self.assertEqual(c.execute('SELECT epoch FROM anchor.state').fetchone(),(1,))
         with self.lab.oracle.connect() as w:self.assertEqual(w.execute('SELECT epoch,owner FROM w.state').fetchone(),(2,'B'))
-        self.assertFalse(self.a.ready(),'Rolled-back anchor revived previous-owner authority')
+        revived=self.a.ready()
+        if revived:
+            # Fault witness only: if mandatory W enforcement has been removed,
+            # prove the same direct SQL path can actually issue/use old authority.
+            from recovery_fencing.broker import Broker as LegacyBroker
+            self.positive(LegacyBroker(self.lab.parent,'A'))
+            print(BANNER,'INJECTED UNSAFE W bypass: C1 oldA issued new context and scoped RLS under current W2',flush=True)
+        self.assertFalse(revived,'Rolled-back anchor revived previous-owner authority')
         self.assert_denied_sql('A','cac_ctx_runtime','SELECT poc.challenge()')
         self.assert_denied_sql('A','cac_ctx_runtime','SELECT store FROM poc.records')
         self.assert_denied_sql('A','cac_ctx_issuer','SELECT poc.issue(NULL,NULL,NULL,NULL,NULL,NULL)')
