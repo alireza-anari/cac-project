@@ -46,5 +46,19 @@ class Root:
         if action in ('status','genesis'):
             return {k:state[k] for k in ('root_id','namespace','epoch','owner','phase','seq','head','policy','signer_epoch')}|{'revision':revision}
         if action=='inspect' and record['kind']=='control':return dict(state_revision=revision,journal_revision=revision,seq=state['seq'],head=state['head'],complete=True)
-        if action=='reserve' and record['kind']=='coord':return {'unimplemented':True}
+        if action=='reserve' and record['kind']=='coord':
+            node=record['node']
+            if set(args)!={'expected','request'} or type(args['expected']) is not int:raise Denied('denied')
+            request=str(UUID(args['request']))
+            actor=state['actors'].get(node)
+            if not actor or actor.get('admitted') is not True:raise Denied('denied')
+            previous=state['activations'].get(request)
+            if previous:
+                if previous!={'owner':node,'expected':args['expected'],'epoch':state['epoch']} or state.get('request')!=request:raise Denied('denied')
+                return dict(epoch=state['epoch'],owner=node,request=request,revision=revision)
+            if args['expected']!=state['epoch'] or state['phase'] not in ('EMPTY','REVOKING') or any(op['phase'] in ('OPEN','UNKNOWN') for op in state['ops'].values()):raise Denied('denied')
+            state['_previous']=state['head'];state['seq']+=1;state['epoch']+=1;state['owner']=node;state['phase']='RESERVED';state['request']=request
+            state['activations'][request]=dict(owner=node,expected=args['expected'],epoch=state['epoch'])
+            state,revision=self.commit(namespace,state,dict(action=action,node=node,**args),revision)
+            return dict(epoch=state['epoch'],owner=node,request=request,revision=revision)
         raise Denied('denied')
