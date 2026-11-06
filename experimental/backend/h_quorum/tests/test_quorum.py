@@ -14,7 +14,8 @@ class QuorumTests(unittest.TestCase):
     def setUpClass(cls):cls.cfg=config();cls.q=Cluster()
     def setUp(self):
         self.ns=str(uuid4());self.control=Client(self.cfg,'control',self.ns)
-        self.control.call('genesis',dict(actors={n:dict(sid='synthetic-'+n,incarnation=str(uuid4()),manifest='a'*64,admitted=True) for n in ('A','B')}))
+        self.actors={n:dict(sid='synthetic-'+n,incarnation=str(uuid4()),manifest='a'*64,admitted=True) for n in ('A','B')}
+        self.control.call('genesis',dict(actors=self.actors))
     def reserve(self,node,expected=0):return Client(self.cfg,node+'_coord',self.ns).call('reserve',dict(expected=expected,request=str(uuid4())))
     def test_two_contenders_cas_one_committed_epoch(self):
         def attempt(node):
@@ -34,17 +35,26 @@ class QuorumTests(unittest.TestCase):
         finally:
             for name in ('r4','r5'):self.q.start(name)
     def test_quorum_loss_denies_reads_and_commands_then_current_recovery(self):
-        self.assertEqual(self.reserve('A')['epoch'],1)
+        # Healthy paired control: B's exact command is eligible in EMPTY state.
+        args=dict(expected=0,request=str(uuid4()));paired=str(uuid4())
+        Client(self.cfg,'control',paired).call('genesis',dict(actors=self.actors))
+        self.assertEqual(Client(self.cfg,'B_coord',paired).call('reserve',args)['epoch'],1)
+        self.assertEqual(Client(self.cfg,'B_check',self.ns).call('status')['phase'],'EMPTY')
         self.q.stop(['r3','r4','r5'])
         try:
-            with self.assertRaises(Denied):Client(self.cfg,'A_check',self.ns).call('status')
-            with self.assertRaises(Denied):self.reserve('B',1)
+            with self.assertRaises(Denied):Client(self.cfg,'B_check',self.ns).call('status')
+            with self.assertRaises(Denied):Client(self.cfg,'B_coord',self.ns).call('reserve',args)
         finally:
             for name in ('r3','r4','r5'):self.q.start(name)
-        recovered=Client(self.cfg,'A_check',self.ns).call('status')
-        self.assertEqual(recovered['phase'],'RESERVED')
-        self.assertIn(recovered['epoch'],(1,2)) # A timed-out mutation may have committed: never infer ABORT.
-        print(BANNER,'actual quorum outage denied current read + command; current data restart preserved epoch',flush=True)
+        recovered=Client(self.cfg,'B_check',self.ns).call('status')
+        self.assertIn((recovered['phase'],recovered['epoch']),(('EMPTY',0),('RESERVED',1)))
+        if recovered['phase']=='RESERVED':self.assertEqual(recovered['owner'],'B')
+        # A timeout is not proof of abort: exact retry resolves any committed
+        # reservation, without granting ACTIVE or applying a second epoch.
+        receipt=Client(self.cfg,'B_coord',self.ns).call('reserve',args)
+        self.assertEqual(receipt['epoch'],1)
+        view=self.control.call('inspect',{});self.assertEqual(view['seq'],1)
+        print(BANNER,'actual quorum outage: paired healthy eligible command PASS; no current read/command ACK while unavailable; exact retry resolves outcome',recovered['phase'],'revision',view['state_revision'],flush=True)
     def test_replacement_is_fresh_learner_then_verified_catchup_then_explicit_vote(self):
         before=self.q.snapshot('before-replacement');self.assertEqual(self.reserve('A')['epoch'],1)
         inspector=self.control.call('inspect',{})
@@ -69,6 +79,12 @@ class QuorumTests(unittest.TestCase):
             history=client.range('/cac-h/'+self.ns+'/journal/',prefix=True,revision=revision,serializable=True,endpoint=endpoint)
             self.assertEqual(len(history.get('kvs',[])),2)
             self.assertEqual(int(history['kvs'][-1]['mod_revision']),revision)
+            self.assertEqual(str(history['header']['cluster_id']),str(self.cfg['cluster_id']))
+            self.assertEqual(str(history['header']['member_id']),fresh)
+            committed=client.range('/cac-h/'+self.ns+'/journal/',prefix=True,revision=revision,endpoint=self.q.cfg['members']['r1']['endpoint'])
+            observed=[(row['key'],row['value'],row['mod_revision']) for row in history['kvs']]
+            authoritative=[(row['key'],row['value'],row['mod_revision']) for row in committed['kvs']]
+            self.assertEqual(observed,authoritative,'Learner journal differs from current survivor committed prefix')
             self.q.promote(name);after=self.q.snapshot('promoted-'+name)
             self.assertTrue(all(not m['isLearner'] for m in after['members'].values()))
             self.assertEqual(len(after['members']),5)

@@ -11,4 +11,4 @@ if __name__=='__main__':
     count=suite.countTestCases()
     result=unittest.TextTestRunner(verbosity=2,failfast=True).run(suite)
     if not result.wasSuccessful() or result.skipped:raise SystemExit(1)
-    print(BANNER,'H SUITE OBSERVED_PASS',count,'distinct; no skips',flush=True)
+    print(BANNER,'H ROOT PREFLIGHT OBSERVED_PASS',count,'distinct; no skips; remaining H scope NOT_RUN',flush=True)
