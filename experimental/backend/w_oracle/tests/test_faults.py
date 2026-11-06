@@ -8,16 +8,38 @@ import time
 from uuid import uuid4
 import psycopg
 from psycopg import sql
+from psycopg.types.json import Jsonb
 
 from recovery_fencing.broker import FenceDenied
+from recovery_fencing.lab import S1,P1
 from recovery_proof.pool_lab import Pool
 from w_oracle.lab import BANNER
-from w_oracle.broker import Broker
+from w_oracle.broker import Broker,Gate
 from w_oracle.ack_loss import CommitReplyLoss
 from w_oracle.tests.test_integration import IntegrationFixture
 
 
 class FaultTests(IntegrationFixture):
+    def live_paths_fault(self,install,restore,label):
+        observed=[]
+        with self.assertRaises(FenceDenied):
+            with self.a.runtime() as runtime:
+                args=[runtime.challenge(),self.a.cfg['proof'],S1,'read',P1,Jsonb({})]
+                with Gate(self.a,'cac_ctx_issuer',args=args) as issuer:
+                    query='SELECT poc.issue(%s,%s,%s,%s,%s,%s)'
+                    token=issuer.c.execute(query,args).fetchone()[0]
+                    runtime.install(token);self.assertEqual(runtime.records(),[S1])
+                    # Same live issuer ticket + exact arguments succeed before
+                    # fault; missing ticket/invalid NULL args cannot mask it.
+                    self.assertTrue(issuer.c.execute(query,args).fetchone()[0] is not None)
+                    try:
+                        install();self.assertFalse(self.a.ready())
+                        with self.assertRaises(psycopg.errors.InsufficientPrivilege):issuer.c.execute(query,args)
+                        with self.assertRaises(psycopg.errors.InsufficientPrivilege):runtime.records()
+                        observed.append(True)
+                    finally:restore()
+        self.assertEqual(observed,[True],'Fault denied setup instead of tested valid issuer/RLS paths')
+        print(BANNER,'LIVE PATH CAUSALITY',label,'same known-valid issuer args/ticket and installed context denied only after fault; unresolved holds retained',flush=True)
     def wait_w(self):
         end=time.monotonic()+15
         while True:
@@ -119,72 +141,58 @@ class FaultTests(IntegrationFixture):
             self.assertEqual(w.execute("SELECT phase FROM w.state").fetchone(),('revoking',))
         print(BANNER,'DELAYED admission ACK + revoke before hold/first use -> DENIED, OPEN retained',flush=True)
     def test_w_outage_denies_existing_rls_issuer_and_new_gate(self):
-        stopped=False
-        try:
-            with self.assertRaises(FenceDenied):
-                with self.a.runtime() as g:
-                    self.scope(self.a,g)
-                    self.lab.parent.docker('stop','--time','1',self.lab.oracle.cfg['container']);stopped=True
-                    self.assertFalse(self.a.ready())
-                    self.assert_denied_sql('A','cac_ctx_issuer','SELECT poc.issue(NULL,NULL,NULL,NULL,NULL,NULL)')
-                    with self.assertRaises(psycopg.errors.InsufficientPrivilege):g.records()
-                    with self.assertRaises(FenceDenied):self.a.issue('stale')
-        finally:
-            if stopped:self.lab.parent.docker('start',self.lab.oracle.cfg['container']);self.wait_w()
+        def stop():self.lab.parent.docker('stop','--time','1',self.lab.oracle.cfg['container'])
+        def start():self.lab.parent.docker('start',self.lab.oracle.cfg['container']);self.wait_w()
+        self.live_paths_fault(stop,start,'actual W process outage')
         self.blocked()
         print(BANNER,'actual W process outage -> SQL/RLS/issuer/new admission fail-closed; original OPEN durable',flush=True)
     def test_one_channel_partition_denies_without_c_fallback(self):
-        self.positive(self.a)
         with self.lab.connect() as c:
             before=c.execute('SELECT checker_conn FROM w_guard.config').fetchone()[0]
-            c.execute("UPDATE w_guard.config SET checker_conn='host=127.0.0.1 port=1 dbname=unreachable connect_timeout=1'")
-        try:
-            self.assertFalse(self.a.ready())
-            self.assert_denied_sql('A','cac_ctx_runtime','SELECT store FROM poc.records')
-            self.assert_denied_sql('A','cac_ctx_issuer','SELECT poc.issue(NULL,NULL,NULL,NULL,NULL,NULL)')
-            with self.assertRaises(FenceDenied):self.a.issue('stale')
-            with self.lab.oracle.connect() as w:self.assertEqual(w.execute('SELECT epoch,phase FROM w.state').fetchone(),(1,'active'))
-        finally:
+        def install():
+            with self.lab.connect() as c:c.execute("UPDATE w_guard.config SET checker_conn='host=127.0.0.1 port=1 dbname=unreachable connect_timeout=1'")
+        def restore():
             with self.lab.connect() as c:c.execute('UPDATE w_guard.config SET checker_conn=%s',(before,))
-        self.positive(self.a)
+        self.live_paths_fault(install,restore,'checker-only connection refusal')
+        with self.lab.oracle.connect() as w:self.assertEqual(w.execute('SELECT epoch,phase FROM w.state').fetchone(),(1,'active'))
+        self.blocked()
         print(BANNER,'checker-channel connection refusal while W coordinator is reachable -> DENIED; exact config restored',flush=True)
     def test_wrong_root_namespace_policy_and_old_actor_are_denied(self):
-        self.positive(self.a)
-        for field,value in [('root',str(uuid4())),('namespace',str(uuid4())),('policy',999),('incarnation',str(uuid4()))]:
+        cases=[('root',str(uuid4())),('namespace',str(uuid4())),('policy',999),('incarnation',str(uuid4())),('actor',str(uuid4()))]
+        for index,(field,value) in enumerate(cases):
             with self.subTest(binding=field):
-                with self.lab.connect() as c:
-                    old=c.execute(sql.SQL('SELECT {} FROM w_guard.config').format(sql.Identifier(field))).fetchone()[0]
-                    c.execute(sql.SQL('UPDATE w_guard.config SET {}=%s').format(sql.Identifier(field)),(value,))
-                try:
-                    self.assertFalse(self.a.ready());self.assert_denied_sql('A','cac_ctx_runtime','SELECT store FROM poc.records')
-                    self.assert_denied_sql('A','cac_ctx_issuer','SELECT poc.issue(NULL,NULL,NULL,NULL,NULL,NULL)')
-                finally:
-                    with self.lab.connect() as c:c.execute(sql.SQL('UPDATE w_guard.config SET {}=%s').format(sql.Identifier(field)),(old,))
-        old=self.lab.oracle.cfg['actors']['A']['incarnation']
-        with self.lab.oracle.connect() as w:w.execute("UPDATE w.actors SET incarnation=%s WHERE node='A'",(str(uuid4()),))
-        try:
-            self.assertFalse(self.a.ready())
-            with self.assertRaises(FenceDenied):self.a.issue('old-actor')
-        finally:
-            with self.lab.oracle.connect() as w:w.execute("UPDATE w.actors SET incarnation=%s WHERE node='A'",(old,))
-        self.positive(self.a)
+                if index:
+                    # Independent synthetic test genesis, never OPEN recovery.
+                    self.lab.reset();self.a=Broker(self.lab);self.b=Broker(self.lab,'B');self.a.activate(0,str(uuid4()))
+                if field=='actor':
+                    old=self.lab.oracle.cfg['actors']['A']['incarnation']
+                    def install():
+                        with self.lab.oracle.connect() as w:w.execute("UPDATE w.actors SET incarnation=%s WHERE node='A'",(value,))
+                    def restore():
+                        with self.lab.oracle.connect() as w:w.execute("UPDATE w.actors SET incarnation=%s WHERE node='A'",(old,))
+                else:
+                    with self.lab.connect() as c:old=c.execute(sql.SQL('SELECT {} FROM w_guard.config').format(sql.Identifier(field))).fetchone()[0]
+                    def install():
+                        with self.lab.connect() as c:c.execute(sql.SQL('UPDATE w_guard.config SET {}=%s').format(sql.Identifier(field)),(value,))
+                    def restore():
+                        with self.lab.connect() as c:c.execute(sql.SQL('UPDATE w_guard.config SET {}=%s').format(sql.Identifier(field)),(old,))
+                self.live_paths_fault(install,restore,field)
+                self.blocked()
     def test_valid_old_signed_response_cannot_satisfy_fresh_challenge(self):
         self.positive(self.a);actor=self.lab.oracle.cfg['actors']['A']
         with self.lab.oracle.connect('A',check=True) as w:
             proof=w.execute("SELECT w.attest(%s,'active','',%s,123,'456',%s,'','cac_ctx_runtime')",('e'*64,self.lab.cfg['A']['sid'],actor['manifest'])).fetchone()[0]
         signature='w.attest(text,text,text,text,int,text,text,text,text)'
         with self.lab.oracle.connect() as w:before=w.execute('SELECT pg_get_functiondef(%s::regprocedure)',(signature,)).fetchone()[0]
-        try:
+        def install():
             with self.lab.oracle.connect() as w:
                 body="CREATE OR REPLACE FUNCTION w.attest(n text,mode_arg text,t text,sid_arg text,pid_arg int,tx_arg text,man text,d text,login_arg text) RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,w AS $stale$ BEGIN RETURN {};END $stale$"
                 w.execute(sql.SQL(body).format(sql.Literal(proof)))
-            self.assertFalse(self.a.ready())
-            self.assert_denied_sql('A','cac_ctx_runtime','SELECT store FROM poc.records')
-            self.assert_denied_sql('A','cac_ctx_issuer','SELECT poc.issue(NULL,NULL,NULL,NULL,NULL,NULL)')
-        finally:
+        def restore():
             with self.lab.oracle.connect() as w:w.execute(before)
             with self.lab.oracle.connect() as w:self.assertTrue(w.execute('SELECT pg_get_functiondef(%s::regprocedure)',(signature,)).fetchone()[0]==before,'Stale-response fixture restoration drift')
-        self.positive(self.a)
+        self.live_paths_fault(install,restore,'actual valid stale signed response')
+        self.blocked()
         print(BANNER,'actual valid old W signature replay denied on fresh nonce/mode/transcript; signer function restored',flush=True)
     def test_paired_takeover_cas_race_has_one_winner_no_early_ready(self):
         self.positive(self.a);self.lab.restore();barrier=threading.Barrier(2)
@@ -220,8 +228,10 @@ class FaultTests(IntegrationFixture):
         self.no_open()
         print(BANNER,'CONCURRENT local transactions distinct PID/fullxid',bindings,'each held until local ACK; successor denied',flush=True)
     def test_prepared_transaction_is_actually_prohibited(self):
-        with self.assertRaises(psycopg.Error) as caught:
-            with self.a.runtime() as g:g.c.execute("PREPARE TRANSACTION 'synthetic-s009f-forbidden'")
+        with self.assertRaises(FenceDenied):
+            with self.a.runtime() as g:
+                with self.assertRaises(psycopg.Error) as caught:g.c.execute("PREPARE TRANSACTION 'synthetic-s009f-forbidden'")
+                self.assertEqual(caught.exception.sqlstate,'55000')
         self.assertEqual(caught.exception.sqlstate,'55000')
         for node in ['A','B','C']:
             with self.lab.connect(node) as c:
