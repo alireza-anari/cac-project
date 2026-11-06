@@ -13,7 +13,7 @@ concurrency:
 jobs:
   quorum-preflight:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -91,6 +91,12 @@ jobs:
           curl --fail --location --retry 2 --max-time 120 https://github.com/etcd-io/etcd/releases/download/v3.6.16/etcd-v3.6.16-linux-amd64.tar.gz --output "$RUNNER_TEMP/etcd.tar.gz"
           printf '%s  %s\n' c8c0d96d8292ef085deabbf735e9561d3d396768e4d606df005aa25964f21911 "$RUNNER_TEMP/etcd.tar.gz" | sha256sum --check --strict
           tar -xzf "$RUNNER_TEMP/etcd.tar.gz" -C "$RUNNER_TEMP"
+      - name: Install pinned disposable transaction pooler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pgbouncer=1.22.0-1build4
+          test "$(dpkg-query -W -f='${Version}' pgbouncer)" = '1.22.0-1build4'
+          /usr/sbin/pgbouncer --version
       - name: Bootstrap three independent disposable PostgreSQL clusters
         env:
           CAC_C_A_CONTAINER: ${{ job.services.primary.id }}
