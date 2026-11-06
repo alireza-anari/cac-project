@@ -1,6 +1,7 @@
 """W_ORACLE_ASSUMED. Real PostgreSQL contract, not real W-root evidence."""
 import unittest
 from uuid import uuid4
+import psycopg
 
 from w_oracle.lab import OracleLab, BANNER
 
@@ -19,7 +20,6 @@ class OracleContractTests(unittest.TestCase):
         print(BANNER, 'independent-test namespace', self.lab.namespace, flush=True)
 
     def test_initial_activation_and_stale_cas_denial(self):
-        import psycopg
         request = str(uuid4())
         with self.lab.connect('A') as c:
             result = c.execute('SELECT w.reserve(0,%s)', (request,)).fetchone()[0]
@@ -27,3 +27,111 @@ class OracleContractTests(unittest.TestCase):
         with self.lab.connect('B') as c:
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):
                 c.execute('SELECT w.reserve(0,%s)', (str(uuid4()),))
+
+    def activate(self, node='A'):
+        request = str(uuid4())
+        with self.lab.connect(node) as c:
+            c.execute('SELECT w.reserve(0,%s)', (request,))
+        with self.lab.connect(node) as c:
+            c.execute('SELECT w.activate(%s)', (request,))
+
+    def binding(self):
+        a = self.lab.cfg['actors']['A']
+        return [str(uuid4()),str(uuid4()),'b'*64,self.lab.parent.cfg['A']['sid'],
+                123,'456','runtime','cac_ctx_runtime',self.lab.namespace,
+                self.lab.cfg['policy'],a['incarnation'],a['manifest']]
+
+    def admit(self, c, args):
+        return c.execute('SELECT w.admit('+','.join(['%s']*12)+')',args).fetchone()[0]
+
+    def test_open_is_committed_before_ticket_and_same_key_is_idempotent(self):
+        self.activate(); args=self.binding()
+        with self.lab.connect('A') as c:
+            ticket=self.admit(c,args);c.commit()
+            with self.lab.connect() as observer:
+                self.assertEqual(observer.execute('SELECT phase,dbpid,dbtx FROM w.ops').fetchone(),('open',123,'456'))
+            self.assertTrue(self.admit(c,args)==ticket,'Retry did not return original ticket')
+            c.commit()
+        with self.lab.connect() as c:
+            self.assertEqual(c.execute('SELECT count(*) FROM w.ops').fetchone(),(1,))
+
+    def test_same_key_changed_intent_is_denied(self):
+        self.activate();args=self.binding()
+        with self.lab.connect('A') as c:
+            self.admit(c,args);c.commit();args[2]='c'*64
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):self.admit(c,args)
+
+    def test_known_local_read_commit_ack_closes_exact_bound_hold(self):
+        # Trusted coordinator observes actual PG COMMIT ACK; no guessed outcome.
+        self.lab.parent.reset();self.activate()
+        with self.lab.parent.connect('A','cac_ctx_runtime') as local,self.lab.connect('A') as w:
+            pid,tx,sid=local.execute('SELECT pg_backend_pid(),txid_current()::text,fence.system_id()').fetchone()
+            args=self.binding();args[3:6]=[sid,pid,tx]
+            ticket=self.admit(w,args);w.commit()
+            w.execute('SELECT w.hold(%s)',(ticket,))
+            with self.lab.connect('B') as rival:
+                with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                    rival.execute('SELECT w.reserve(1,%s)',(str(uuid4()),))
+            local.commit()
+            self.assertEqual(local.info.transaction_status,psycopg.pq.TransactionStatus.IDLE)
+            w.execute('SELECT w.close(%s,%s,%s,%s,%s)',(ticket,'commit',pid,tx,sid));w.commit()
+        with self.lab.connect() as observer:
+            self.assertEqual(observer.execute('SELECT phase FROM w.ops').fetchone(),('closed_commit',))
+        with self.lab.connect('B') as c:
+            self.assertEqual(c.execute('SELECT w.reserve(1,%s)',(str(uuid4()),)).fetchone()[0]['epoch'],2)
+
+    def test_checker_cannot_admit_or_close(self):
+        self.activate()
+        with self.lab.connect('A',check=True) as c:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):self.admit(c,self.binding())
+        with self.lab.connect('A',check=True) as c:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                c.execute("SELECT w.close('not-a-ticket','commit',123,'456',%s)",(self.lab.parent.cfg['A']['sid'],))
+
+    def test_orphan_open_blocks_takeover_after_disconnect(self):
+        self.activate()
+        with self.lab.connect('A') as c:self.admit(c,self.binding())
+        with self.lab.connect('B') as c:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                c.execute('SELECT w.reserve(1,%s)',(str(uuid4()),))
+        with self.lab.connect() as c:self.assertEqual(c.execute('SELECT phase FROM w.ops').fetchone(),('open',))
+
+    def test_revoke_blocks_new_admission_and_delayed_first_use(self):
+        self.activate();args=self.binding()
+        with self.lab.connect('A') as holder:
+            ticket=self.admit(holder,args);holder.commit()
+            with self.lab.connect('B') as revoker:revoker.execute('SELECT w.revoke(1)')
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):holder.execute('SELECT w.hold(%s)',(ticket,))
+        with self.lab.connect('A') as c:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):self.admit(c,self.binding())
+
+    def test_copy_actor_with_wrong_incarnation_or_sid_denies(self):
+        self.activate()
+        for index,value in [(3,self.lab.parent.cfg['B']['sid']),(10,str(uuid4()))]:
+            with self.subTest(field=index),self.lab.connect('A') as c:
+                args=self.binding();args[index]=value
+                with self.assertRaises(psycopg.errors.InsufficientPrivilege):self.admit(c,args)
+
+    def test_declared_continuity_loss_denies_without_reinitialization(self):
+        self.activate()
+        with self.lab.connect() as c:c.execute('UPDATE w.control SET continuity=false')
+        with self.lab.connect('A') as c:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):c.execute('SELECT w.status()')
+        with self.lab.connect() as c:self.assertEqual(c.execute('SELECT epoch FROM w.state').fetchone(),(1,))
+
+    def test_real_oracle_restart_preserves_durable_open(self):
+        self.activate()
+        with self.lab.connect('A') as c:self.admit(c,self.binding())
+        self.lab.parent.docker('restart','--time','1',self.lab.cfg['container'])
+        import time
+        end=time.monotonic()+15
+        while True:
+            try:
+                with self.lab.connect() as c:
+                    self.assertEqual(c.execute('SELECT count(*) FROM w.ops WHERE phase=\'open\'').fetchone(),(1,))
+                break
+            except psycopg.Error:
+                if time.monotonic()>end:raise
+                time.sleep(.1)
+        with self.lab.connect('B') as c:
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):c.execute('SELECT w.reserve(1,%s)',(str(uuid4()),))

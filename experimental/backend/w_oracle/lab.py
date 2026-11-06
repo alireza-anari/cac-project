@@ -27,9 +27,11 @@ def bootstrap():
         c.execute('CREATE EXTENSION pgcrypto')
         c.execute('CREATE ROLE cac_w_guard NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS')
         c.execute('GRANT pg_read_all_stats TO cac_w_guard WITH INHERIT TRUE')
+        c.execute('GRANT EXECUTE ON FUNCTION pg_control_system() TO cac_w_guard')
         c.execute('REVOKE ALL ON DATABASE cac_s009f_oracle FROM PUBLIC; REVOKE ALL ON SCHEMA public FROM PUBLIC')
         c.execute('GRANT USAGE ON SCHEMA public TO cac_w_guard')
         cfg['sid'] = c.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0]
+        assert c.execute("SELECT current_setting('fsync'),current_setting('synchronous_commit'),current_setting('full_page_writes'),current_setting('max_prepared_transactions')").fetchone()==('on','on','on','0')
         for node in ['A', 'B']:
             actor = dict(incarnation=str(uuid4()), manifest='a'*64)
             for kind in ['coord', 'check']:
@@ -41,7 +43,7 @@ def bootstrap():
                 c.execute(sql.SQL('GRANT CONNECT ON DATABASE cac_s009f_oracle TO {}').format(sql.Identifier(role)))
             cfg['actors'][node] = actor
     private(Path(os.environ['CAC_F_CONFIG']), cfg)
-    print(BANNER, 'oracle SID', cfg['sid'], 'same-host model; authenticated channel ASSUMED', flush=True)
+    print(BANNER, 'oracle SID', cfg['sid'], 'durability controls ON; prepared disabled; same-host model; authenticated channel ASSUMED', flush=True)
     parent.close()
 
 
