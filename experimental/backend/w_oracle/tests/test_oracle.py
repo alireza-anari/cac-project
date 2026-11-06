@@ -1,5 +1,7 @@
 """W_ORACLE_ASSUMED. Real PostgreSQL contract, not real W-root evidence."""
 import unittest
+import threading
+import time
 from uuid import uuid4
 import psycopg
 
@@ -135,3 +137,38 @@ class OracleContractTests(unittest.TestCase):
                 time.sleep(.1)
         with self.lab.connect('B') as c:
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):c.execute('SELECT w.reserve(1,%s)',(str(uuid4()),))
+
+    def test_close_never_overwrites_concurrent_unknown(self):
+        self.activate(); args=self.binding()
+        with self.lab.connect('A') as holder, self.lab.connect('A') as uncertain:
+            ticket=self.admit(holder,args); holder.commit()
+            holder.execute("SET LOCAL lock_timeout='4000ms'; SET LOCAL statement_timeout='6000ms'")
+            pid=holder.execute('SELECT pg_backend_pid()').fetchone()[0]
+            holder.execute('SELECT w.hold(%s)',(ticket,))
+            uncertain.execute('SELECT w.unknown(%s)',(ticket,))
+            result=[]
+            def close():
+                try:
+                    holder.execute('SELECT w.close(%s,%s,%s,%s,%s)',(ticket,'commit',args[4],args[5],args[3]))
+                    holder.commit(); result.append('CLOSED')
+                except psycopg.errors.InsufficientPrivilege:
+                    holder.rollback(); result.append('DENIED')
+                except Exception as error:
+                    result.append(type(error).__name__)
+            worker=threading.Thread(target=close); worker.start()
+            blocked=False
+            try:
+                end=time.monotonic()+2
+                with self.lab.connect() as observer:
+                    observer.autocommit=True
+                    while time.monotonic()<end:
+                        if observer.execute('SELECT cardinality(pg_blocking_pids(%s))>0',(pid,)).fetchone()[0]:
+                            blocked=True; break
+                        time.sleep(.01)
+            finally:
+                uncertain.commit(); worker.join(7)
+            self.assertFalse(worker.is_alive(),'CLOSE thread did not finish')
+            self.assertTrue(blocked,'Race barrier did not observe actual PostgreSQL row-lock wait')
+            self.assertEqual(result,['DENIED'],'CLOSE overwrote concurrent UNKNOWN')
+        with self.lab.connect() as observer:
+            self.assertEqual(observer.execute('SELECT phase FROM w.ops').fetchone(),('unknown',))
