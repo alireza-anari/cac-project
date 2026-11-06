@@ -13,20 +13,28 @@ class Broker(CBroker):
         self.root=Client(lab.rootcfg,node+'_coord',lab.namespace)
     def command(self,action,args):return self.root.call(action,args)
     def inspect(self):return Client(self.lab.rootcfg,'control',self.lab.namespace).call('inspect')
-    def local(self,role):return self.pool.connect() if self.pool and role=='cac_ctx_runtime' else super().local(role)
+    def _direct(self,role):
+        c=super().local(role)
+        try:c.execute("SET LOCAL statement_timeout='30000ms'");return c
+        except BaseException:c.close();raise
+    def local(self,role):
+        if not self.pool or role!='cac_ctx_runtime':return self._direct(role)
+        c=self.pool.connect()
+        try:c.execute("SET LOCAL statement_timeout='30000ms'");return c
+        except BaseException:c.close();raise
     def ready(self):
         try:
-            with super().local('cac_ctx_runtime') as c:return c.execute('SELECT fence.is_ready()').fetchone()[0] is True
+            with self._direct('cac_ctx_runtime') as c:return c.execute('SELECT fence.is_ready()').fetchone()[0] is True
         except psycopg.Error:return False
     def activate(self,expected,request):
         try:
             receipt=self.command('reserve',dict(expected=expected,request=request));self.hook('after_r_reserve')
             # Legacy C is a generation cache, not the operation-hold authority.
             current=self.status()['epoch'];cache=self.reserve(current,request)
-            with super().local('cac_fence_activator') as c:c.execute('SELECT fence.apply(%s,%s,%s)',(cache['epoch'],cache['generation'],cache['request']))
-            with super().local('cac_fence_activator') as c:ack=c.execute('SELECT fence.ack(%s,%s)',(cache['epoch'],cache['request'])).fetchone()[0]
+            with self._direct('cac_fence_activator') as c:c.execute('SELECT fence.apply(%s,%s,%s)',(cache['epoch'],cache['generation'],cache['request']))
+            with self._direct('cac_fence_activator') as c:ack=c.execute('SELECT fence.ack(%s,%s)',(cache['epoch'],cache['request'])).fetchone()[0]
             with self.anchor() as c:c.execute('SELECT anchor.confirm(%s)',(ack,))
-            with super().local('cac_fence_activator') as c:
+            with self._direct('cac_fence_activator') as c:
                 c.execute('SELECT fence.mark_ready()');c.execute('SELECT h_guard.set_epoch(%s)',(receipt['epoch'],))
             self.hook('before_r_active');self.command('activate',dict(request=request))
             if not self.ready():raise Denied('denied')
