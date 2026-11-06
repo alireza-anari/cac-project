@@ -52,6 +52,7 @@ class OracleLab:
         require()
         self.parent = ParentLab()
         self.cfg = json.loads(Path(os.environ['CAC_F_CONFIG']).read_text())
+        self.namespace=self.cfg.get('namespace')
 
     def connect(self, node=None, check=False):
         if node is None:
@@ -76,6 +77,15 @@ class OracleLab:
                 c.execute('INSERT INTO w.actors VALUES(%s,%s,%s,%s,%s,%s,true)',
                           (node, actor['coord'], actor['check'], self.parent.cfg[node]['sid'],
                            actor['incarnation'], actor['manifest']))
+            key=c.execute("SELECT encode(secret,'hex') FROM w.control").fetchone()[0]
+        self.cfg.setdefault('historical_keys',[]).append(key)
+        self.cfg['namespace']=self.namespace
+        self.save()
+
+    def save(self):
+        path=Path(os.environ['CAC_F_CONFIG'])
+        with path.open('w') as f:json.dump(self.cfg,f)
+        path.chmod(0o600)
 
     def close(self):
         self.parent.close()

@@ -65,7 +65,10 @@ class OracleContractTests(unittest.TestCase):
 
     def test_known_local_read_commit_ack_closes_exact_bound_hold(self):
         # Trusted coordinator observes actual PG COMMIT ACK; no guessed outcome.
-        self.lab.parent.reset();self.activate()
+        with self.lab.parent.connect() as admin:
+            installed=admin.execute("SELECT to_regprocedure('fence.system_id()') IS NOT NULL").fetchone()[0]
+        if not installed:self.lab.parent.reset()
+        self.activate()
         with self.lab.parent.connect('A','cac_ctx_runtime') as local,self.lab.connect('A') as w:
             pid,tx,sid=local.execute('SELECT pg_backend_pid(),txid_current()::text,fence.system_id()').fetchone()
             args=self.binding();args[3:6]=[sid,pid,tx]

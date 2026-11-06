@@ -8,4 +8,4 @@ if __name__ == '__main__':
     result = unittest.TextTestRunner(verbosity=2, failfast=True).run(tests)
     if not result.wasSuccessful() or result.skipped:
         raise SystemExit(1)
-    print(BANNER, 'ORACLE CONTRACT PASS', tests.countTestCases(), flush=True)
+    print(BANNER, 'S009F SUITE PASS', tests.countTestCases(), 'distinct; no skips', flush=True)

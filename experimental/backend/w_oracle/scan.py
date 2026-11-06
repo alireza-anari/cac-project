@@ -6,6 +6,7 @@ from w_oracle.lab import OracleLab, BANNER
 
 lab = OracleLab()
 values = [lab.cfg['password']]
+values += lab.cfg.get('historical_keys',[])
 for actor in lab.cfg['actors'].values():
     values += [actor['coord_password'], actor['check_password']]
 for node in lab.parent.cfg.values():
