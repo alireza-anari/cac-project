@@ -34,7 +34,9 @@ class IntegrationLab:
         definition=(ROOT/'sql/guard.sql').read_text().replace('-- MEASUREMENT_FUNCTION','CREATE FUNCTION h_guard.measure() RETURNS text LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS $measure$ '+MEASURE+' $measure$;')
         with self.connect(node) as c:c.execute(definition)
     def measure(self,node):
-        with self.connect(node) as c:return c.execute(MEASURE).fetchone()[0]
+        with self.connect(node) as c:
+            c.execute('SET LOCAL search_path=pg_catalog')
+            return c.execute(MEASURE).fetchone()[0]
     def validate_private_acl(self,node):
         private={'cac_ctx_runtime':['poc_private.challenge_unfenced()','poc_private.verify_unfenced()','h_guard.verify_c()','h_guard.c_is_ready()','fence_private.check_guard_c()','h_guard.rpc(text,jsonb)'],
                  'cac_ctx_issuer':['poc_private.issue_unfenced(text,text,uuid,text,uuid,jsonb)','h_guard.issue_c(text,text,uuid,text,uuid,jsonb)','h_guard.c_is_ready()','fence_private.check_guard_c()','h_guard.rpc(text,jsonb)']}
@@ -78,6 +80,8 @@ class IntegrationLab:
         # recovery or clearing UNKNOWN in an existing namespace. Old R history stays.
         for node in ('A','B'):self.quarantine(node);self.down(node)
         self.parent.reset();self.install('A');measured=self.measure('A')
+        with self.connect() as c:live_measure=c.execute('SELECT h_guard.measure()').fetchone()[0]
+        if live_measure!=measured:raise AssertionError('External and live guard catalog measurement differ; LOGIN remains closed')
         self.rootcfg=config()
         expected=self.rootcfg.get('approved_manifest')
         if expected is None:self.rootcfg['approved_manifest']=measured
