@@ -67,7 +67,7 @@ END $$;
 CREATE FUNCTION w.close(t text,result text,pid_arg int,tx_arg text,sid_arg text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,w AS $$
 DECLARE a w.actors;g w.ops;s w.state;BEGIN
  -- Outcome authority is the trusted synthetic coordinator, never app/checker.
- a=w.identity(true);SELECT * INTO STRICT s FROM w.state;SELECT * INTO STRICT g FROM w.ops WHERE ticket=t AND node=a.node;
+ a=w.identity(true);SELECT * INTO STRICT s FROM w.state;SELECT * INTO STRICT g FROM w.ops WHERE ticket=t AND node=a.node FOR UPDATE;
  IF result IS NULL OR result NOT IN ('commit','abort') OR g.phase<>'open' OR g.holder<>pg_backend_pid() OR NOT w.locked(g) OR (g.dbpid,g.dbtx,g.sid) IS DISTINCT FROM (pid_arg,tx_arg,sid_arg) OR s.owner IS DISTINCT FROM a.node OR s.epoch<>g.epoch THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
  UPDATE w.ops SET phase='closed_'||result,outcome=jsonb_build_object('kind','trusted_local_ack','result',result,'dbpid',pid_arg,'dbtx',tx_arg,'sid',sid_arg) WHERE id=g.id;
 END $$;
@@ -81,7 +81,7 @@ DECLARE a w.actors;s w.state;c w.control;g w.ops;p jsonb;b bytea;BEGIN
  IF n IS NULL OR n!~'^[0-9a-f]{64}$' OR mode_arg IS NULL OR d IS NULL OR sid_arg IS DISTINCT FROM a.sid OR man IS DISTINCT FROM a.manifest OR s.phase<>'active' OR s.owner IS DISTINCT FROM a.node OR EXISTS(SELECT 1 FROM w.ops o WHERE o.phase='unknown' OR (o.phase='open' AND NOT w.live(o))) THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
  IF mode_arg='guard' THEN
   SELECT * INTO STRICT g FROM w.ops WHERE ticket=t AND node=a.node;
-  IF g.phase<>'open' OR g.epoch<>s.epoch OR g.incarnation<>a.incarnation OR (g.sid,g.dbpid,g.dbtx,g.login) IS DISTINCT FROM (sid_arg,pid_arg,tx_arg,login_arg) OR NOT w.locked(g) OR (d<>'' AND d IS DISTINCT FROM g.digest) THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
+  IF g.phase<>'open' OR g.epoch<>s.epoch OR g.incarnation<>a.incarnation OR (g.sid,g.dbpid,g.dbtx,g.login) IS DISTINCT FROM (sid_arg,pid_arg,tx_arg,login_arg) OR NOT w.locked(g) OR (g.namespace,g.policy,g.manifest) IS DISTINCT FROM (c.namespace,c.policy,a.manifest) OR d IS DISTINCT FROM g.digest THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
  ELSIF mode_arg<>'active' THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
  p=jsonb_build_object('v',1,'domain','cac-s009f-assumed','root',c.root,'namespace',c.namespace,'policy',c.policy,'owner',a.node,'incarnation',a.incarnation,'epoch',s.epoch,'nonce',n,'mode',mode_arg,'sid',sid_arg,'pid',pid_arg,'tx',tx_arg,'manifest',man,'login',login_arg,'op',g.id,'request',g.request,'digest',g.digest,'kind',g.kind,'ticket_hash',encode(public.digest(coalesce(t,''),'sha256'),'hex'));
  b=convert_to(p::text,'UTF8');RETURN encode(b,'hex')||'.'||encode(public.hmac(b,c.secret,'sha256'),'hex');

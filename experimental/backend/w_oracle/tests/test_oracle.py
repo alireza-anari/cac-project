@@ -172,3 +172,52 @@ class OracleContractTests(unittest.TestCase):
             self.assertEqual(result,['DENIED'],'CLOSE overwrote concurrent UNKNOWN')
         with self.lab.connect() as observer:
             self.assertEqual(observer.execute('SELECT phase FROM w.ops').fetchone(),('unknown',))
+
+    def proof_args(self, ticket, args):
+        return ['c'*64,'guard',ticket,args[3],args[4],args[5],args[11],args[2],args[7]]
+
+    def test_attestation_requires_live_hold_and_exact_intent(self):
+        self.activate(); args=self.binding()
+        with self.lab.connect('A') as holder:
+            ticket=self.admit(holder,args); holder.commit()
+            values=self.proof_args(ticket,args)
+            with self.lab.connect('A',check=True) as check:
+                with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                    check.execute('SELECT w.attest('+','.join(['%s']*9)+')',values)
+            holder.execute('SELECT w.hold(%s)',(ticket,))
+            for index,value in [(7,''),(7,'d'*64),(4,124),(5,'457'),(6,'e'*64)]:
+                with self.subTest(field=index,value=value),self.lab.connect('A',check=True) as check:
+                    changed=values.copy(); changed[index]=value
+                    with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                        check.execute('SELECT w.attest('+','.join(['%s']*9)+')',changed)
+            with self.lab.connect('A',check=True) as check:
+                proof=check.execute('SELECT w.attest('+','.join(['%s']*9)+')',values).fetchone()[0]
+                self.assertTrue(check.execute('SELECT w.verify('+','.join(['%s']*10)+')',[proof,*values]).fetchone()[0])
+                self.assertFalse(check.execute('SELECT w.verify('+','.join(['%s']*10)+')',[proof+'00',*values]).fetchone()[0])
+                changed=values.copy(); changed[0]='d'*64
+                self.assertFalse(check.execute('SELECT w.verify('+','.join(['%s']*10)+')',[proof,*changed]).fetchone()[0])
+            holder.rollback()
+            with self.lab.connect('A',check=True) as check:
+                self.assertFalse(check.execute('SELECT w.verify('+','.join(['%s']*10)+')',[proof,*values]).fetchone()[0])
+
+    def test_old_hold_cannot_attest_under_changed_namespace_or_policy(self):
+        self.activate(); args=self.binding()
+        with self.lab.connect('A') as holder:
+            ticket=self.admit(holder,args); holder.commit(); holder.execute('SELECT w.hold(%s)',(ticket,))
+            with self.lab.connect() as admin:
+                admin.execute('UPDATE w.control SET policy=policy+1,namespace=%s',(str(uuid4()),))
+            with self.lab.connect('A',check=True) as check:
+                with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                    check.execute('SELECT w.attest('+','.join(['%s']*9)+')',self.proof_args(ticket,args))
+
+    def test_revocation_invalidates_previous_attestation(self):
+        self.activate(); args=self.binding()
+        with self.lab.connect('A') as holder:
+            ticket=self.admit(holder,args); holder.commit(); holder.execute('SELECT w.hold(%s)',(ticket,))
+            values=self.proof_args(ticket,args)
+            with self.lab.connect('A',check=True) as check:
+                proof=check.execute('SELECT w.attest('+','.join(['%s']*9)+')',values).fetchone()[0]
+            with self.lab.connect('B') as revoker:
+                revoker.execute('SELECT w.revoke(1)')
+            with self.lab.connect('A',check=True) as check:
+                self.assertFalse(check.execute('SELECT w.verify('+','.join(['%s']*10)+')',[proof,*values]).fetchone()[0])
