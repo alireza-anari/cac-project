@@ -2,6 +2,9 @@
 import json
 import secrets
 import unittest
+from pathlib import Path
+import subprocess
+import tempfile
 from uuid import uuid4
 import psycopg
 from psycopg.conninfo import make_conninfo
@@ -49,3 +52,22 @@ class RootTests(unittest.TestCase):
         self.assertEqual(snap['seq'],1)
         self.assertTrue(snap['complete'])
         print(BANNER,'ATOMIC state/journal MVCC',snap['state_revision'],'head',snap['head'],flush=True)
+    def test_wrong_ca_plaintext_checker_credentials_and_mutating_wire_payload_deny(self):
+        role='A_check';base=dict(host=self.cfg['gateway_ip'],port=self.cfg['wire_port'],dbname='rcheck',user=role,password=self.cfg['roles'][role]['password'],sslmode='verify-full',sslrootcert='/tmp/cac-h-ca.crt',connect_timeout=2)
+        request=dict(action='status',namespace=self.ns,args={});valid="SELECT h_call('"+b64(canonical(request))+"')"
+        def call(settings,query):
+            with self.pg.connect() as c:return json.loads(c.execute('SELECT r FROM public.dblink(%s,%s) AS response(r text)',(make_conninfo(**settings),query)).fetchone()[0])
+        before=self.control.call('status');self.assertEqual(call(base,valid)['head'],before['head'])
+        with tempfile.TemporaryDirectory(prefix='cac-h-untrusted-ca-') as directory:
+            ca=Path(directory)/'ca.crt';key=Path(directory)/'private.key';remote='/tmp/cac-h-untrusted-'+str(uuid4())+'.crt'
+            subprocess.run(['openssl','req','-x509','-newkey','rsa:2048','-nodes','-keyout',str(key),'-out',str(ca),'-days','1','-subj','/CN=synthetic-h-untrusted-ca'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=10)
+            container=self.pg.cfg['A']['container'];subprocess.run(['docker','cp',str(ca),container+':'+remote],capture_output=True,check=True,timeout=10)
+            try:
+                cases=[('untrusted CA',dict(base,sslrootcert=remote),valid),('plaintext startup',dict(base,sslmode='disable'),valid),('wrong checker password',dict(base,password='synthetic-wrong-checker-password'),valid),('coordinator role on read-only wire',dict(base,user='A_coord',password=self.cfg['roles']['A_coord']['password']),valid),('SQL parser bypass',base,'SELECT 1'),('mutating RPC on checker wire',base,"SELECT h_call('"+b64(canonical(dict(action='reserve',namespace=self.ns,args=dict(expected=0,request=str(uuid4())))))+"')"),('duplicate JSON keys',base,"SELECT h_call('"+b64('{"action":"status","action":"admit","args":{},"namespace":"'+self.ns+'"}')+"')")]
+                for label,settings,query in cases:
+                    with self.subTest(label=label):
+                        with self.assertRaises(psycopg.Error):call(settings,query)
+                        self.assertEqual(call(base,valid)['head'],before['head'])
+                        self.assertEqual(self.control.call('status'),before)
+                        print(BANNER,'ACTUAL PG dblink TLS/wire negative',label,'denied; paired valid status and authoritative head unchanged',flush=True)
+            finally:subprocess.run(['docker','exec',container,'rm','-f',remote],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=10)

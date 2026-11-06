@@ -85,3 +85,17 @@ class RecoveryTests(unittest.TestCase):
         self.lab.restore();b=Broker(self.lab,'B');b.activate(1,str(uuid4()));self.scope(b)
         with self.lab.connect('B') as observer:self.assertEqual(observer.execute('SELECT body FROM poc.records WHERE store=%s',(S1,)).fetchone(),(body['body'],))
         print(BANNER,'ACTUAL W restore forgot public OPEN but current-R hold survived restart; successor blocked through old protected COMMIT until known CLOSE',flush=True)
+    def test_04_live_scoped_sql_denies_incomplete_w_without_admit_repair(self):
+        a=self.start()
+        with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+            with a.runtime() as g:
+                g.install(a.issue(g.challenge()));self.assertEqual(g.records(),[S1])
+                # Corrupt after both admissions/first-use ACKs: no coordinator
+                # command may repair the projection before this exact SQL read.
+                with self.lab.connect('C') as c:c.execute('DELETE FROM h_w.journal WHERE namespace=%s AND seq=0',(self.lab.namespace,))
+                data=g.records()
+                self.assertEqual(data,[S1])
+                with self.lab.connect('C') as c:self.assertEqual(c.execute('SELECT count(*) FROM h_w.journal WHERE namespace=%s AND seq=0',(self.lab.namespace,)).fetchone(),(0,))
+                print(BANNER,'UNSAFE REPLAY WITNESS actual already-granted scoped RLS read while W genesis still absent; no ADMIT repair',flush=True)
+        self.assertEqual(a.inspect()['unknown'],1)
+        self.lab.replay();self.assertFalse(a.ready(),'Projection repair must not clear the actual UNKNOWN')

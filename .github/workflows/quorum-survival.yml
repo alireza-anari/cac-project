@@ -14,6 +14,10 @@ jobs:
   quorum-preflight:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [proof, sensitivity]
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -121,9 +125,15 @@ jobs:
               except OSError:time.sleep(.1)
           else:raise RuntimeError('Root transport did not start')
           PYTHON
-      - name: Actual root contract and PostgreSQL transport tests
+      - name: Candidate-specific original assertion RED and exact restoration GREEN
+        if: matrix.lane == 'sensitivity'
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.sensitivity 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          git -C "$GITHUB_WORKSPACE" diff --exit-code -- experimental/backend/h_quorum .github/workflows/quorum-survival.yml
+      - name: Actual root contract and PostgreSQL transport tests
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" >> "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Scan safe evidence
         id: scan
@@ -149,6 +159,6 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always() && steps.scan.outputs.safe == 'true'
         with:
-          name: s009h-${{ github.run_id }}-${{ github.run_attempt }}
+          name: s009h-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.lane }}
           path: evidence-s009h/
           retention-days: 30

@@ -114,3 +114,17 @@ class OrderingTests(unittest.TestCase):
                 self.assertEqual(rejected.exception.sqlstate,'55000')
                 print(BANNER,'ACTUAL PREPARE denied SQLSTATE55000; local status',g.c.info.transaction_status.name,'coordinator must deny ambiguous exit',flush=True)
         self.assertEqual(self.a.inspect()['unknown'],1)
+    def test_05_actual_admitted_contenders_one_ready_owner_and_scoped_positive(self):
+        b=self.successor();b.command('revoke',dict(expected=1))
+        def contender(broker):
+            try:return broker.node,broker.activate(1,str(uuid4()))['epoch']
+            except Denied:return broker.node,'DENIED'
+        with concurrent.futures.ThreadPoolExecutor(2) as workers:results=list(workers.map(contender,(self.a,b)))
+        self.assertEqual(sum(epoch==2 for _,epoch in results),1)
+        self.assertEqual(sum(epoch=='DENIED' for _,epoch in results),1)
+        owner=next(node for node,epoch in results if epoch==2);winner=self.a if owner=='A' else b
+        self.assertEqual(winner.command('status',{})['owner'],owner)
+        self.assertEqual([self.a.ready(),b.ready()],[owner=='A',owner=='B'])
+        with winner.runtime() as g:
+            g.install(winner.issue(g.challenge()));self.assertEqual(g.records(),[S1])
+        print(BANNER,'ACTUAL ADMITTED TAKEOVER CAS',results,'only owner',owner,'READY and fresh scoped SQL positive',flush=True)

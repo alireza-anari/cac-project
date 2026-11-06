@@ -240,7 +240,17 @@ class Cluster:
                            for member in result['members'] for url in member['peerURLs'])
         self.save()
         self._spawn(name, initial=initial)
-        self._wait(lambda: self.etcd.call('/v3/maintenance/status', {}, endpoint=m['endpoint']))
+        def authenticated_learner_ready():
+            # A token minted before this learner started need not be available
+            # in its local auth provider. Mint a real new authenticated token
+            # via the surviving voter AFTER start; never enable learner auth or
+            # bypass TLS/password checks to make the health probe succeed.
+            auth=self.etcd.call('/v3/auth/authenticate',dict(name=self.cfg['etcd']['user'],password=self.cfg['etcd']['password']),endpoint=self.cfg['members']['r1']['endpoint'])
+            token=auth.get('token')
+            if not isinstance(token,str) or not token:raise Denied('denied')
+            self.etcd.token=token
+            return self.etcd.call('/v3/maintenance/status', {}, endpoint=m['endpoint'])
+        self._wait(authenticated_learner_ready)
         return fresh_id
 
     def promote(self, name):
