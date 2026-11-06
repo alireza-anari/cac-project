@@ -206,11 +206,30 @@ class Cluster:
         m['admitted'] = False
         self.save()
         self.etcd.call('/v3/cluster/member/remove', {'ID': old_id})
-        try:
-            result = self.etcd.call('/v3/cluster/member/add', {'peerURLs': [m['peer_url']], 'isLearner': True})
-        except Denied:
-            print(BANNER,'learner-admission diagnostics',dict(http_status=getattr(self.etcd,'last_http_status',None),rpc_code=getattr(self.etcd,'last_rpc_code',None),path=getattr(self.etcd,'last_path',None),safe_error=getattr(self.etcd,'last_error',None)),flush=True)
-            raise
+        deadline = time.monotonic() + 20
+        waited = False
+        while True:
+            # Resolve actual membership before any retry. A learner never votes
+            # because of a timeout; strict server-side reconfiguration stays on.
+            listed = self.etcd.call('/v3/cluster/member/list', {})['members']
+            matches = [member for member in listed if m['peer_url'] in member['peerURLs']]
+            if matches:
+                if len(matches) != 1 or not matches[0].get('isLearner') or str(matches[0]['ID']) == old_id:
+                    raise RuntimeError('Unexpected replacement identity or voter')
+                result = {'member': matches[0], 'members': listed}
+                break
+            try:
+                result = self.etcd.call('/v3/cluster/member/add', {'peerURLs': [m['peer_url']], 'isLearner': True})
+                break
+            except Denied:
+                if (getattr(self.etcd, 'last_path', None) != '/v3/cluster/member/add'
+                        or 'etcdserver: unhealthy cluster' not in getattr(self.etcd, 'last_error', '')
+                        or time.monotonic() >= deadline):
+                    raise
+                if not waited:
+                    print(BANNER, 'real server denied unhealthy reconfiguration; wait for protocol health, never disable strict check', flush=True)
+                    waited = True
+                time.sleep(.2)
         fresh_id = str(result['member']['ID'])
         m.update(id=fresh_id, name=name + '-' + uuid4().hex[:12], isLearner=True, admitted=True,
                  data_dir=str(Path(self.cfg['private_dir']) / (name + '-' + fresh_id)))

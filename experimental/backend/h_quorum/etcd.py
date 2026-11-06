@@ -20,6 +20,11 @@ def unb64(value):
     return base64.b64decode(value, validate=True)
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, newurl):
+        raise Denied('denied')
+
+
 class Etcd:
     def __init__(self, cfg):
         self.cfg = cfg.get('etcd', cfg)
@@ -31,7 +36,7 @@ class Etcd:
         self.context.load_cert_chain(self.cfg['cert'], self.cfg['key'])
         # Never honor proxy variables for this private loopback channel.
         self.opener = urllib.request.build_opener(
-            urllib.request.ProxyHandler({}), urllib.request.HTTPSHandler(context=self.context))
+            urllib.request.ProxyHandler({}), _NoRedirect(), urllib.request.HTTPSHandler(context=self.context))
         self.token = None
 
     def _request(self, endpoint, path, body, token=None):
@@ -52,6 +57,7 @@ class Etcd:
             # Inspect privately only to distinguish token expiration from failures.
             raw = error.read(65536)
             self.last_http_status=error.code
+            self.last_rpc_code=None
             diagnostic=raw.decode('utf-8','replace')
             for secret in (self.cfg.get('password',''),token or '',self.token or ''):
                 if secret:diagnostic=diagnostic.replace(secret,'[REDACTED]')
@@ -62,6 +68,7 @@ class Etcd:
             try:
                 result = json.loads(raw)
             except (ValueError, UnicodeError):
+                if error.code in (502, 503, 504):raise _Unavailable() from None
                 raise Denied('denied') from None
             self.last_rpc_code=result.get('code')
             if error.code == 401 or result.get('code') == 16:
