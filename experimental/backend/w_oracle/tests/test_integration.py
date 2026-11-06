@@ -104,6 +104,7 @@ class IntegrationTests(IntegrationFixture):
         print(BANNER,'OVERLAY ROUNDTRIP definition/owners/ACL/RLS/catalog manifest exact',before,flush=True)
 
     def test_open_survives_last_guard_until_known_commit_and_close(self):
+        self.lab.restore() # Rival must be admitted, otherwise denial is vacuous.
         stages=[]
         def hook(stage):
             if stage in ('after_durable_open','after_final_guard','after_local_commit_before_close'):
@@ -127,6 +128,7 @@ class IntegrationTests(IntegrationFixture):
         self.no_open();self.takeover()
 
     def test_replaced_transaction_exception_never_closes_original_as_abort(self):
+        self.lab.restore()
         with self.assertRaises(FenceDenied):
             with self.a.runtime() as g:
                 g.c.commit()

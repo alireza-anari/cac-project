@@ -30,7 +30,10 @@ class FaultTests(IntegrationFixture):
     def restart_w(self):
         self.lab.parent.docker('restart','--time','1',self.lab.oracle.cfg['container']);self.wait_w()
     def blocked(self):
+        # Exercise the actual OPEN exclusion, never an unadmitted-actor denial.
+        self.lab.restore()
         with self.lab.oracle.connect('B') as w:
+            self.assertEqual(w.execute('SELECT w.status()').fetchone()[0]['epoch'],1)
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):w.execute('SELECT w.reserve(1,%s)',(str(uuid4()),))
         self.assertFalse(self.a.ready())
     def worker(self,stage):
@@ -103,6 +106,7 @@ class FaultTests(IntegrationFixture):
         self.restart_w();self.blocked()
         print(BANNER,'WIRE durable OPEN committed, reply dropped; no hold/permit/local authorization; OPEN durable, successor BLOCKED',flush=True)
     def test_delayed_open_ack_cannot_start_after_revoke_intent(self):
+        self.lab.restore()
         self.positive(self.a)
         def hook(stage):
             if stage=='after_durable_open':
@@ -200,6 +204,7 @@ class FaultTests(IntegrationFixture):
         self.assertEqual(winner.activate(1,requests[winners[0]])['epoch'],2);self.positive(winner)
         print(BANNER,'PAIRED CAS RACE',results,'reserved successor NOT_READY until committed app ACK and W activation',flush=True)
     def test_concurrent_local_transactions_hold_independent_bound_operations(self):
+        self.lab.restore()
         barrier=threading.Barrier(2)
         def operation(_):
             broker=Broker(self.lab)
