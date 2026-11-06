@@ -10,7 +10,8 @@ if __name__=='__main__':
     from h_quorum.tests.test_lifecycle import LifecycleTests
     from h_quorum.tests.test_guard import GuardTests
     from h_quorum.tests.test_integration import IntegrationTests
-    suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RootTests,QuorumTests,TransportTests,LifecycleTests,GuardTests,IntegrationTests))
+    from h_quorum.tests.test_recovery import RecoveryTests
+    suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RootTests,QuorumTests,TransportTests,LifecycleTests,GuardTests,IntegrationTests,RecoveryTests))
     count=suite.countTestCases()
     result=unittest.TextTestRunner(verbosity=2,failfast=True).run(suite)
     if not result.wasSuccessful() or result.skipped:raise SystemExit(1)
