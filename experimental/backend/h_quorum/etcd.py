@@ -52,6 +52,11 @@ class Etcd:
             # Inspect privately only to distinguish token expiration from failures.
             raw = error.read(65536)
             self.last_http_status=error.code
+            diagnostic=raw.decode('utf-8','replace')[:500]
+            for secret in (self.cfg.get('password',''),token or '',self.token or ''):
+                if secret:diagnostic=diagnostic.replace(secret,'[REDACTED]')
+            self.last_error=diagnostic
+            self.last_path=path
             if error.code in (502, 503, 504):
                 raise _Unavailable() from None
             try:

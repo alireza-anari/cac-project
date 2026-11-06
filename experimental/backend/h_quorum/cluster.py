@@ -306,7 +306,7 @@ def bootstrap():
             cluster._wait(lambda: cluster.etcd.range('/h/bootstrap'))
             print(json.dumps(cluster.snapshot('bootstrap-five-real-voters')), flush=True)
         except BaseException:
-            print(BANNER,'bootstrap diagnostics',dict(auth_enabled=cfg['etcd']['auth_enabled'],http_status=getattr(cluster.etcd,'last_http_status',None),rpc_code=getattr(cluster.etcd,'last_rpc_code',None)),flush=True)
+            print(BANNER,'bootstrap diagnostics',dict(auth_enabled=cfg['etcd']['auth_enabled'],http_status=getattr(cluster.etcd,'last_http_status',None),rpc_code=getattr(cluster.etcd,'last_rpc_code',None),path=getattr(cluster.etcd,'last_path',None),safe_error=getattr(cluster.etcd,'last_error',None)),flush=True)
             cluster.cleanup()
             raise
     finally:
