@@ -53,7 +53,13 @@ class QuorumTests(unittest.TestCase):
             self.assertNotEqual(fresh,before['members'][name]['id']);self.assertTrue(phase['members'][name]['isLearner'])
             self.assertEqual(sum(not m['isLearner'] for m in phase['members'].values() if m['admitted']),4)
             for survivor in ('r1','r2','r3'):self.assertEqual(phase['members'][survivor]['id'],before['members'][survivor]['id'])
-            endpoint=self.q.cfg['members'][name]['endpoint'];client=Etcd(self.q.cfg);deadline=time.monotonic()+15
+            endpoint=self.q.cfg['members'][name]['endpoint'];client=Etcd(self.q.cfg)
+            # Authenticate is a Raft proposal and forbidden on learners. Mint a
+            # fresh token at a surviving voter AFTER learner start, then observe
+            # its actual replicated auth entry and serializable local data.
+            client._authenticate(self.q.cfg['members']['r1']['endpoint'])
+            with self.assertRaises(Denied):client.range('/cac-h/'+self.ns+'/state',endpoint=endpoint)
+            deadline=time.monotonic()+15
             while True:
                 local=client.range('/cac-h/'+self.ns+'/state',serializable=True,endpoint=endpoint)
                 if local.get('kvs') and json.loads(unb64(local['kvs'][0]['value']))['head']==inspector['head']:break
