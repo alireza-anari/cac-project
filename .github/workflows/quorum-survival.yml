@@ -1,0 +1,148 @@
+name: S009H real quorum survival
+on:
+  push:
+    branches: [work/s0-09h-quorum-survival-poc]
+    paths: ['experimental/backend/h_quorum/**', '.github/workflows/quorum-survival.yml', 'docs/S0_09H*.md', 'docs/security/S0_09H*.md']
+  pull_request:
+    paths: ['experimental/backend/h_quorum/**', '.github/workflows/quorum-survival.yml', 'docs/S0_09H*.md', 'docs/security/S0_09H*.md']
+permissions:
+  contents: read
+concurrency:
+  group: s009h-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quorum-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      primary:
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s007_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s009c-disposable-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s007_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+      restore:
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s007_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s009c-disposable-only
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s007_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+      anchor:
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s009c_anchor
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s009c-disposable-only
+        ports: ['5434:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s009c_anchor"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      CAC_H_BANNER: 'Q_SURVIVAL_ONLY / NONRESTORED_MAJORITY_REQUIRED / SECURITY_UNPROVEN'
+      CAC_EXPERIMENTAL_DISPOSABLE: '1'
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        working-directory: experimental/backend
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.15'
+      - name: Private config and exact revision
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "CAC_C_CONFIG=$RUNNER_TEMP/cac-s009h-parent.json" >> "$GITHUB_ENV"
+          echo "CAC_H_CONFIG=$RUNNER_TEMP/cac-s009h-root.json" >> "$GITHUB_ENV"
+          echo "CAC_H_ETCD_BIN=$RUNNER_TEMP/etcd-v3.6.16-linux-amd64" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/evidence-s009h"
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/tested-sha.txt"
+          git rev-parse HEAD >> "$GITHUB_WORKSPACE/evidence-s009h/tested-sha.txt"
+          printf '%s\n%s\n' "$CAC_H_BANNER" "$PR_HEAD" > "$GITHUB_WORKSPACE/evidence-s009h/pr-head-sha.txt"
+          python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+      - name: Unchanged inherited implementation and synthetic merge receipt
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin 2bebe0022956809b3842a015d215e6332c5a8b0f
+          git -C "$GITHUB_WORKSPACE" diff --exit-code 2bebe0022956809b3842a015d215e6332c5a8b0f HEAD -- experimental/backend ':(exclude)experimental/backend/h_quorum/**'
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/source-receipt.log"
+          git rev-parse HEAD:experimental/backend/h_quorum >> "$GITHUB_WORKSPACE/evidence-s009h/source-receipt.log"
+          if [ -n "$PR_HEAD" ]; then
+            test "${#PR_HEAD}" = 40
+            git fetch --no-tags --depth=1 origin "$PR_HEAD"
+            git -C "$GITHUB_WORKSPACE" diff --exit-code "$PR_HEAD" HEAD -- experimental/backend .github/workflows/quorum-survival.yml
+          fi
+      - name: Verify and install pinned upstream consensus binaries
+        run: |
+          curl --fail --location --retry 2 --max-time 120 https://github.com/etcd-io/etcd/releases/download/v3.6.16/etcd-v3.6.16-linux-amd64.tar.gz --output "$RUNNER_TEMP/etcd.tar.gz"
+          printf '%s  %s\n' c8c0d96d8292ef085deabbf735e9561d3d396768e4d606df005aa25964f21911 "$RUNNER_TEMP/etcd.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/etcd.tar.gz" -C "$RUNNER_TEMP"
+      - name: Bootstrap three independent disposable PostgreSQL clusters
+        env:
+          CAC_C_A_CONTAINER: ${{ job.services.primary.id }}
+          CAC_C_B_CONTAINER: ${{ job.services.restore.id }}
+          CAC_C_C_CONTAINER: ${{ job.services.anchor.id }}
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/topology.log"
+          python -m recovery_fencing.lab | tee -a "$GITHUB_WORKSPACE/evidence-s009h/topology.log"
+      - name: Bootstrap actual five-voter root
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/quorum.log"
+          python -m h_quorum.cluster | tee -a "$GITHUB_WORKSPACE/evidence-s009h/quorum.log"
+      - name: Start authenticated online root transport
+        run: |
+          python -m h_quorum.service > "$GITHUB_WORKSPACE/evidence-s009h/service.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/cac-h-service.pid"
+          python - <<'PYTHON'
+          import socket,time
+          for _ in range(50):
+              try:
+                  with socket.create_connection(('127.0.0.1',6549),timeout=.2):break
+              except OSError:time.sleep(.1)
+          else:raise RuntimeError('Root transport did not start')
+          PYTHON
+      - name: Actual root contract and PostgreSQL transport tests
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Scan safe evidence
+        id: scan
+        if: always()
+        run: python -m h_quorum.scan
+      - name: Stop owned root processes and remove private fixtures
+        if: always()
+        run: |
+          python - <<'PYTHON'
+          import os,signal
+          from pathlib import Path
+          from h_quorum.cluster import Cluster
+          p=Path(os.environ['RUNNER_TEMP'])/'cac-h-service.pid'
+          if p.exists():
+              pid=int(p.read_text())
+              try:
+                  if b'h_quorum.service' in Path('/proc',str(pid),'cmdline').read_bytes():os.kill(pid,signal.SIGTERM)
+              except FileNotFoundError:pass
+          if Path(os.environ['CAC_H_CONFIG']).exists():Cluster().cleanup()
+          for name in ('CAC_C_CONFIG','CAC_H_CONFIG'):
+              Path(os.environ[name]).unlink(missing_ok=True)
+          PYTHON
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always() && steps.scan.outputs.safe == 'true'
+        with:
+          name: s009h-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence-s009h/
+          retention-days: 30
