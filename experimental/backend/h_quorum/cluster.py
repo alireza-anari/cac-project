@@ -206,7 +206,11 @@ class Cluster:
         m['admitted'] = False
         self.save()
         self.etcd.call('/v3/cluster/member/remove', {'ID': old_id})
-        result = self.etcd.call('/v3/cluster/member/add', {'peerURLs': [m['peer_url']], 'isLearner': True})
+        try:
+            result = self.etcd.call('/v3/cluster/member/add', {'peerURLs': [m['peer_url']], 'isLearner': True})
+        except Denied:
+            print(BANNER,'learner-admission diagnostics',dict(http_status=getattr(self.etcd,'last_http_status',None),rpc_code=getattr(self.etcd,'last_rpc_code',None),path=getattr(self.etcd,'last_path',None),safe_error=getattr(self.etcd,'last_error',None)),flush=True)
+            raise
         fresh_id = str(result['member']['ID'])
         m.update(id=fresh_id, name=name + '-' + uuid4().hex[:12], isLearner=True, admitted=True,
                  data_dir=str(Path(self.cfg['private_dir']) / (name + '-' + fresh_id)))
