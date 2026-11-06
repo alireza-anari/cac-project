@@ -69,7 +69,7 @@ def _certificate(directory, name, ips, ca=False, cn=None):
                        'keyUsage=critical,digitalSignature,keyEncipherment\n'
                        'extendedKeyUsage=serverAuth,clientAuth\nsubjectAltName=' +
                        ','.join('IP:' + ip for ip in ips) + '\n')
-        _run(['openssl', 'req', '-new', '-key', str(key), '-subj', '/CN=' + (cn or name), '-out', str(csr)])
+        _run(['openssl', 'req', '-new', '-key', str(key), '-subj', ('/O=CAC-H-private-client' if cn == '' else '/CN=' + (name if cn is None else cn)), '-out', str(csr)])
         _run(['openssl', 'x509', '-req', '-in', str(csr), '-CA', str(directory / 'ca.crt'),
               '-CAkey', str(directory / 'ca.key'), '-set_serial', str(secrets.randbits(120)),
               '-days', '2', '-sha256', '-extfile', str(ext), '-out', str(cert)])
@@ -261,7 +261,7 @@ def bootstrap():
         directory = Path(tempfile.mkdtemp(prefix='cac-h-private-', dir=runner))
         directory.chmod(0o700)
         ca, _ = _certificate(directory, 'ca', [], ca=True)
-        cert, key = _certificate(directory, 'root-client', ['127.0.0.1'], cn='root')
+        cert, key = _certificate(directory, 'root-client', ['127.0.0.1'], cn='')
         gateway_cert, gateway_key = _certificate(directory, 'gateway', ['127.0.0.1', gateway])
         cfg = {'private_dir': str(directory), 'root_id': str(uuid4()), 'gateway_ip': gateway,
                'wire_port': 6548, 'http_port': 6549, 'binary': binary,
