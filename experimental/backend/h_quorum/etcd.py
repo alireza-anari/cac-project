@@ -35,7 +35,9 @@ class Etcd:
         self.token = None
 
     def _request(self, endpoint, path, body, token=None):
-        headers = {'Content-Type': 'application/json'}
+        # etcd AuthInfoFromTLS ignores the gateway's server CN only when
+        # Grpcgateway-Accept is present (pinned upstream auth/store.go).
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
         if token:
             headers['Authorization'] = token
         request = urllib.request.Request(endpoint.rstrip('/') + path,
@@ -49,18 +51,21 @@ class Etcd:
         except urllib.error.HTTPError as error:
             # Inspect privately only to distinguish token expiration from failures.
             raw = error.read(65536)
+            self.last_http_status=error.code
             if error.code in (502, 503, 504):
                 raise _Unavailable() from None
             try:
                 result = json.loads(raw)
             except (ValueError, UnicodeError):
                 raise Denied('denied') from None
+            self.last_rpc_code=result.get('code')
             if error.code == 401 or result.get('code') == 16:
                 raise _Expired() from None
             if error.code in (502, 503, 504) or result.get('code') == 14:
                 raise _Unavailable() from None
             raise Denied('denied') from None
         if 'error' in result or result.get('code', 0):
+            self.last_rpc_code=result.get('code')
             if result.get('code') == 16:
                 raise _Expired()
             if result.get('code') == 14:
