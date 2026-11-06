@@ -47,7 +47,7 @@ ALTER FUNCTION w_guard.verify() RENAME TO verify_c;
 REVOKE ALL ON FUNCTION w_guard.c_is_ready() FROM cac_ctx_runtime,cac_ctx_issuer,cac_fence_activator;
 REVOKE ALL ON FUNCTION w_guard.issue_c(text,text,uuid,text,uuid,jsonb) FROM cac_ctx_issuer;
 REVOKE ALL ON FUNCTION w_guard.verify_c() FROM cac_ctx_runtime;
-SET LOCAL ROLE cac_ctx_guard;
+RESET ROLE;
 CREATE FUNCTION fence_private.check_guard() RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,fence_private AS $$
 BEGIN PERFORM w_guard.require();PERFORM fence_private.check_guard_c();END $$;
 CREATE FUNCTION fence.is_ready() RETURNS bool LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
@@ -61,6 +61,10 @@ CREATE FUNCTION poc.verify() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET
 DECLARE r jsonb;BEGIN
  PERFORM w_guard.require();r=w_guard.verify_c();PERFORM w_guard.require('guard',w_guard.runtime_digest((r->>'store')::uuid));RETURN r;
 END $$;
+ALTER FUNCTION fence_private.check_guard() OWNER TO cac_ctx_guard;
+ALTER FUNCTION fence.is_ready() OWNER TO cac_ctx_guard;
+ALTER FUNCTION poc.issue(text,text,uuid,text,uuid,jsonb) OWNER TO cac_ctx_guard;
+ALTER FUNCTION poc.verify() OWNER TO cac_ctx_guard;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA w_guard FROM PUBLIC;
 REVOKE ALL ON FUNCTION fence_private.check_guard(),fence.is_ready(),poc.issue(text,text,uuid,text,uuid,jsonb),poc.verify() FROM PUBLIC;
 RESET ROLE;
