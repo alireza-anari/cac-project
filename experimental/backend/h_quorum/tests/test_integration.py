@@ -13,6 +13,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertTrue(installed,'Mandatory H guard admission is not implemented')
         with self.lab.connect() as c:
             self.assertIsNotNone(c.execute("SELECT to_regclass('h_guard.config')").fetchone()[0])
+            guard_measure=c.execute('SELECT h_guard.measure()').fetchone()[0]
+            self.assertEqual(self.lab.measure('A'),guard_measure,'External controller and live SQL guard catalog measurements differ')
             self.assertEqual(c.execute("SELECT rolcanlogin FROM pg_roles WHERE rolname IN ('cac_ctx_runtime','cac_ctx_issuer') ORDER BY rolname").fetchall(),[(True,),(True,)])
 
     def broker(self):
