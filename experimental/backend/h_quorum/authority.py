@@ -5,6 +5,7 @@ import re
 from uuid import UUID
 from h_quorum.common import Denied,canonical,digest
 from h_quorum.etcd import Etcd,b64,unb64
+from h_quorum import policy
 
 class Root:
     def __init__(self,cfg):self.cfg=cfg;self.etcd=Etcd(cfg)
@@ -20,10 +21,11 @@ class Root:
         result=self.etcd.txn([comparison],[{'request_put':{'key':b64(key),'value':b64(canonical(state))}},{'request_put':{'key':b64(journal),'value':b64(canonical(entry))}}])
         if not result.get('succeeded'):raise Denied('denied')
         return state,int(result['header']['revision'])
-    def read(self,namespace):
+    def read(self,namespace,with_history=False):
         prefix=self.prefix(namespace);result=self.etcd.range(prefix+'state')
         if str(result['header']['cluster_id'])!=str(self.cfg['cluster_id']) or len(result.get('kvs',[]))!=1:raise Denied('denied')
         kv=result['kvs'][0];state=json.loads(unb64(kv['value']));revision=int(kv['mod_revision'])
+        if state['root_id']!=self.cfg['root_id'] or state['namespace']!=namespace:raise Denied('denied')
         history=self.etcd.range(prefix+'journal/',prefix=True,revision=int(result['header']['revision']))
         rows=history.get('kvs',[])
         if len(rows)!=state['seq']+1:raise Denied('denied')
@@ -34,7 +36,7 @@ class Root:
             previous=digest(entry)
         expected=dict(state);expected.pop('head')
         if previous!=state['head'] or entry['state']!=expected or int(rows[-1]['mod_revision'])!=revision:raise Denied('denied')
-        return state,revision
+        return (state,revision,rows) if with_history else (state,revision)
     def dispatch(self,role,payload):
         record=self.cfg['roles'].get(role)
         if not record or set(payload)!={'action','args','namespace'} or not isinstance(payload['args'],dict):raise Denied('denied')
@@ -44,10 +46,19 @@ class Root:
             if record['kind']!='control' or set(args)!={'actors'} or set(args['actors'])!={'A','B'}:raise Denied('denied')
             state=dict(root_id=self.cfg['root_id'],namespace=namespace,cluster_id=self.cfg['cluster_id'],seq=0,epoch=0,owner=None,phase='EMPTY',policy=1,signer_epoch=1,actors=args['actors'],ops={},requests={},activations={})
             state,revision=self.commit(namespace,state,{'action':'genesis'},0)
-        else:state,revision=self.read(namespace)
+        else:state,revision,history=self.read(namespace,True)
         if action in ('status','genesis'):
             return {k:state[k] for k in ('root_id','namespace','epoch','owner','phase','seq','head','policy','signer_epoch')}|{'revision':revision}
         if action=='inspect' and record['kind']=='control':return dict(state_revision=revision,journal_revision=revision,seq=state['seq'],head=state['head'],complete=True,open=sum(op['phase']=='OPEN' for op in state['ops'].values()),unknown=sum(op['phase']=='UNKNOWN' for op in state['ops'].values()),granted=sum(op.get('granted',False) and op['phase']=='OPEN' for op in state['ops'].values()))
+        if action in ('guard','verify'):
+            from h_quorum.attestation import attest
+            return attest(self,state,revision,history,record,args,namespace,verify=action=='verify')
+        if action=='retire_signer' and record['kind']=='control':
+            if (set(args)!={'expected','new'} or type(args['expected']) is not int or type(args['new']) is not int
+                or args['expected']!=state['signer_epoch'] or args['new']<=args['expected'] or str(args['new']) not in self.cfg['signing_keys']):raise Denied('denied')
+            state['_previous']=state['head'];state['seq']+=1;state['signer_epoch']=args['new']
+            state,revision=self.commit(namespace,state,dict(action=action,**args),revision)
+            return dict(signer_epoch=state['signer_epoch'],revision=revision)
         if action=='reserve' and record['kind']=='coord':
             node=record['node']
             if set(args)!={'expected','request'} or type(args['expected']) is not int:raise Denied('denied')
@@ -58,8 +69,8 @@ class Root:
             if previous:
                 if previous!={'owner':node,'expected':args['expected'],'epoch':state['epoch']} or state.get('request')!=request:raise Denied('denied')
                 return dict(epoch=state['epoch'],owner=node,request=request,revision=revision)
-            if args['expected']!=state['epoch'] or state['phase'] not in ('EMPTY','REVOKING') or any(op['phase'] in ('OPEN','UNKNOWN') for op in state['ops'].values()):raise Denied('denied')
-            state['_previous']=state['head'];state['seq']+=1;state['epoch']+=1;state['owner']=node;state['phase']='RESERVED';state['request']=request
+            if args['expected']!=state['epoch'] or state['phase'] not in ('EMPTY','REVOKING') or policy.has_unresolved(state):raise Denied('denied')
+            state['_previous']=state['head'];state['seq']+=1;state['epoch']+=1;state['owner']=node;state['phase']='RESERVED';state['request']=request;state.pop('revoke_seq',None)
             state['activations'][request]=dict(owner=node,expected=args['expected'],epoch=state['epoch'])
             state,revision=self.commit(namespace,state,dict(action=action,node=node,**args),revision)
             return dict(epoch=state['epoch'],owner=node,request=request,revision=revision)
@@ -70,7 +81,7 @@ class Root:
             state['_previous']=state['head'];state['seq']+=1
             return self.commit(namespace,state,dict(action=action,node=node,**command),revision)
         def summary(current,rev):return dict(epoch=current['epoch'],phase=current['phase'],owner=current['owner'],revision=rev)
-        unresolved=any(op['phase'] in ('OPEN','UNKNOWN') for op in state['ops'].values())
+        unresolved=policy.has_unresolved(state)
         if action=='activate':
             if set(args)!={'request'} or args['request']!=state.get('request') or state['owner']!=node or unresolved:raise Denied('denied')
             if state['phase']=='ACTIVE':return summary(state,revision)
@@ -80,12 +91,12 @@ class Root:
         if action=='revoke':
             if set(args)!={'expected'} or type(args['expected']) is not int or args['expected']!=state['epoch'] or state['phase'] not in ('ACTIVE','REVOKING'):raise Denied('denied')
             if state['phase']=='REVOKING':return summary(state,revision)
-            state['phase']='REVOKING';state,revision=write(args)
+            state['phase']='REVOKING';state['revoke_seq']=state['seq']+1;state,revision=write(args)
             return summary(state,revision)
         binding_keys={'sid','pid','tx','kind','login','digest','incarnation','manifest','policy'}
         def binding():
             b={key:args[key] for key in binding_keys}
-            if (b['sid']!=actor['sid'] or b['incarnation']!=actor['incarnation'] or b['manifest']!=actor['manifest'] or b['policy']!=state['policy']
+            if (b['sid']!=actor['sid'] or b['incarnation']!=actor['incarnation'] or b['manifest']!=actor['manifest'] or type(b['policy']) is not int or b['policy']!=state['policy']
                 or type(b['pid']) is not int or b['pid']<=0 or not isinstance(b['tx'],str) or not b['tx'].isdecimal() or int(b['tx'])<=0
                 or b['kind'] not in ('runtime','issuer') or b['login']!={'runtime':'cac_ctx_runtime','issuer':'cac_ctx_issuer'}[b['kind']]
                 or not isinstance(b['digest'],str) or not re.fullmatch('[0-9a-f]{64}',b['digest'])):raise Denied('denied')
@@ -119,9 +130,9 @@ class Root:
         elif action=='first_use':
             if op['phase']!='OPEN':raise Denied('denied')
             if op['granted']:
-                if state['phase'] not in ('ACTIVE','REVOKING'):raise Denied('denied')
+                if not policy.first_use_valid(state,op):raise Denied('denied')
                 return summary(state,revision)
-            if state['phase']!='ACTIVE':raise Denied('denied')
+            if not policy.first_use_valid(state,op):raise Denied('denied')
             op['granted']=True;op['grant_seq']=state['seq']+1
         else:
             if op['phase']!='OPEN' or not op['granted'] or args['outcome'] not in ('commit','abort') or state['phase'] not in ('ACTIVE','REVOKING'):raise Denied('denied')
