@@ -6,6 +6,7 @@ from uuid import UUID
 from h_quorum.common import Denied,canonical,digest
 from h_quorum.etcd import Etcd,b64,unb64
 from h_quorum import policy
+from h_quorum.admission import current_profile
 
 class Root:
     def __init__(self,cfg):self.cfg=cfg;self.etcd=Etcd(cfg)
@@ -65,6 +66,7 @@ class Root:
             request=str(UUID(args['request']))
             actor=state['actors'].get(node)
             if not actor or actor.get('admitted') is not True:raise Denied('denied')
+            current_profile(self.cfg,namespace,actor)
             previous=state['activations'].get(request)
             if previous:
                 if previous!={'owner':node,'expected':args['expected'],'epoch':state['epoch']} or state.get('request')!=request:raise Denied('denied')
@@ -77,6 +79,7 @@ class Root:
         if record['kind']!='coord':raise Denied('denied')
         node=record['node'];actor=state['actors'].get(node)
         if not actor or actor.get('admitted') is not True:raise Denied('denied')
+        current_profile(self.cfg,namespace,actor)
         def write(command):
             state['_previous']=state['head'];state['seq']+=1
             return self.commit(namespace,state,dict(action=action,node=node,**command),revision)

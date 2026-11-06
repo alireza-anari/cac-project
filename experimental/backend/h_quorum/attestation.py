@@ -6,6 +6,7 @@ import re
 from h_quorum.common import Denied,canonical,digest
 from h_quorum.etcd import unb64
 from h_quorum import policy
+from h_quorum.admission import current_profile
 
 FIELDS={'sid','pid','tx','kind','login','digest','incarnation','manifest','policy','ticket','root_id','epoch','nonce','mode'}
 
@@ -19,6 +20,7 @@ def attest(root,state,revision,history,record,args,namespace,verify=False):
         or type(args['pid']) is not int or args['pid']<=0 or not isinstance(args['tx'],str) or not args['tx'].isdecimal() or int(args['tx'])<=0
         or not isinstance(args['nonce'],str) or not re.fullmatch('[0-9a-f]{64}',args['nonce'])
         or not isinstance(args['ticket'],str) or len(args['ticket'])>128):raise Denied('denied')
+    current_profile(root.cfg,namespace,actor)
     kinds={'cac_ctx_runtime':'runtime','cac_ctx_issuer':'issuer','cac_fence_activator':'activator'}
     if args['login'] not in kinds or args['kind']!=kinds[args['login']]:raise Denied('denied')
     if args['mode']=='active':
