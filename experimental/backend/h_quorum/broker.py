@@ -11,7 +11,10 @@ class Broker(CBroker):
     def __init__(self,lab,node='A',pool=None,hook=None):
         super().__init__(lab.parent,node,hook=hook);self.lab=lab;self.node=node;self.pool=pool
         self.root=Client(lab.rootcfg,node+'_coord',lab.namespace)
-    def command(self,action,args):return self.root.call(action,args)
+    def command(self,action,args):
+        result=self.root.call(action,args)
+        if action not in ('status','inspect'):self.lab.replay()
+        return result
     def inspect(self):return Client(self.lab.rootcfg,'control',self.lab.namespace).call('inspect')
     def _direct(self,role):
         c=super().local(role)
@@ -28,6 +31,8 @@ class Broker(CBroker):
         except psycopg.Error:return False
     def activate(self,expected,request):
         try:
+            current_root=self.command('status',{})
+            if current_root['phase']=='ACTIVE' and current_root['epoch']==expected:self.command('revoke',dict(expected=expected))
             receipt=self.command('reserve',dict(expected=expected,request=request));self.hook('after_r_reserve')
             # Legacy C is a generation cache, not the operation-hold authority.
             current=self.status()['epoch'];cache=self.reserve(current,request)
@@ -40,6 +45,16 @@ class Broker(CBroker):
             if not self.ready():raise Denied('denied')
             return receipt
         except (psycopg.Error,FenceDenied):raise Denied('denied') from None
+    def sync_cache(self):
+        status=self.command('status',{})
+        if status['owner']!=self.node or status['phase']!='ACTIVE':raise Denied('denied')
+        cache=self.reserve(self.status()['epoch'],str(uuid4()))
+        with self._direct('cac_fence_activator') as c:c.execute('SELECT fence.apply(%s,%s,%s)',(cache['epoch'],cache['generation'],cache['request']))
+        with self._direct('cac_fence_activator') as c:ack=c.execute('SELECT fence.ack(%s,%s)',(cache['epoch'],cache['request'])).fetchone()[0]
+        with self.anchor() as c:c.execute('SELECT anchor.confirm(%s)',(ack,))
+        with self._direct('cac_fence_activator') as c:c.execute('SELECT fence.mark_ready()')
+        self.lab.replay()
+        if not self.ready():raise Denied('denied')
     def runtime(self,store=S1,action='read',target=P1,body=None):return Gate(self,'cac_ctx_runtime',store=store,action=action,target=target,body={} if body is None else body)
     def issue(self,h,store=S1,action='read',target=P1,body=None):
         args=[h,self.cfg['proof'],store,action,target,Jsonb({} if body is None else body)]
@@ -79,7 +94,7 @@ class Gate:
     def _unknown(self):
         if self.ticket and self.binding:
             try:self.broker.command('unknown',dict(self.binding,ticket=self.ticket))
-            except Denied:pass # Durable OPEN remains an exclusion even without UNKNOWN ACK.
+            except (Denied,psycopg.Error):pass # Durable OPEN remains an exclusion even without UNKNOWN ACK.
     def __exit__(self,exc_type,exc,tb):
         try:
             status=self.c.info.transaction_status

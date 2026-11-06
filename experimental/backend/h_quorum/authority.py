@@ -54,6 +54,17 @@ class Root:
         if action in ('guard','verify'):
             from h_quorum.attestation import attest
             return attest(self,state,revision,history,record,args,namespace,verify=action=='verify')
+        if action=='admit_actor' and record['kind']=='control':
+            if set(args)!={'node','actor'} or args['node'] not in state['actors']:raise Denied('denied')
+            node=args['node'];actor=args['actor']
+            if (not isinstance(actor,dict) or set(actor)!={'sid','incarnation','manifest','admitted','profile_required','w_required'}
+                or actor['sid']!=state['actors'][node]['sid'] or actor['admitted'] is not True or actor['profile_required'] is not True or actor['w_required'] is not True
+                or actor['manifest']!=self.cfg.get('approved_manifest') or str(UUID(actor['incarnation']))!=actor['incarnation']
+                or any(op['node']==node and op['phase'] in ('OPEN','UNKNOWN') for op in state['ops'].values())):raise Denied('denied')
+            current_profile(self.cfg,namespace,actor)
+            state['_previous']=state['head'];state['seq']+=1;state['actors'][node]=actor
+            state,revision=self.commit(namespace,state,dict(action=action,node=node,actor=actor),revision)
+            return dict(node=node,incarnation=actor['incarnation'],revision=revision)
         if action=='retire_signer' and record['kind']=='control':
             if (set(args)!={'expected','new'} or type(args['expected']) is not int or type(args['new']) is not int
                 or args['expected']!=state['signer_epoch'] or args['new']<=args['expected'] or str(args['new']) not in self.cfg['signing_keys']):raise Denied('denied')

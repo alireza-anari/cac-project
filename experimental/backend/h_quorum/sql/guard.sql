@@ -20,6 +20,12 @@ DECLARE cfg h_guard.config;req jsonb;answer text;q text;BEGIN
  IF answer IS NULL OR length(answer)>16000 THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
  RETURN answer::jsonb;
 EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END $$;
+CREATE FUNCTION h_guard.w_status() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,h_guard AS $$
+DECLARE cfg h_guard.config;conn text;s jsonb;BEGIN
+ SELECT * INTO STRICT cfg FROM h_guard.config;SELECT anchor_conn INTO STRICT conn FROM fence_private.config;
+ SELECT r INTO STRICT s FROM public.dblink(conn,format('SELECT h_w.status(%L::uuid)',cfg.namespace)) AS response(r jsonb);
+ RETURN s;
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END $$;
 CREATE FUNCTION h_guard.require(mode_arg text DEFAULT 'guard',digest_arg text DEFAULT NULL) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,h_guard AS $$
 DECLARE cfg h_guard.config;n text;sid text;pid int;tx text;man text;intent text;t text;a jsonb;r jsonb;p jsonb;answer text;k text;BEGIN
  SELECT * INTO STRICT cfg FROM h_guard.config;
@@ -28,6 +34,7 @@ DECLARE cfg h_guard.config;n text;sid text;pid int;tx text;man text;intent text;
  t=CASE WHEN mode_arg='active' THEN '' ELSE coalesce(current_setting('cac.h_ticket',true),'') END;
  k=CASE session_user WHEN 'cac_ctx_runtime' THEN 'runtime' WHEN 'cac_ctx_issuer' THEN 'issuer' WHEN 'cac_fence_activator' THEN 'activator' END;
  a=jsonb_build_object('root_id',cfg.root,'policy',cfg.policy,'epoch',cfg.epoch,'incarnation',cfg.incarnation,'manifest',man,'sid',sid,'pid',pid,'tx',tx,'nonce',n,'mode',mode_arg,'ticket',t,'digest',intent,'kind',k,'login',session_user);
+ a=a||jsonb_build_object('projection',h_guard.w_status());
  r=h_guard.rpc('guard',a);answer=r->>'answer';
  IF answer IS NULL OR length(answer)>16000 OR answer!~'^[0-9a-f]+\.[0-9a-f]{64}$' THEN RAISE EXCEPTION 'denied' USING ERRCODE='42501';END IF;
  p=convert_from(decode(split_part(answer,'.',1),'hex'),'UTF8')::jsonb;

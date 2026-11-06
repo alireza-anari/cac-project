@@ -11,8 +11,10 @@ from h_quorum.admission import current_profile
 FIELDS={'sid','pid','tx','kind','login','digest','incarnation','manifest','policy','ticket','root_id','epoch','nonce','mode'}
 
 def attest(root,state,revision,history,record,args,namespace,verify=False):
-    if record['kind']!='check' or set(args)!=FIELDS|({'answer'} if verify else set()):raise Denied('denied')
     node=record['node'];actor=state['actors'].get(node)
+    needs_w=bool(actor and actor.get('w_required') is True)
+    extra=({'answer'} if verify else set())|({'projection'} if needs_w else set())
+    if record['kind']!='check' or set(args)!=FIELDS|extra:raise Denied('denied')
     if (not actor or actor.get('admitted') is not True or state['owner']!=node
         or args['root_id']!=root.cfg['root_id'] or type(args['epoch']) is not int or args['epoch']!=state['epoch']
         or type(args['policy']) is not int or args['policy']!=state['policy']
@@ -23,6 +25,8 @@ def attest(root,state,revision,history,record,args,namespace,verify=False):
     current_profile(root.cfg,namespace,actor)
     kinds={'cac_ctx_runtime':'runtime','cac_ctx_issuer':'issuer','cac_fence_activator':'activator'}
     if args['login'] not in kinds or args['kind']!=kinds[args['login']]:raise Denied('denied')
+    op=None
+    if actor.get('profile_required') is True and not needs_w:raise Denied('denied')
     if args['mode']=='active':
         if state['phase']!='ACTIVE' or args['ticket']!='' or args['digest']!='' or any(op['phase']=='UNKNOWN' for op in state['ops'].values()):raise Denied('denied')
     elif args['mode']=='guard':
@@ -32,7 +36,11 @@ def attest(root,state,revision,history,record,args,namespace,verify=False):
         op=matches[0]
         if op['node']!=node or op['epoch']!=state['epoch'] or op['binding']!=binding or not op['granted'] or not policy.first_use_valid(state,op):raise Denied('denied')
     else:raise Denied('denied')
+    if needs_w:
+        from h_quorum.projection import validate_projection
+        validate_projection(root,state,history,args['projection'],args['mode'],op)
     transcript={key:args[key] for key in FIELDS-{'ticket'}}
+    if needs_w:transcript['projection_hash']=digest(args['projection'])
     transcript.update(v=1,domain='cac-s009h-q-survival',namespace=namespace,node=node,signer_epoch=state['signer_epoch'],ticket_hash=hashlib.sha256(args['ticket'].encode()).hexdigest())
     key=bytes.fromhex(root.cfg['signing_keys'][str(state['signer_epoch'])])
     if len(key)!=32:raise Denied('denied')

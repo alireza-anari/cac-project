@@ -28,7 +28,6 @@ class RecoveryTests(unittest.TestCase):
     def test_00_real_old_w_restore_never_revives_old_owner(self):
         a=self.start();self.require_recovery();old=self.lab.dump_w()
         self.lab.restore();b=Broker(self.lab,'B');b.activate(1,str(uuid4()));self.scope(b)
-        latest=self.lab.dump_w();self.addCleanup(self.lab.restore_w,latest)
         self.lab.restore_w(old)
         with self.lab.connect('C') as c:self.assertEqual(c.execute('SELECT epoch FROM anchor.state').fetchone(),(1,))
         status=b.command('status',{});self.assertEqual((status['epoch'],status['owner']),(2,'B'))
