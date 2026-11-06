@@ -34,10 +34,12 @@ class OrderingTests(unittest.TestCase):
                 with self.lab.connect() as observer:
                     actual=observer.execute('SELECT body FROM poc.records WHERE store=%s',(S1,)).fetchone()[0]
                     self.assertEqual(actual,body['body'] if label=='after_local_commit_before_close' else 'synthetic')
-        self.a.hook=hook
         with self.a.runtime(action='probe',body=body) as g:
             self.scope(g,'probe',body)
             self.assertEqual(g.c.execute('UPDATE poc.records SET body=%s WHERE store=%s',(body['body'],S1)).rowcount,1)
+            # Issuer's independent COMMIT has already completed. Only the
+            # protected runtime transaction below is the intended crash cut.
+            self.a.hook=hook
         self.assertEqual(cuts,['before_local_commit','after_local_commit_before_close'])
         self.assertEqual(self.a.inspect()['open'],0)
         # Refresh the independent logical restore after the actual old COMMIT.
