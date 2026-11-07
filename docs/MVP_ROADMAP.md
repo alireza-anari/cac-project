@@ -44,3 +44,10 @@ This section **does not replace** S0–S6, unblock Sprint0/Sprint1, approve prod
 | Actual application integration/public Live | Django/PostgreSQL RLS, identity/onboarding, Woo/AI/Widget secure deployment, legal/provider and production operations | **BLOCKED / NOT AUTHORIZED** until independent relevant approval and all actual evidence gates |
 
 [Detailed S0-10 management decision](management/S0_10_PARALLEL_PRODUCT_DELIVERY_PLAN_R0.md). A demo/mock that displays READY or LIVE does not prove any real readiness; no new API/schema/privilege contract follows from a UX label.
+
+
+## S0-10A accepted UX contract / S0-10A-M1 explicitly authorized static mock — 2026-11-07
+
+- [UX contract Draft PR #40](https://github.com/alireza-anari/cac-project/pull/40), head `971bcaab79b7e249866b948243ef881cecf7045a`, **DESIGN_ACCEPTED_FOR_BOUNDED_MOCK_ONLY**, [documentation Issue #39](https://github.com/alireza-anari/cac-project/issues/39) completed/closed strictly as UX documentation. Ten merchant journeys remain `DESIGNED/NOT_RUN`.
+- [Separate M1 Issue #41](https://github.com/alireza-anari/cac-project/issues/41) and [Management authorization](management/S0_10A_UX_ACCEPTANCE_AND_M1_STATIC_MOCK_AUTHORIZATION.md) allow **only a standalone offline, synthetic HTML/CSS/minimal-JS visual panel prototype** under `prototypes/s0-10a-merchant-ui/`, in a new unmerged Draft PR. No backend, login, Woo/AI, network, real data, actual public Live/Preview, hosted demo, Production, or canonical source claim.
+- S0/S1 and actual S2–S6 implementation/release gates **remain BLOCKED/NOT_RUN**; this is a parallel *visual design* exercise, not evidence of application readiness. `SOURCE-001/GATE-SOURCE` BLOCKED, #9 OPEN, S0-09D original FAIL_SECURITY, root majority catastrophe UNSUPPORTED, Lane3 orphan clearing BLOCKED and E P0 G1–G5 DESIGN_BLOCKED.
