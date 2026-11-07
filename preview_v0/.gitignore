@@ -1,0 +1,8 @@
+.local_state/
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3*
+.env*
+*.log
+dist/

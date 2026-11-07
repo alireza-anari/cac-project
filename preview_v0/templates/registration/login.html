@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="login-grid"><section class="welcome"><span class="eyebrow light">CAC PREVIEW V0</span><h1>فروشگاه شما،<br>دستیار خودتان.</h1><p>از یک محصول شروع کنید. دستیار خصوصی بسازید و همین‌جا گفتگو را تجربه کنید.</p><div class="welcome-note">بدون اتصال بیرونی<br>فقط داده آزمایشی روی همین دستگاه</div></section>
+<section class="card login-card"><span class="pill">ورود محلی</span><h2>دوباره خوش آمدید</h2><p class="muted">با حساب آزمایشی ساخته‌شده هنگام راه‌اندازی وارد شوید.</p><form method="post">{% csrf_token %}{{ form.as_div }}<button class="button primary wide" type="submit">ورود به پنل فروشنده ←</button></form><p class="hint">حساب ندارید؟ دستور setup_demo را طبق README اجرا کنید. ثبت‌نام عمومی وجود ندارد.</p></section></div>
+{% endblock %}
