@@ -1,5 +1,8 @@
 """Literal stopped native bytes, actual current quorum and protected SQL only."""
 import importlib.util
+import copy
+import os
+import signal
 import unittest
 from uuid import uuid4
 import psycopg
@@ -64,6 +67,9 @@ class PhysicalTests(unittest.TestCase):
             reader.range('/cac-h/'+self.lab.namespace+'/state', endpoint=physical.original['endpoint'])
         self.retire(); authoritative = self.state()
         self.assertGreater(authoritative[1], old_revision)
+        self.assertFalse(self.a.ready(), 'Unavailable stale minority revived old SQL readiness')
+        with self.assertRaises(Denied):
+            with self.a.runtime(): self.fail('Unavailable minority allowed old policy gate')
         receipt = physical.replay()
         self.assertEqual(receipt['policy'], 2); self.assertNotEqual(receipt['head'], old_state['head'])
         self.assertEqual(self.state(), authoritative)
@@ -158,3 +164,17 @@ class PhysicalTests(unittest.TestCase):
             print(BANNER,'UNSAFE L PHYSICAL AUTHORITY WITNESS native import completed then coordinator committed policy2',flush=True)
         self.assertEqual(self.state(),before)
         self.retire(); self.current2()
+
+    def test_06_forced_nonchild_stop_proved_before_native_reimport(self):
+        from h_quorum.cluster import Cluster
+        physical=self.physical()
+        child,_=physical.spawn(); physical.caught_up()
+        record=copy.deepcopy(physical.q.cfg['members']['r4'])
+        os.kill(record['pid'],signal.SIGSTOP) # real unresponsive minority, quorum stays current
+        physical.q=Cluster() # emulate bootstrap-owned PID: deliberately no Popen child handle
+        self.assertFalse(physical.q.children)
+        physical.stop()
+        self.assertFalse(physical.q._owned(record), 'Old executable still running before byte replacement')
+        self.assertEqual(child.wait(timeout=5),-signal.SIGKILL)
+        self.retire(); physical.replay(); self.current2()
+        print(BANNER,'L ACTUAL SIGSTOP -> nonchild SIGKILL termination witnessed before byte replay; no concurrent same-ID',flush=True)

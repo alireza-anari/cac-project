@@ -29,6 +29,20 @@ class Physical:
         self.manifest = None
         self.old = None
         self.command_receipts = []
+        self.stopped_records = []
+
+    def stop(self):
+        # Cluster.stop may clear a bootstrap-owned PID immediately after SIGKILL.
+        # Retain its original identity and prove that executable is gone before
+        # any copy/rename/restart, including the non-child forced-stop branch.
+        record=copy.deepcopy(self.q.cfg['members']['r4'])
+        self.q.stop('r4')
+        deadline=time.monotonic()+5
+        while self.q._owned(record):
+            if time.monotonic()>deadline:raise AssertionError('Minority process not terminated; native import forbidden')
+            time.sleep(.02)
+        self.stopped_records.append(record)
+        print(BANNER,'L STOP PROVEN original minority executable absent',record.get('pid'),record['id'],flush=True)
 
     def path(self, value):
         p = Path(value)
@@ -44,6 +58,7 @@ class Physical:
     def majority_current(self, label):
         membership = self.q.etcd.call('/v3/cluster/member/list', {})
         voters = {str(m['ID']) for m in membership['members'] if not m.get('isLearner')}
+        target, revision = Root(self.lab.rootcfg).read(self.lab.namespace)
         statuses = {}
         for n, original in self.majority.items():
             m = self.q.cfg['members'][n]
@@ -52,9 +67,15 @@ class Physical:
             status = self.q.etcd.call('/v3/maintenance/status', {}, endpoint=m['endpoint'])
             if str(m['id']) not in voters or str(status['header']['member_id']) != str(m['id']):
                 raise AssertionError('Original majority membership mismatch')
+            def current_local():
+                result=self.q.etcd.range('/cac-h/'+self.lab.namespace+'/state',serializable=True,endpoint=m['endpoint'])
+                rows=result.get('kvs',[])
+                return len(rows)==1 and int(rows[0]['mod_revision'])==revision and json.loads(unb64(rows[0]['value']))==target
+            self.q._wait(current_local)
             statuses[n] = {k: status[k] for k in ('raftTerm','raftIndex','raftAppliedIndex')}
         print(BANNER, 'L ORIGINAL CURRENT MAJORITY', json.dumps(dict(label=label,
-              ids={n:m['id'] for n,m in self.majority.items()}, statuses=statuses)), flush=True)
+              ids={n:m['id'] for n,m in self.majority.items()}, statuses=statuses,
+              head=target['head'],revision=revision,policy=target['policy'],seq=target['seq'],all_three_local_state_equal=True)), flush=True)
         return statuses
 
     def inventory(self, directory):
@@ -72,6 +93,8 @@ class Physical:
         if name != 'r4': raise AssertionError('Physical spawn restricted to minority r4')
         m = self.q.cfg['members'][name]
         if self.q._owned(m): raise AssertionError('Concurrent same-ID process forbidden')
+        if any(self.q._owned(record) for record in self.stopped_records):
+            raise AssertionError('Prior minority process remains live; spawn forbidden')
         data = self.path(m['data_dir']); data.mkdir(mode=0o700, parents=True, exist_ok=True)
         args = [self.q.cfg['binary'], '--name', m['name'], '--data-dir', str(data),
                 '--listen-client-urls', m['endpoint'], '--advertise-client-urls', m['endpoint'],
@@ -122,7 +145,7 @@ class Physical:
 
     def archive_current(self):
         self.majority_current('before-native-archive')
-        self.q.stop('r4')
+        self.stop()
         self.spawn(small_snapshot=True)
         self.q._wait(lambda: self.local())
         # Native member-local Raft snapshots, not an application export.
@@ -132,7 +155,7 @@ class Physical:
         self.q._wait(lambda: list((data/'member/snap').glob('*.snap')))
         self.old = self.caught_up()
         self.old_response = self.local()
-        self.q.stop('r4')
+        self.stop()
         if self.q._owned(self.q.cfg['members']['r4']): raise AssertionError('Archive requires stopped member')
         shutil.copytree(data, self.archive)
         self.manifest = self.inventory(self.archive)
@@ -158,7 +181,7 @@ class Physical:
         current, revision = Root(self.lab.rootcfg).read(self.lab.namespace)
         if current['head'] == self.old['head'] or revision <= self.old['revision']:
             raise AssertionError('Native archive must predate genuine committed authority transition')
-        self.q.stop('r4')
+        self.stop()
         data = self.path(self.q.cfg['members']['r4']['data_dir'])
         quarantine = self.private / ('superseded-'+uuid4().hex)
         data.rename(quarantine)
@@ -170,10 +193,10 @@ class Physical:
 
     def incompatible_attempt(self, learner_identity=False):
         # Native replacement first; removed old ID is never concurrently active.
-        self.q.replace('r4')
+        self.stop(); self.q.replace('r4')
         self.caught_up()
         fresh = copy.deepcopy(self.q.cfg['members']['r4'])
-        self.q.stop('r4'); fresh['pid'] = None
+        self.stop(); fresh['pid'] = None
         fresh_data = self.path(fresh['data_dir'])
         backup = self.private / ('valid-learner-'+uuid4().hex)
         fresh_data.rename(backup)
@@ -205,7 +228,7 @@ class Physical:
             self.majority_current('native-refusal-majority-untouched')
             return receipt
         finally:
-            self.q.stop('r4')
+            self.stop()
             self.q.cfg['members']['r4'] = fresh; self.q.save()
             bad = self.private / ('rejected-data-'+uuid4().hex)
             fresh_data.rename(bad); backup.rename(fresh_data)

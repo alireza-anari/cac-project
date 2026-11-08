@@ -136,7 +136,7 @@ jobs:
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.l_physical.sensitivity 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           git -C "$GITHUB_WORKSPACE" diff --exit-code -- experimental/backend
-      - name: Literal native replay L6
+      - name: Literal native replay L7
         run: |
           python -m h_quorum.l_physical.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Scan safe evidence
