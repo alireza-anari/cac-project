@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-heading"><div><span class="eyebrow">تاریخچه تجربه شما</span><h1>گفتگوهای آزمایشی</h1><p class="muted">فقط پیام‌های خصوصی همین فروشگاه. نگهداری خودکار ۳۰روزه در Preview پیاده نشده است.</p></div><a class="button primary" href="{% url 'chat' store.pk %}">ادامه گفتگوی خصوصی ←</a></div>
+{% for exchange in exchanges %}<article class="card exchange"><small class="muted">{{ exchange.created_at|date:'Y/m/d H:i' }} · پیام آزمایشی</small><h3>{{ exchange.question }}</h3><p>{{ exchange.answer|linebreaksbr }}</p><span class="demo-label">پاسخ قوانین‌محور Demo — هوش مصنوعی واقعی متصل نیست</span></article>{% empty %}<section class="card empty"><span class="large-icon" aria-hidden="true">◌</span><h2>اولین گفتگویتان را شروع کنید</h2><p class="muted">بعد از تنظیم دستیار، سؤال بپرسید. نتیجه اینجا ذخیره می‌شود.</p></section>{% endfor %}
+{% endblock %}
