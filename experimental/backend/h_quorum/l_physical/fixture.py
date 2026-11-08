@@ -3,6 +3,7 @@ import copy
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -113,6 +114,7 @@ class Physical:
             child = subprocess.Popen(args, stdout=output, stderr=output, start_new_session=True)
         self.q.children[name] = child; m['pid'] = child.pid; self.q.save()
         self.last_native = (child, log)
+        self.last_local = None # Never present a pre-restart read as a live response.
         # Full commands remain private (TLS paths); safe receipt records exact flags.
         flags = [a.split('=',1)[0] for a in args[1:] if a.startswith('--')]
         self.command_receipts.append(dict(member=m['id'], flags=flags, small_snapshot=small_snapshot))
@@ -258,6 +260,42 @@ class Physical:
             self.q.start('r4'); self.caught_up()
             self.q._wait(lambda: self.q.promote('r4'))
             self.majority_current('valid-fresh-learner-recovery')
+
+    def classified_replay_after_progress(self):
+        """Issue47 permits actual catch-up OR evidenced native refusal.
+
+        A leader may remember a match index newer than physically restored WAL.
+        Native Raft's explicit out-of-range fail-stop is availability evidence,
+        not recovered membership and never permission to use old authority.
+        """
+        try:
+            return dict(kind='caught_up',receipt=self.replay())
+        except RuntimeError:
+            child, log = self.last_native
+            if child.poll()!=2:raise
+            messages=[]; identities=[]
+            for line in log.read_text().splitlines():
+                try:record=json.loads(line)
+                except ValueError:continue
+                if record.get('local-member-id'):identities.append(str(record['local-member-id']).lower())
+                msg=str(record.get('msg',''))
+                if record.get('level')=='panic' and re.fullmatch(r'tocommit\(\d+\) is out of range \[lastIndex\(\d+\)\]\. Was the raft log corrupted, truncated, or lost\?',msg):
+                    messages.append(msg)
+            expected=format(int(self.q.cfg['members']['r4']['id']),'x')
+            if len(messages)!=1 or expected not in identities:raise
+            self.majority_current('native-raft-fail-stop-current-majority')
+            receipt=dict(kind='native_raft_fail_stop',member=self.q.cfg['members']['r4']['id'],exit=2,panic=messages[0])
+            print(BANNER,'L ACTUAL NATIVE RAFT FAIL_STOP not catchup',json.dumps(receipt),flush=True)
+            return receipt
+
+    def repair_fresh_after_native_refusal(self):
+        old=self.q.cfg['members']['r4']['id']
+        self.stop(); fresh=self.q.replace('r4')
+        if fresh==old:raise AssertionError('Native refusal repair must use fresh learner identity')
+        result=self.caught_up(); self.q._wait(lambda:self.q.promote('r4'))
+        self.majority_current('fresh-identity-after-actual-native-refusal')
+        print(BANNER,'L FRESH LEARNER REPAIR AFTER literal old-byte refusal',old,'->',fresh,flush=True)
+        return result
 
     def close(self):
         # Never erase active data dirs. Actual archive bytes contain synthetic

@@ -176,5 +176,14 @@ class PhysicalTests(unittest.TestCase):
         physical.stop()
         self.assertFalse(physical.q._owned(record), 'Old executable still running before byte replacement')
         self.assertEqual(child.wait(timeout=5),-signal.SIGKILL)
-        self.retire(); physical.replay(); self.current2()
+        self.retire(); before=self.state()
+        outcome=physical.classified_replay_after_progress()
+        self.assertIn(outcome['kind'],('caught_up','native_raft_fail_stop'))
+        self.assertEqual(self.state(),before,'Native refusal changed current majority authority')
+        self.assertFalse(self.a.ready(),'Native refusal revived old policy readiness')
+        with self.assertRaises(Denied):
+            with self.a.runtime():self.fail('Native refusal admitted old policy')
+        self.current2() # Actual protected SQL on current quorum BEFORE member repair.
+        if outcome['kind']=='native_raft_fail_stop':physical.repair_fresh_after_native_refusal()
+        self.scope()
         print(BANNER,'L ACTUAL SIGSTOP -> nonchild SIGKILL termination witnessed before byte replay; no concurrent same-ID',flush=True)

@@ -75,9 +75,14 @@ in the authorized disposable CI, not a claimed local database run.
 6. Stop/prove r4 termination, `Path(data_dir).rename(private_quarantine)`, then
    `shutil.copytree(archive,data_dir)`. Require every restored file size/hash to
    match the archived inventory **before** spawn. No ID/term/WAL rewriting occurs.
-7. Start native etcd and separately require current member ID, exact current
-   Root state/revision and byte-identical complete journal rows. Native catch-up,
-   unavailable endpoint and native refusal are distinct observed results.
+7. Start native etcd. L00–L05 keep their exact current-member/state/revision and
+   complete-journal requirements or explicit removed-member refusal. The extra
+   forced-stop L06 classifies either exact catch-up or the narrowly recognized
+   native exit2/out-of-range-Raft-log panic. That panic is **not catch-up**:
+   current-majority state must remain unchanged, old readiness/admission denied,
+   protected current-policy SQL must succeed before member repair, then a fresh
+   learner identity must catch up and be explicitly promoted. No arbitrary
+   timeout/error is accepted as refusal.
 
 The native command (the actual argument list is in `fixture.py:Physical.spawn`)
 is the following, with variables resolved from the private synthetic fixture:
@@ -158,7 +163,7 @@ repeats, mutation/scanner probes and the extra historical D failure are separate
 | L03 | Removed old-member bytes actually booted and native-refused with old ID/exit1; valid fresh learner recovery | PASS |
 | L04 | Fresh learner configuration receives actual incompatible old bytes; native old ID/refusal/exit1; correct directory catch-up and promotion | PASS |
 | L05 | Actual native replay across real epoch advance, then non-control policy retirement denied; control transition and healthy policy2 succeed | PASS; original controlled sensitivity also demonstrated |
-| L06 | Real SIGSTOP forces non-child SIGKILL; retained original PID termination is proved before reimport, then healthy policy2 succeeds | Added after review, NOT_RUN at report-writing checkpoint; final receipt required |
+| L06 | Real SIGSTOP/non-child SIGKILL termination proved before reimport; classify genuine catch-up or exact native Raft exit2/panic, preserve majority state and deny old policy, healthy policy2 before repair, fresh learner repair if refused | Executed on0d8fa55/57cfe7f: native exit2/panic, original catch-up expectation failed; revised observational contract awaits final CI |
 
 The original missing-feature RED ran after a real healthy SQL baseline in push
 [42514945640](https://github.com/alireza-anari/cac-project/actions/runs/42514945640)
@@ -194,7 +199,7 @@ Two P2 observations were recorded:
    L now retains the original process record, waits for executable absence and
    rechecks before spawn; L06 executes the actual forced non-child branch. This
    is an L-local corrective proof requirement, not a change to H or a claimed
-   previously observed overlapping member. Its actual final test must pass.
+   previously observed overlapping member. Its actual final stop, native-outcome classification and healthy-current-path assertions must pass.
 
 The corrected helper also proves that all three original local state values and
 revisions match current Root before/after replay, beyond unchanged identity/PID.
@@ -239,3 +244,49 @@ authorization, and it is not suppressed or counted as PASS. Final verdict stays
 L_INCOMPLETE. A following diagnostic checkpoint adds filtered native messages,
 last local head/revision and native exit state, plus an isolated L06 preflight;
 no security assertion, deadline or Raft state is relaxed to obtain GREEN.
+
+## Diagnosed native fail-stop and revised observation contract
+
+The diagnostic checkpoint `57cfe7f214a9c25b8d5fde09b68e8c8fbc606fa6` reproduced
+L06 in isolation, proving this was not dependency on earlier learner tests.
+Push run42517410587/job128843476566 recorded three unchanged original voters:
+r1 `6572280535119683461`, r2 `8674384402007481560`, r3 `13207032006758200800`.
+All three local state values equalled current policy2/head
+`73d3858ac9ab98e75a5f8cc8047554f8f05c171f73f03dc2f9dfa2ebd0565a44`,
+revision51. The restored r4 ID `14058114604549236933` (hex `c31874bfefe368c5`)
+started but natively exited **2**, with the actual panic:
+
+```text
+tocommit(89) is out of range [lastIndex(84)]. Was the raft log corrupted, truncated, or lost?
+```
+
+The archive preceded an intervening start/progress of r4; its physical replay
+therefore removed progress the live cluster had already observed. The native
+message establishes commit89 versus restored lastIndex84, not a forged epoch or
+application dump. The original test's unconditional catch-up expectation was
+incorrect for an experiment whose authorized outcomes explicitly include native
+refusal. **No etcd algorithm, security assertion, deadline, WAL or surviving
+voter is modified to make that member run.**
+
+The next contract keeps executable-absence, child exit(-SIGKILL), exact byte
+hashes and current-majority equality. Only this additional L06 may classify the
+specific native JSON panic, matching on-disk member ID and actual exit2, as
+`native_raft_fail_stop`; every other failure still fails. It must then prove old
+policy readiness/admission denied and actual healthy policy2 SQL **before** repair.
+Repair is consensual removal plus a fresh learner, never reuse of the rejected
+old identity or clearing an unresolved transaction. Normal L00–L05 assertions
+remain unchanged. Earlier failing runs remain failures in this record; a later
+bounded PASS must not be described as successful same-ID recovery in L06.
+
+Finding **P1 availability**: replaying older physical state under a previously
+observed member ID can natively fail-stop even while a current majority survives.
+This is an experimental finding, not a repaired upstream defect or an unsafe
+old-authority grant. Global rollback security is still unproven. The diagnostic
+`last_local` in that historical job was the last successful **pre-restart** read,
+not evidence the restarted endpoint served old data; subsequent source clears
+that observation at every native spawn.
+
+Ruling: classify actual native refusal separately rather than weakening any guard
+or forcing consensus recovery. This follows Issue47's allowed native outcome
+categories; it preserves the original failures and adds stricter healthy/negative
+controls around the refusal. Final corrected-head CI remains mandatory.
