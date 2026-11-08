@@ -45,7 +45,7 @@ class Root:
         self.prefix(namespace)
         if action=='genesis':
             if record['kind']!='control' or set(args)!={'actors'} or set(args['actors'])!={'A','B'}:raise Denied('denied')
-            state=dict(root_id=self.cfg['root_id'],namespace=namespace,cluster_id=self.cfg['cluster_id'],seq=0,epoch=0,owner=None,phase='EMPTY',policy=1,signer_epoch=1,actors=args['actors'],ops={},requests={},activations={})
+            state=dict(root_id=self.cfg['root_id'],namespace=namespace,cluster_id=self.cfg['cluster_id'],seq=0,epoch=0,owner=None,phase='EMPTY',policy=1,policy_profile=policy.PROFILES[1],retired_policies={},policy_requests={},signer_epoch=1,actors=args['actors'],ops={},requests={},activations={})
             state,revision=self.commit(namespace,state,{'action':'genesis'},0)
         else:state,revision,history=self.read(namespace,True)
         if action in ('status','genesis'):
@@ -54,6 +54,9 @@ class Root:
         if action in ('guard','verify'):
             from h_quorum.attestation import attest
             return attest(self,state,revision,history,record,args,namespace,verify=action=='verify')
+        if action=='retire_policy':
+            from h_quorum.retirement import retire_policy
+            return retire_policy(self,record,args,namespace,state,revision,history)
         if action=='admit_actor' and record['kind']=='control':
             if set(args)!={'node','actor'} or args['node'] not in state['actors']:raise Denied('denied')
             node=args['node'];actor=args['actor']
@@ -108,15 +111,15 @@ class Root:
             state['phase']='REVOKING';state['revoke_seq']=state['seq']+1;state,revision=write(args)
             return summary(state,revision)
         binding_keys={'sid','pid','tx','kind','login','digest','incarnation','manifest','policy'}
-        def binding():
+        def binding(require_current=True):
             b={key:args[key] for key in binding_keys}
-            if (b['sid']!=actor['sid'] or b['incarnation']!=actor['incarnation'] or b['manifest']!=actor['manifest'] or type(b['policy']) is not int or b['policy']!=state['policy']
+            if (b['sid']!=actor['sid'] or b['incarnation']!=actor['incarnation'] or b['manifest']!=actor['manifest'] or type(b['policy']) is not int or b['policy']<=0 or (require_current and b['policy']!=state['policy'])
                 or type(b['pid']) is not int or b['pid']<=0 or not isinstance(b['tx'],str) or not b['tx'].isdecimal() or int(b['tx'])<=0
                 or b['kind'] not in ('runtime','issuer') or b['login']!={'runtime':'cac_ctx_runtime','issuer':'cac_ctx_issuer'}[b['kind']]
                 or not isinstance(b['digest'],str) or not re.fullmatch('[0-9a-f]{64}',b['digest'])):raise Denied('denied')
             return b
         if action=='admit':
-            if set(args)!=binding_keys|{'request','operation'} or state['phase']!='ACTIVE' or state['owner']!=node or any(op['phase']=='UNKNOWN' for op in state['ops'].values()):raise Denied('denied')
+            if set(args)!=binding_keys|{'request','operation'} or state['phase']!='ACTIVE' or state['owner']!=node or any(op['phase']=='UNKNOWN' for op in state['ops'].values()) or policy.has_retired_unresolved(state):raise Denied('denied')
             b=binding();request=str(UUID(args['request']));operation=str(UUID(args['operation']))
             fingerprint=digest(dict(node=node,epoch=state['epoch'],args=args))
             previous=state['requests'].get(request)
@@ -133,7 +136,7 @@ class Root:
         if action not in ('first_use','unknown','close'):raise Denied('denied')
         expected=binding_keys|{'ticket'}|({'outcome'} if action=='close' else set())
         if set(args)!=expected:raise Denied('denied')
-        b=binding();matches=[(key,op) for key,op in state['ops'].items() if secrets.compare_digest(op['ticket'],str(args['ticket']))]
+        b=binding(require_current=action=='first_use');matches=[(key,op) for key,op in state['ops'].items() if secrets.compare_digest(op['ticket'],str(args['ticket']))]
         if len(matches)!=1:raise Denied('denied')
         operation,op=matches[0]
         if op['node']!=node or op['binding']!=b or op['epoch']!=state['epoch'] or state['owner']!=node:raise Denied('denied')

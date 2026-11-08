@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lane: [proof]
+        lane: [proof, sensitivity]
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -126,9 +126,20 @@ jobs:
               except OSError:time.sleep(.1)
           else:raise RuntimeError('Root transport did not start')
           PYTHON
-      - name: Actual policy retirement implementation probe
+      - name: Unchanged inherited H51 real-quorum regression
+        if: matrix.lane == 'proof'
         run: |
-          python -m unittest -v h_quorum.tests.test_policy_retirement.PolicyRetirementTests.test_00_real_policy_transition_is_atomic_not_signer_rotation 2>&1 | tee "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Policy authority original assertion RED and byte-equivalent restoration GREEN
+        if: matrix.lane == 'sensitivity'
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.policy_sensitivity 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          git -C "$GITHUB_WORKSPACE" diff --exit-code -- experimental/backend/h_quorum .github/workflows/policy-retirement.yml
+      - name: K17 real policy retirement suite after restoration
+        run: |
+          python -m h_quorum.policy_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Scan safe evidence
         id: scan
         if: always()
