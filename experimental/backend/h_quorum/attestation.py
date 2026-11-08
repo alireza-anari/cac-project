@@ -17,7 +17,7 @@ def attest(root,state,revision,history,record,args,namespace,verify=False):
     if record['kind']!='check' or set(args)!=FIELDS|extra:raise Denied('denied')
     if (not actor or actor.get('admitted') is not True or state['owner']!=node
         or args['root_id']!=root.cfg['root_id'] or type(args['epoch']) is not int or args['epoch']!=state['epoch']
-        or type(args['policy']) is not int or args['policy']!=state['policy']
+        or type(args['policy']) is not int or args['policy']<=0
         or args['sid']!=actor['sid'] or args['incarnation']!=actor['incarnation'] or args['manifest']!=actor['manifest']
         or type(args['pid']) is not int or args['pid']<=0 or not isinstance(args['tx'],str) or not args['tx'].isdecimal() or int(args['tx'])<=0
         or not isinstance(args['nonce'],str) or not re.fullmatch('[0-9a-f]{64}',args['nonce'])
@@ -36,6 +36,7 @@ def attest(root,state,revision,history,record,args,namespace,verify=False):
         op=matches[0]
         if op['node']!=node or op['epoch']!=state['epoch'] or op['binding']!=binding or not op['granted'] or not policy.first_use_valid(state,op):raise Denied('denied')
     else:raise Denied('denied')
+    if not policy.allows_guard_policy(state,op,args['policy']):raise Denied('denied')
     if needs_w:
         from h_quorum.projection import validate_projection
         validate_projection(root,state,history,args['projection'],args['mode'],op)

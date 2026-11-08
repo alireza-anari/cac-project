@@ -73,7 +73,7 @@ class Gate:
             if self.role=='cac_ctx_runtime':intent=self.c.execute('SELECT h_guard.runtime_digest(%s,%s,%s,h_guard.body_digest(%s))',(self.store,self.action,self.target,Jsonb(self.body))).fetchone()[0]
             else:intent=self.c.execute('SELECT h_guard.issuer_digest(%s,%s,%s,%s,%s,%s)',self.args).fetchone()[0]
             actor=self.broker.lab.actors[self.broker.node]
-            self.binding=dict(sid=self.sid,pid=self.pid,tx=self.tx,kind='runtime' if self.role=='cac_ctx_runtime' else 'issuer',login=self.role,digest=intent,incarnation=actor['incarnation'],manifest=actor['manifest'],policy=1)
+            self.binding=dict(sid=self.sid,pid=self.pid,tx=self.tx,kind='runtime' if self.role=='cac_ctx_runtime' else 'issuer',login=self.role,digest=intent,incarnation=actor['incarnation'],manifest=actor['manifest'],policy=self.broker.command('status',{})['policy'])
             self.broker.hook('before_open_commit')
             receipt=self.broker.command('admit',dict(self.binding,request=self.request,operation=self.operation))
             self.ticket=receipt['ticket'];self.broker.hook('after_durable_open')

@@ -48,12 +48,12 @@ class IntegrationLab:
                 if c.execute('SELECT rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb OR rolreplication FROM pg_roles WHERE rolname=%s',(role,)).fetchone()[0]:raise AssertionError('Privileged application role')
                 if c.execute('SELECT has_table_privilege(%s,\'h_guard.config\',\'SELECT\')',(role,)).fetchone()[0]:raise AssertionError('Private checker config exposed')
             if c.execute("SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE oid='poc.records'::regclass").fetchone()!=(True,):raise AssertionError('FORCE RLS absent')
-    def bind(self,node,epoch=0):
+    def bind(self,node,epoch=0,policy=1):
         actor=self.actors[node];checker=node+'_check'
         conn=make_conninfo(host=self.rootcfg['gateway_ip'],port=self.rootcfg['wire_port'],dbname='rcheck',user=checker,password=self.rootcfg['roles'][checker]['password'],sslmode='verify-full',sslrootcert='/tmp/cac-h-ca.crt',connect_timeout=2)
         with self.connect(node) as c:
             c.execute('DELETE FROM h_guard.config')
-            c.execute('INSERT INTO h_guard.config VALUES(true,%s,%s,1,%s,%s,%s,%s)',(self.rootcfg['root_id'],self.namespace,node,actor['incarnation'],epoch,conn))
+            c.execute('INSERT INTO h_guard.config VALUES(true,%s,%s,%s,%s,%s,%s,%s)',(self.rootcfg['root_id'],self.namespace,policy,node,actor['incarnation'],epoch,conn))
     def restart_service(self):
         path=Path(os.environ['RUNNER_TEMP'])/'cac-h-service.pid';pid=int(path.read_text())
         command=Path('/proc',str(pid),'cmdline')
@@ -110,7 +110,7 @@ class IntegrationLab:
         control=Client(self.rootcfg,'control',self.namespace)
         control.call('admit_actor',dict(node=node,actor=actor));self.actors[node]=actor
         status=control.call('status')
-        self.bind(node,status['epoch'] if status['owner']==node and status['phase']=='ACTIVE' else 0)
+        self.bind(node,status['epoch'] if status['owner']==node and status['phase']=='ACTIVE' else 0,policy=status['policy'])
         self.replay()
         with self.connect(node) as c:c.execute('ALTER ROLE cac_ctx_runtime LOGIN;ALTER ROLE cac_ctx_issuer LOGIN')
         print(BANNER,'ADMISSION',node,'actual SID',actor['sid'],'pinned manifest',actor['manifest'],'new incarnation',actor['incarnation'],flush=True)
