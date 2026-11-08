@@ -30,6 +30,8 @@ class Physical:
         self.old = None
         self.command_receipts = []
         self.stopped_records = []
+        self.last_native = None
+        self.last_local = None
 
     def stop(self):
         # Cluster.stop may clear a bootstrap-owned PID immediately after SIGKILL.
@@ -110,6 +112,7 @@ class Physical:
         with os.fdopen(fd, 'ab') as output:
             child = subprocess.Popen(args, stdout=output, stderr=output, start_new_session=True)
         self.q.children[name] = child; m['pid'] = child.pid; self.q.save()
+        self.last_native = (child, log)
         # Full commands remain private (TLS paths); safe receipt records exact flags.
         flags = [a.split('=',1)[0] for a in args[1:] if a.startswith('--')]
         self.command_receipts.append(dict(member=m['id'], flags=flags, small_snapshot=small_snapshot))
@@ -122,7 +125,9 @@ class Physical:
                                    endpoint=self.q.cfg['members']['r4']['endpoint'])
         if len(result.get('kvs',[])) != 1: raise Denied('Minority namespace not yet applied')
         row = result['kvs'][0]
-        return json.loads(unb64(row['value'])), int(row['mod_revision']), result['header']
+        value=json.loads(unb64(row['value']))
+        self.last_local=dict(head=value['head'],policy=value['policy'],seq=value['seq'],revision=int(row['mod_revision']),member=result['header']['member_id'])
+        return value, int(row['mod_revision']), result['header']
 
     def caught_up(self):
         target, revision, history = Root(self.lab.rootcfg).read(self.lab.namespace, True)
@@ -138,7 +143,24 @@ class Physical:
                 return False
             return dict(member=header['member_id'], cluster=header['cluster_id'], revision=revision,
                         head=target['head'], policy=target['policy'], seq=target['seq'], complete_journal=len(rows))
-        receipt = self.q._wait(current)
+        try:
+            receipt = self.q._wait(current)
+        except RuntimeError:
+            child, log = self.last_native
+            messages=[]
+            for line in log.read_text().splitlines():
+                try: record=json.loads(line)
+                except ValueError: continue
+                msg=str(record.get('msg',''))
+                safe={k:record[k] for k in ('level','local-member-id','cluster-id','term','index','commit-index','applied-index') if k in record}
+                safe['msg']=msg[:200]
+                error=str(record.get('error','')).lower()
+                if error:safe['error_categories']=[w for w in ('removed','corrupt','wal','snapshot','bind','already','timeout','auth','refused','mismatch') if w in error]
+                messages.append(safe)
+            print(BANNER,'L NATIVE CONVERGENCE FAILURE DIAGNOSTICS',json.dumps(dict(exit=child.poll(),
+                  target_head=target['head'],target_revision=revision,last_local=self.last_local,
+                  rpc_code=getattr(self.q.etcd,'last_rpc_code',None),native=messages[-22:])),flush=True)
+            raise
         self.majority_current('after-native-catchup')
         print(BANNER, 'L LITERAL NATIVE CATCHUP', json.dumps(receipt), flush=True)
         return receipt

@@ -124,6 +124,10 @@ jobs:
             git fetch --no-tags --depth=1 origin "$PR_HEAD"
             git -C "$GITHUB_WORKSPACE" diff --exit-code "$PR_HEAD" HEAD -- experimental/backend .github/workflows/stale-raft-physical.yml
           fi
+      - name: Isolated real forced-stop diagnostic preflight
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m unittest -v h_quorum.l_physical.tests.test_physical.PhysicalTests.test_06_forced_nonchild_stop_proved_before_native_reimport 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Unchanged H51 and K17 real regressions
         if: matrix.lane == 'proof'
         run: |

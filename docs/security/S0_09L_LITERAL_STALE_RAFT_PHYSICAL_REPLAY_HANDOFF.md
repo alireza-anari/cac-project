@@ -226,3 +226,16 @@ artifact scans. Until then L_INCOMPLETE. A supported stale-authorization asserti
 failure is L_SUPPORTED_SECURITY_FAIL; inability to execute authentic native import
 is L_PHYSICAL_IMPORT_NOT_RUN. No whole-root rollback, protocol, Production or
 Sprint0 acceptance follows from any L result; Management alone interprets it.
+
+## Corrected-head failure under investigation
+
+At `0d8fa55f6a8f724353a2f6bdf87d24f686d42ac1`, PR sensitivity job128841073583
+in run42516623015 and push sensitivity job128841054392 in run42516618574
+ran L7 and failed L06 with `RuntimeError: Real etcd readiness blocked` in
+`caught_up()` after the actual SIGSTOP/non-child SIGKILL and native reimport.
+The executable-absence and child exit(-SIGKILL) assertions had completed; L00–L05
+passed. This is a real convergence/fixture error, not a demonstrated stale
+authorization, and it is not suppressed or counted as PASS. Final verdict stays
+L_INCOMPLETE. A following diagnostic checkpoint adds filtered native messages,
+last local head/revision and native exit state, plus an isolated L06 preflight;
+no security assertion, deadline or Raft state is relaxed to obtain GREEN.
