@@ -10,7 +10,7 @@ Technical parent is exact K `9e768a4d1f6c97c429c36475237e132b8e3e7fc2`.
 Branch: `work/s0-09l-stale-raft-minority-physical-replay`, Draft stacked against K.
 
 The existing H controller deliberately never imports stale Raft files. L adds an
-isolated test-only `raft_physical` module; existing H/K/security SQL and tests
+isolated test-only `h_quorum.l_physical` module; existing H/K/security SQL and tests
 remain unchanged. Native etcd is pinned to 3.6.16 with the inherited checksum.
 
 Approach: stop only r4, require positive current r1/r2/r3 membership/status receipts,
@@ -32,7 +32,7 @@ Execution tasks:
 
 - [ ] Write a real healthy baseline plus missing-native-fixture original assertion;
   execute in disposable CI and record the missing-feature RED.
-- [ ] Add `raft_physical.fixture.Physical` for stopped-copy provenance, native spawn,
+- [ ] Add `h_quorum.l_physical.fixture.Physical` for stopped-copy provenance, native spawn,
   same-ID replay, original-majority invariants and safe native diagnostic receipts.
 - [ ] Add focused real tests: policy/pool stale denial plus policy2 positive;
   pre-granted COMMIT with hold; UNKNOWN retained; removed identity and learner

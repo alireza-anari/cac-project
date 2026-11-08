@@ -2,9 +2,9 @@ name: S009L literal stale Raft physical replay
 on:
   push:
     branches: [work/s0-09l-stale-raft-minority-physical-replay]
-    paths: ['experimental/backend/raft_physical/**', '.github/workflows/stale-raft-physical.yml', 'docs/security/S0_09L*.md']
+    paths: ['experimental/backend/h_quorum/l_physical/**', '.github/workflows/stale-raft-physical.yml', 'docs/security/S0_09L*.md']
   pull_request:
-    paths: ['experimental/backend/raft_physical/**', '.github/workflows/stale-raft-physical.yml', 'docs/security/S0_09L*.md']
+    paths: ['experimental/backend/h_quorum/l_physical/**', '.github/workflows/stale-raft-physical.yml', 'docs/security/S0_09L*.md']
 permissions:
   contents: read
 concurrency:
@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lane: [proof]
+        lane: [proof, sensitivity]
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -112,10 +112,33 @@ jobs:
               except OSError:time.sleep(.1)
           else:raise RuntimeError('Root transport did not start')
           PYTHON
-      - name: L real healthy baseline and missing physical fixture probe
+      - name: Unchanged parent source and synthetic merge receipt
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin 9e768a4d1f6c97c429c36475237e132b8e3e7fc2
+          git -C "$GITHUB_WORKSPACE" diff --exit-code 9e768a4d1f6c97c429c36475237e132b8e3e7fc2 HEAD -- experimental/backend ':(exclude)experimental/backend/h_quorum/l_physical/**'
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/source-receipt.log"
+          git rev-parse HEAD:experimental/backend >> "$GITHUB_WORKSPACE/evidence-s009h/source-receipt.log"
+          if [ -n "$PR_HEAD" ]; then
+            git fetch --no-tags --depth=1 origin "$PR_HEAD"
+            git -C "$GITHUB_WORKSPACE" diff --exit-code "$PR_HEAD" HEAD -- experimental/backend .github/workflows/stale-raft-physical.yml
+          fi
+      - name: Unchanged H51 and K17 real regressions
+        if: matrix.lane == 'proof'
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
-          python -m unittest -v raft_physical.tests.test_physical 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.policy_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Physical native admission sensitivity RED exact restoration GREEN
+        if: matrix.lane == 'sensitivity'
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.l_physical.sensitivity 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          git -C "$GITHUB_WORKSPACE" diff --exit-code -- experimental/backend
+      - name: Literal native replay L6
+        run: |
+          python -m h_quorum.l_physical.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Scan safe evidence
         id: scan
         if: always()
