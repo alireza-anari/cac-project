@@ -25,7 +25,10 @@ jobs:
           - {case: REG_H, repetition: 0}
           - {case: REG_K, repetition: 0}
           - {case: REG_L, repetition: 0}
-          - {case: REG_M, repetition: 0}
+          - {case: REG_M_OFFLINE_OLD_CLEAN, repetition: 0}
+          - {case: REG_M_PROGRESSED_OLD_CLEAN, repetition: 0}
+          - {case: REG_M_PROGRESSED_OLD_KILL, repetition: 0}
+          - {case: REG_M_PROGRESSED_CURRENT_KILL, repetition: 0}
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -153,13 +156,12 @@ jobs:
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.l_physical.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
-      - name: Preserved M4 separate cases cohort
-        if: matrix.case == 'REG_M'
+      - name: One isolated M case regression cohort
+        if: startsWith(matrix.case, 'REG_M_')
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
-          for case in OFFLINE_OLD_CLEAN PROGRESSED_OLD_CLEAN PROGRESSED_OLD_KILL PROGRESSED_CURRENT_KILL; do
-            CAC_M_CASE="$case" CAC_M_REPEAT=1 python -m h_quorum.l_physical.m_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
-          done
+          case="${CAC_N_CASE#REG_M_}"
+          CAC_M_CASE="$case" CAC_M_REPEAT=1 python -m h_quorum.l_physical.m_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Scan safe evidence
         id: scan
         if: always()

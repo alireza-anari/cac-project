@@ -18,6 +18,7 @@ from h_quorum.l_physical.m_triage import (
     observe,
     state_summary,
 )
+from h_quorum.l_physical.n_recovery import repair_with_receipt
 from h_quorum.retirement import adopt_policy
 from h_quorum.rpc import Client
 from recovery_fencing.lab import S1
@@ -121,139 +122,6 @@ def replay_old_and_require_panic(test, lab, physical, expected_state):
     return dict(native=native, archive_files=physical.manifest,
                 sealed_current_files=current_files, imported_files=imported,
                 highest_observed_index=physical.highest_index)
-
-
-def repair_with_receipt(test, physical, old_id):
-    """Run the existing real remove -> fresh learner -> catch-up -> promote path."""
-    q = physical.q
-    old_member = copy.deepcopy(q.cfg["members"]["r4"])
-    old_data_dir = old_member["data_dir"]
-    old_cert, old_key = old_member["cert"], old_member["key"]
-    if q._owned(old_member):
-        raise AssertionError("N old native member is still running; replacement forbidden")
-
-    receipt = {
-        "old_member_id": str(old_id),
-        "old_process_absent": True,
-        "fresh_data_dir_absent_before_spawn": False,
-        "fresh_identity_distinct": False,
-        "fresh_certificate_distinct": False,
-        "learner_observed_before_promotion": False,
-        "current_log_catchup_verified": False,
-        "server_accepted_promotion": False,
-        "membership_calls": [],
-    }
-
-    original_call = q.etcd.call
-    original_spawn = q._spawn
-    original_promote = q.promote
-    original_caught_up = physical.caught_up
-
-    def traced_call(path, *args, **kwargs):
-        result = original_call(path, *args, **kwargs)
-        if path in (
-            "/v3/cluster/member/remove",
-            "/v3/cluster/member/add",
-            "/v3/cluster/member/promote",
-        ):
-            receipt["membership_calls"].append(
-                dict(path=path, response_keys=sorted(result.keys()) if isinstance(result, dict) else [])
-            )
-        return result
-
-    def guarded_spawn(name, state="existing", initial=None):
-        if name == "r4":
-            member = q.cfg["members"][name]
-            data_dir = Path(member["data_dir"])
-            test.assertNotEqual(str(member["id"]), str(old_id), "N replacement reused old member ID")
-            test.assertNotEqual(str(data_dir), str(old_data_dir), "N replacement reused old data directory")
-            test.assertFalse(data_dir.exists(), "N fresh learner data directory was not empty before bootstrap")
-            test.assertNotEqual(member["cert"], old_cert, "N replacement reused old certificate")
-            test.assertNotEqual(member["key"], old_key, "N replacement reused old private key")
-            receipt.update(
-                fresh_data_dir_absent_before_spawn=True,
-                fresh_identity_distinct=True,
-                fresh_certificate_distinct=True,
-                new_member_id=str(member["id"]),
-                new_data_dir_is_distinct=True,
-            )
-        return original_spawn(name, state=state, initial=initial)
-
-    def guarded_caught_up():
-        result = original_caught_up()
-        member_id = str(q.cfg["members"]["r4"]["id"])
-        if member_id != str(old_id):
-            members = q.etcd.call("/v3/cluster/member/list", {}).get("members", [])
-            matches = [m for m in members if str(m["ID"]) == member_id]
-            test.assertEqual(len(matches), 1, "N fresh learner membership is ambiguous")
-            test.assertTrue(matches[0].get("isLearner"), "N fresh member voted before promotion")
-            test.assertFalse(any(str(m["ID"]) == str(old_id) for m in members),
-                             "N removed old identity remains in authoritative membership")
-            receipt["learner_observed_before_promotion"] = True
-            receipt["current_log_catchup_verified"] = True
-            receipt["learner_status"] = physical.status("N-fresh-learner-caught-up")
-        return result
-
-    def guarded_promote(name):
-        member_id = str(q.cfg["members"][name]["id"])
-        members = q.etcd.call("/v3/cluster/member/list", {}).get("members", [])
-        matches = [m for m in members if str(m["ID"]) == member_id]
-        test.assertEqual(len(matches), 1, "N promotion target is not uniquely present")
-        test.assertTrue(matches[0].get("isLearner"), "N promotion attempted after learner already voted")
-        test.assertTrue(receipt["current_log_catchup_verified"],
-                        "N promotion attempted before current Root/journal catch-up")
-        result = original_promote(name)
-        receipt["server_accepted_promotion"] = True
-        return result
-
-    q.etcd.call = traced_call
-    q._spawn = guarded_spawn
-    q.promote = guarded_promote
-    physical.caught_up = guarded_caught_up
-    try:
-        physical.repair_fresh_after_native_refusal()
-    finally:
-        q.etcd.call = original_call
-        q._spawn = original_spawn
-        q.promote = original_promote
-        physical.caught_up = original_caught_up
-
-    membership = q.etcd.call("/v3/cluster/member/list", {})
-    members = membership.get("members", [])
-    cluster_id = str(membership.get("header", {}).get("cluster_id"))
-    new_id = str(q.cfg["members"]["r4"]["id"])
-    voters = [m for m in members if not m.get("isLearner")]
-    learners = [m for m in members if m.get("isLearner")]
-    test.assertEqual(cluster_id, str(q.cfg["cluster_id"]), "N cluster ID changed during repair")
-    test.assertEqual(len(members), 5, "N expected five total members after replacement")
-    test.assertEqual(len(voters), 5, "N expected five voters after explicit promotion")
-    test.assertEqual(len(learners), 0, "N learner remained after promotion")
-    test.assertTrue(any(str(m["ID"]) == new_id for m in voters), "N fresh identity is not a voter")
-    test.assertFalse(any(str(m["ID"]) == str(old_id) for m in members), "N old identity remains admitted")
-    test.assertTrue(receipt["fresh_data_dir_absent_before_spawn"])
-    test.assertTrue(receipt["fresh_identity_distinct"])
-    test.assertTrue(receipt["fresh_certificate_distinct"])
-    test.assertTrue(receipt["learner_observed_before_promotion"])
-    test.assertTrue(receipt["current_log_catchup_verified"])
-    test.assertTrue(receipt["server_accepted_promotion"])
-    required = {
-        "/v3/cluster/member/remove",
-        "/v3/cluster/member/add",
-        "/v3/cluster/member/promote",
-    }
-    test.assertTrue(required.issubset({v["path"] for v in receipt["membership_calls"]}),
-                    "N actual consensus membership operations are incomplete")
-    receipt.update(
-        new_member_id=new_id,
-        cluster_id=cluster_id,
-        total_members=len(members),
-        voter_count=len(voters),
-        learner_count=len(learners),
-        old_member_absent=True,
-        new_member_is_voter=True,
-        original_majority_ids={name: str(m["id"]) for name, m in physical.majority.items()},
-    )
-    return receipt
 
 
 def run_open_case(test, lab, broker, repetition):
@@ -436,4 +304,3 @@ def run_sample(test, lab, broker, case, repetition):
 
 
 # N uses the one-shot, quarantine-hash-verified repair observer; parent L/M stay immutable.
-from h_quorum.l_physical.n_recovery import repair_with_receipt as repair_with_receipt

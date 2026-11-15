@@ -1,5 +1,6 @@
 """S0-09N: instrument the existing consensus-governed fresh-identity replacement."""
 import copy
+import json
 from pathlib import Path
 
 from h_quorum.authority import Root
@@ -48,6 +49,8 @@ def repair_with_receipt(test, physical, old_id):
         "current_log_catchup_verified": False,
         "server_accepted_promotion": False,
         "membership_calls": [],
+        "membership_attempts": [],
+        "promotion_attempts": 0,
     }
 
     original_call = q.etcd.call
@@ -55,23 +58,35 @@ def repair_with_receipt(test, physical, old_id):
     original_promote = q.promote
 
     def traced_call(path, *args, **kwargs):
-        result = original_call(path, *args, **kwargs)
+        tracked = path in (
+            "/v3/cluster/member/remove",
+            "/v3/cluster/member/add",
+            "/v3/cluster/member/promote",
+        )
+        attempt = {"path": path, "outcome": "REQUESTED"} if tracked else None
+        if attempt is not None:
+            receipt["membership_attempts"].append(attempt)
+        if path == "/v3/cluster/member/add" and not receipt["old_id_absent_before_add"]:
+            if attempt is not None:
+                attempt["outcome"] = "REJECTED_ORDER"
+            raise AssertionError("N learner add attempted before old ID removal was verified")
+        try:
+            result = original_call(path, *args, **kwargs)
+        except Exception as error:
+            if attempt is not None:
+                attempt["outcome"] = "ERROR"
+                attempt["error_type"] = type(error).__name__
+            raise
         if path == "/v3/cluster/member/remove":
             # A fresh authoritative membership read proves removal before add.
             members = original_call("/v3/cluster/member/list", {})["members"]
             if any(str(member["ID"]) == old_id for member in members):
+                if attempt is not None:
+                    attempt["outcome"] = "POSTCONDITION_FAILED"
                 raise AssertionError("N old member ID remains after consensus remove")
             receipt["old_id_absent_before_add"] = True
-            receipt["membership_calls"].append(
-                {"path": path, "response_keys": sorted(result.keys())}
-            )
-        elif path == "/v3/cluster/member/add":
-            if not receipt["old_id_absent_before_add"]:
-                raise AssertionError("N learner add attempted before old ID removal was verified")
-            receipt["membership_calls"].append(
-                {"path": path, "response_keys": sorted(result.keys())}
-            )
-        elif path == "/v3/cluster/member/promote":
+        if attempt is not None:
+            attempt["outcome"] = "COMMITTED_RESPONSE"
             receipt["membership_calls"].append(
                 {"path": path, "response_keys": sorted(result.keys())}
             )
@@ -109,6 +124,9 @@ def repair_with_receipt(test, physical, old_id):
         test.assertTrue(receipt["current_log_catchup_verified"],
                         "N promotion attempted before current Root/journal catch-up")
         # Exactly one promotion request; no retry loop around a destructive membership change.
+        receipt["promotion_attempts"] += 1
+        test.assertEqual(receipt["promotion_attempts"], 1,
+                         "N attempted more than one learner promotion")
         result = original_promote(name)
         receipt["server_accepted_promotion"] = True
         return result
@@ -141,7 +159,6 @@ def repair_with_receipt(test, physical, old_id):
         receipt.update(
             old_data_dir_quarantined=True,
             quarantine_hashes_match=True,
-            quarantine_path=str(quarantine),
             quarantine_file_count=len(quarantine_files),
         )
 
@@ -210,13 +227,16 @@ def repair_with_receipt(test, physical, old_id):
         "server_accepted_promotion",
     ):
         test.assertTrue(receipt[key], "N recovery receipt missing " + key)
-    required = {
+    expected_attempt_order = [
         "/v3/cluster/member/remove",
         "/v3/cluster/member/add",
         "/v3/cluster/member/promote",
-    }
-    test.assertTrue(required.issubset({item["path"] for item in receipt["membership_calls"]}),
-                    "N actual consensus membership operations are incomplete")
+    ]
+    actual_attempt_order = [item["path"] for item in receipt["membership_attempts"]]
+    test.assertEqual(actual_attempt_order, expected_attempt_order,
+                     "N membership operations retried or executed out of order")
+    test.assertEqual(receipt["promotion_attempts"], 1,
+                     "N promotion was not exactly one explicit request")
     receipt.update(
         new_member_id=new_id,
         cluster_id=cluster_id,
@@ -228,7 +248,6 @@ def repair_with_receipt(test, physical, old_id):
         original_majority_ids={name: str(member["id"]) for name, member in physical.majority.items()},
         root_unchanged=True,
         old_quarantine_hashes_match=True,
-        promotion_attempts=1,
     )
-    print(BANNER, "N RECOVERY", __import__("json").dumps(receipt, sort_keys=True), flush=True)
+    print(BANNER, "N RECOVERY", json.dumps(receipt, sort_keys=True), flush=True)
     return receipt
