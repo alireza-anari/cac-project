@@ -4,13 +4,16 @@ import json
 import os
 import re
 import signal
+import socket
+import ssl
+import urllib.error
 import time
 from uuid import uuid4
 
 from h_quorum.authority import Root
 from h_quorum.cluster import Cluster
 from h_quorum.common import BANNER, Denied
-from h_quorum.etcd import b64, unb64
+from h_quorum.etcd import b64, unb64, _Expired, _Unavailable
 from h_quorum.l_physical.fixture import Physical
 from h_quorum.retirement import adopt_policy
 from h_quorum.rpc import Client
@@ -71,6 +74,22 @@ class ObservedPhysical(Physical):
         self.stops.append(proof); emit('STOP_PROOF',proof)
 
 
+
+def clean_stop_receipt(test,child,log):
+    code=child.wait(timeout=5)
+    records=[]
+    for line in log.read_text().splitlines():
+        try:records.append(json.loads(line))
+        except ValueError:pass
+    # Upstream osutil resets the default handler and re-raises SIGTERM after
+    # e.Close(). Therefore -SIGTERM is a documented clean result, not SIGKILL.
+    signal_seen=any(r.get('msg')=='received signal; shutting down' and r.get('signal')=='terminated' for r in records)
+    closed=any(r.get('msg')=='closed etcd server' for r in records)
+    test.assertIn(code,(0,-signal.SIGTERM),'M native clean stop did not use TERM completion')
+    test.assertTrue(signal_seen and closed,'M clean stop lacks native signal and closed-server ACK')
+    return dict(exit_code=code,received_sigterm=signal_seen,closed_server=closed)
+
+
 def native_receipt(physical, child, log):
     records=[]; functions=set()
     for line in log.read_text().splitlines():
@@ -102,35 +121,59 @@ def native_receipt(physical, child, log):
 def observe(physical, target, revision, history):
     child,log=physical.last_native
     start=time.monotonic(); deadline=start+OBSERVE_SECONDS
-    last=None
+    last=None; probe_errors={}
+    def probe_range(key,prefix=False,at_revision=None):
+        body=dict(key=b64(key),serializable=True)
+        if prefix:body['range_end']=b64(key[:-1]+'0') # journal/ -> journal0
+        if at_revision is not None:body['revision']=str(at_revision)
+        return physical.q.etcd._request(physical.q.cfg['members']['r4']['endpoint'],
+                                       '/v3/kv/range',body,physical.q.etcd.token)
     while time.monotonic()<deadline:
         if child.poll() is not None:
             result=native_receipt(physical,child,log)
             result['elapsed_seconds']=round(time.monotonic()-start,6)
             return result
         try:
-            state,local_revision,header=physical.local()
+            # M-only typed probe: inherited call() intentionally collapses errors.
+            physical.q.etcd._authenticate(physical.q.cfg['members']['r1']['endpoint'])
+            reply=probe_range('/cac-h/'+physical.lab.namespace+'/state')
+            rows=reply.get('kvs',[])
+            if not rows:
+                probe_errors['state_not_yet_applied']=probe_errors.get('state_not_yet_applied',0)+1
+                time.sleep(.1); continue
+            if len(rows)!=1:raise AssertionError('M invalid local state row count')
+            state=json.loads(unb64(rows[0]['value'])); local_revision=int(rows[0]['mod_revision']); header=reply['header']
             last=dict(head=state['head'],revision=local_revision,policy=state['policy'],member=str(header['member_id']))
             if str(header['cluster_id'])!=str(physical.q.cfg['cluster_id']) or str(header['member_id'])!=str(physical.original['id']):
                 raise AssertionError('M TEST_HARNESS_FAILURE native identity/cluster mismatch')
             if state==target and local_revision==revision:
-                rows=physical.q.etcd.range('/cac-h/'+physical.lab.namespace+'/journal/',prefix=True,revision=revision,
-                                          serializable=True,endpoint=physical.q.cfg['members']['r4']['endpoint']).get('kvs',[])
+                rows=probe_range('/cac-h/'+physical.lab.namespace+'/journal/',prefix=True,at_revision=revision).get('kvs',[])
                 wanted=[(r['key'],r['value'],r['mod_revision']) for r in history]
                 if [(r['key'],r['value'],r['mod_revision']) for r in rows]==wanted:
                     status=physical.status('after-current-catchup')
                     return dict(outcome='CATCH_UP_SAME_ID',exit_code=child.poll(),member=str(header['member_id']),
                                 current=last,status=status,complete_journal=len(rows),
-                                elapsed_seconds=round(time.monotonic()-start,6))
-        except Denied:
-            pass
+                                elapsed_seconds=round(time.monotonic()-start,6),probe_errors=probe_errors)
+        except (_Expired,_Unavailable) as error:
+            category=type(error).__name__
+            probe_errors[category]=probe_errors.get(category,0)+1
+        except (urllib.error.URLError,ConnectionError,TimeoutError) as error:
+            reason=getattr(error,'reason',error)
+            if isinstance(reason,ssl.SSLError) or not isinstance(reason,(ConnectionError,TimeoutError,socket.timeout)):
+                raise AssertionError('M typed probe configuration/transport failure') from error
+            category=type(reason).__name__
+            probe_errors[category]=probe_errors.get(category,0)+1
+        except Denied as error:
+            raise AssertionError('M typed probe authentication/permission/protocol failure') from error
         time.sleep(.1)
     # Do not translate a deadline into abort, removal, repair or catch-up.
     if child.poll() is not None:
         result=native_receipt(physical,child,log)
         result['elapsed_seconds']=round(time.monotonic()-start,6)
         return result
-    return dict(outcome='TIMEOUT_UNRESOLVED',exit_code=None,member=physical.original['id'],last_local=last,
+    return dict(outcome='TEST_HARNESS_FAILURE' if probe_errors.get('_Expired') else 'TIMEOUT_UNRESOLVED',
+                reason='unresolved auth expiry' if probe_errors.get('_Expired') else 'bounded native availability observation',
+                probe_errors=probe_errors,exit_code=None,member=physical.original['id'],last_local=last,
                 elapsed_seconds=round(time.monotonic()-start,6),deadline_seconds=OBSERVE_SECONDS)
 
 
@@ -151,6 +194,8 @@ def run_sample(test,lab,broker,case,repetition):
             test.assertEqual(gate.c.execute('UPDATE poc.records SET body=%s WHERE store=%s',(body['body'],S1)).rowcount,1)
             row['postgres_before']=dict(pid=gate.pid,fullxid=gate.tx,system_id=gate.sid)
             physical.archive_current()
+            archive_stop=clean_stop_receipt(test,*physical.last_native)
+            archive_exit=archive_stop['exit_code']; row['archive_stop']=archive_stop
             row['archive_root']=physical.old
             row['archive_files']=physical.manifest
             row['archive_stop_status']=physical.stops[-1]['status']
@@ -177,11 +222,11 @@ def run_sample(test,lab,broker,case,repetition):
                     test.assertEqual(child.wait(timeout=5),-signal.SIGKILL)
                     row['stop_kind']='SIGSTOP_NONCHILD_SIGKILL'; row['stopped_exit']=-signal.SIGKILL
                 else:
-                    physical.stop(); row['stopped_exit']=child.wait(timeout=5)
-                    test.assertEqual(row['stopped_exit'],0,'M clean-stop case was not clean SIGTERM')
+                    physical.stop(); row['clean_stop']=clean_stop_receipt(test,*physical.last_native)
+                    row['stopped_exit']=row['clean_stop']['exit_code']
                     row['stop_kind']='CLEAN_SIGTERM'
             else:
-                row['stop_kind']='ALREADY_OFFLINE_CLEAN_SIGTERM'; row['stopped_exit']=0
+                row['stop_kind']='ALREADY_OFFLINE_CLEAN_SIGTERM'; row['stopped_exit']=archive_exit
             row['stop_proofs']=physical.stops
             data=physical.path(physical.q.cfg['members']['r4']['data_dir'])
             current_files=physical.inventory(data); row['sealed_current_files']=current_files
@@ -205,17 +250,19 @@ def run_sample(test,lab,broker,case,repetition):
             row['started_files']=imported; row['used_old_archive']=specification['archive']
             row['highest_prestart_observed_index']=physical.highest_index
             physical.phase='observation'; physical.spawn()
-            outcome=observe(physical,target,revision,history)
+            try:outcome=observe(physical,target,revision,history)
+            except (AssertionError,ValueError,KeyError,OSError) as probe_error:
+                outcome=dict(outcome='TEST_HARNESS_FAILURE',reason='typed diagnostic failed',failure_type=type(probe_error).__name__)
             row['native']=outcome
             row['highest_observed_index']=physical.highest_index
-            test.assertNotEqual(outcome['outcome'],'TEST_HARNESS_FAILURE',json.dumps(outcome))
             physical.majority_current('M-after-native-observation-before-known-outcome')
             actual=Root(lab.rootcfg).read(lab.namespace,True)
             test.assertEqual(actual,(target,revision,history),'M_SUPPORTED_SECURITY_FAIL Root/OPEN/journal changed across minority replay')
             row['after_observation']=state_summary(*actual)
             test.assertFalse(broker.ready(),'M_SUPPORTED_SECURITY_FAIL old-policy readiness accepted')
-            with test.assertRaises(Denied):
+            try:
                 with broker.runtime():test.fail('M_SUPPORTED_SECURITY_FAIL old policy admitted')
+            except Denied:pass
             with lab.connect('A','cac_ctx_issuer') as issuer:
                 test.assertEqual(issuer.execute('SELECT fence.is_ready()').fetchone(),(False,),'M_SUPPORTED_SECURITY_FAIL old issuer ready')
             # No data access with a token held past its TTL is required. The
@@ -226,15 +273,18 @@ def run_sample(test,lab,broker,case,repetition):
         adopt_policy(lab)
         test.assertTrue(broker.ready(),'M current policy2 path unavailable before any repair')
         with broker.runtime() as fresh:
-            test.assertEqual(fresh.binding['policy'],2)
-            with test.assertRaises(Denied):
+            test.assertEqual(fresh.binding['policy'],2,'M_SUPPORTED_SECURITY_FAIL wrong current admission policy')
+            try:
                 broker.command('admit',dict(fresh.binding,policy=1,request=str(uuid4()),operation=str(uuid4())))
+            except Denied:pass
+            else:test.fail('M_SUPPORTED_SECURITY_FAIL explicit policy1 admission accepted')
             fresh.install(broker.issue(fresh.challenge()))
             test.assertEqual(fresh.records(),[S1])
             test.assertEqual(fresh.c.execute('SELECT body FROM poc.records WHERE store=%s',(S1,)).fetchone(),(body['body'],))
             row['healthy_current_postgres_before_repair']=dict(pid=fresh.pid,fullxid=fresh.tx,system_id=fresh.sid,policy=2,scoped_read=True,committed_body=True)
         physical.majority_current('M-after-healthy-current-SQL-no-repair')
         row['majority_ids']={n:m['id'] for n,m in physical.majority.items()}
+        test.assertNotEqual(outcome['outcome'],'TEST_HARNESS_FAILURE',json.dumps(outcome))
         row['status']='OBSERVED'; row['p1_closed']=False
         emit('OBSERVATION',row)
         return row

@@ -64,6 +64,33 @@ Ruling: use fixed isolated sample jobs rather than automatically repairing a
 member between M observations. Cost: additional disposable job bootstrap time;
 benefit: no implicit member-removal or operational recovery authorization.
 
+## Diagnostic calibration (not final M cohort)
+
+Test-first RED commit `1dce5c82c1ba2a42070b02904b81520feee9ad63`:
+push run43629539092/job132552875913 and PR run43629542232/job132552885858
+failed the missing-driver assertion after the real healthy PostgreSQL baseline.
+No security checks were disabled.
+
+First driver commit `c63925b91192e1af18d3ad6382b8cdf6c2ecac42` ran the frozen
+matrix but its clean-progressed cases rejected actual native exit -15 as if only
+zero could represent normal shutdown. These are **incomplete diagnostic samples**,
+not completed native availability results. Other completed rows remain preliminary
+receipts and are not substituted for the final fixed cohort.
+
+Exact etcd source `0b065e61c679ea81f6862bb24c9815f7fc673966`,
+`pkg/osutil/interrupt_unix.go`, calls handlers, restores the default signal action,
+and re-sends the original SIGTERM. The M-only calibration now requires BOTH native
+`received signal; shutting down` (`signal=terminated`) and `closed etcd server`,
+and actual child exit 0 or -SIGTERM. It never treats SIGKILL as clean. All exit
+values are retained. This corrects a diagnostic assumption, not a Raft/security
+control. The fixed cases, two repetitions and files/authority cuts stay unchanged.
+
+Independent source review also required: record actual archive-stop exit rather
+than hardcode zero; distinguish typed transport, TLS/auth/protocol probe errors;
+complete independently possible security checks before failing native diagnostic
+classification; and mark an accepted policy1 ADMIT as M_SUPPORTED_SECURITY_FAIL.
+Corrections are M-only. Final execution/log review remains pending.
+
 ## Current status
 
 M_P1_DIAGNOSIS_INCONCLUSIVE — M implementation/execution evidence pending.
