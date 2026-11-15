@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-heading"><div><span class="eyebrow">شروع یک تجربه تازه</span><h1>فروشگاه‌های آزمایشی شما</h1><p class="muted">یک فضای محلی بسازید و ایده دستیار فروشگاهتان را امتحان کنید.</p></div><a class="button primary" href="{% url 'store_new' %}">＋ فروشگاه تازه</a></div>
+{% if stores %}<div class="store-grid">{% for item in stores %}<a class="card store-card" href="{{ item.get_absolute_url }}"><span class="store-icon" aria-hidden="true">▤</span><span class="pill">خصوصی</span><h2>{{ item.name }}</h2><p class="muted">{{ item.description|default:'آماده برای افزودن محصولات آزمایشی'|truncatechars:120 }}</p><span class="text-link">ورود به فروشگاه ←</span></a>{% endfor %}</div>
+{% else %}<section class="card empty"><span class="large-icon" aria-hidden="true">✦</span><h2>اولین فروشگاهتان را بسازید</h2><p>نام فروشگاه را بنویسید، دو محصول اضافه کنید و پاسخ‌های دستیار را ببینید.</p><a class="button primary" href="{% url 'store_new' %}">ساخت فروشگاه آزمایشی</a><p class="hint">هیچ داده واقعی مشتری یا کسب‌وکار وارد نکنید.</p></section>{% endif %}
+{% endblock %}

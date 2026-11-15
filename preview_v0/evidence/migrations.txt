@@ -1,0 +1,6 @@
+Migrations for 'merchant':
+  merchant/migrations/0001_initial.py
+    + Create model Store
+    + Create model Exchange
+    + Create model Assistant
+    + Create model Product

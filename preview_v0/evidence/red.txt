@@ -1,0 +1,72 @@
+Creating test database for alias 'default'...
+FFF.FFF
+======================================================================
+FAIL: test_csrf_is_enforced_on_actual_routes (merchant.tests.test_journey.JourneyTests.test_csrf_is_enforced_on_actual_routes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 61, in test_csrf_is_enforced_on_actual_routes
+    home = self.create_store()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 15, in create_store
+    self.assertEqual(r.status_code, 302)
+AssertionError: 404 != 302
+
+======================================================================
+FAIL: test_invalid_input_and_html_are_not_executed (merchant.tests.test_journey.JourneyTests.test_invalid_input_and_html_are_not_executed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 75, in test_invalid_input_and_html_are_not_executed
+    home = self.create_store()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 15, in create_store
+    self.assertEqual(r.status_code, 302)
+AssertionError: 404 != 302
+
+======================================================================
+FAIL: test_login_required_and_real_login (merchant.tests.test_journey.JourneyTests.test_login_required_and_real_login)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 20, in test_login_required_and_real_login
+    self.assertEqual(guest.get('/').status_code, 302)
+AssertionError: 404 != 302
+
+======================================================================
+FAIL: test_one_assistant_and_grounded_updated_chat (merchant.tests.test_journey.JourneyTests.test_one_assistant_and_grounded_updated_chat)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 86, in test_one_assistant_and_grounded_updated_chat
+    home = self.create_store()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 15, in create_store
+    self.assertEqual(r.status_code, 302)
+AssertionError: 404 != 302
+
+======================================================================
+FAIL: test_second_owner_cannot_read_or_mutate_objects (merchant.tests.test_journey.JourneyTests.test_second_owner_cannot_read_or_mutate_objects)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 46, in test_second_owner_cannot_read_or_mutate_objects
+    home = self.create_store()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 15, in create_store
+    self.assertEqual(r.status_code, 302)
+AssertionError: 404 != 302
+
+======================================================================
+FAIL: test_store_and_product_crud_is_persistent (merchant.tests.test_journey.JourneyTests.test_store_and_product_crud_is_persistent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 25, in test_store_and_product_crud_is_persistent
+    home = self.create_store()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_journey.py", line 15, in create_store
+    self.assertEqual(r.status_code, 302)
+AssertionError: 404 != 302
+
+----------------------------------------------------------------------
+Ran 7 tests in 2.831s
+
+FAILED (failures=6)
+Destroying test database for alias 'default'...
+Found 7 test(s).
+System check identified no issues (0 silenced).

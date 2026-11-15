@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-heading"><div><span class="eyebrow">اطلاعات آزمایشی شما</span><h1>{{ title }}</h1><p class="muted">اطلاعات در همین دستگاه ذخیره می‌شود؛ فقط داده ساختگی وارد کنید.</p></div></div>
+<section class="card form-card"><form method="post">{% csrf_token %}{{ form.as_div }}<div class="form-actions"><button class="button primary" type="submit">ذخیره تغییرات</button><a class="button secondary" href="{{ back }}">بازگشت بدون ذخیره</a></div></form></section>
+{% endblock %}

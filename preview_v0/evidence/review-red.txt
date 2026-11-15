@@ -1,0 +1,17 @@
+Creating test database for alias 'default'...
+F
+======================================================================
+FAIL: test_specific_name_resolves_a_shorter_nested_product_name (merchant.tests.test_boundaries.BoundaryTests.test_specific_name_resolves_a_shorter_nested_product_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/463769cb7ac7/cac-pv0-01/preview_v0/merchant/tests/test_boundaries.py", line 59, in test_specific_name_resolves_a_shorter_nested_product_name
+    self.assertIn('125,000', answer)
+AssertionError: '125,000' not found in 'چند مورد پیدا شد؛ لطفاً نام دقیق را بنویسید:\n• قهوه\n• قهوه عربیکا'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.434s
+
+FAILED (failures=1)
+Destroying test database for alias 'default'...
+Found 1 test(s).
+System check identified no issues (0 silenced).
