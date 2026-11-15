@@ -3,6 +3,7 @@ import copy
 from pathlib import Path
 
 from h_quorum.authority import Root
+from h_quorum.common import BANNER
 
 
 def repair_with_receipt(test, physical, old_id):
