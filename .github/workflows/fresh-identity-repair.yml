@@ -22,7 +22,10 @@ jobs:
           - {case: N_PROGRESS_OLD_CLEAN_OPEN, repetition: 2}
           - {case: N_PROGRESS_OLD_KILL_UNKNOWN, repetition: 1}
           - {case: N_PROGRESS_OLD_KILL_UNKNOWN, repetition: 2}
-          - {case: REGRESSIONS, repetition: 0}
+          - {case: REG_H, repetition: 0}
+          - {case: REG_K, repetition: 0}
+          - {case: REG_L, repetition: 0}
+          - {case: REG_M, repetition: 0}
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -131,17 +134,29 @@ jobs:
           else:raise RuntimeError('Root transport did not start')
           PYTHON
       - name: One fixed native fail-stop plus fresh-identity repair observation
-        if: matrix.case != 'REGRESSIONS'
+        if: startsWith(matrix.case, 'N_')
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.l_physical.n_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
-      - name: Preserved H51 K17 L7 and M4 separate cohorts
-        if: matrix.case == 'REGRESSIONS'
+      - name: Preserved H51 regression cohort
+        if: matrix.case == 'REG_H'
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Preserved K17 regression cohort
+        if: matrix.case == 'REG_K'
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.policy_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Preserved L7 regression cohort
+        if: matrix.case == 'REG_L'
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           python -m h_quorum.l_physical.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Preserved M4 separate cases cohort
+        if: matrix.case == 'REG_M'
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           for case in OFFLINE_OLD_CLEAN PROGRESSED_OLD_CLEAN PROGRESSED_OLD_KILL PROGRESSED_CURRENT_KILL; do
             CAC_M_CASE="$case" CAC_M_REPEAT=1 python -m h_quorum.l_physical.m_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
           done
