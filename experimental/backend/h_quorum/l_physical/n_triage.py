@@ -295,6 +295,7 @@ def run_open_case(test, lab, broker, repetition):
                 successor.activate(1, str(uuid4()))
             repair = repair_with_receipt(test, physical, physical.original["id"])
             row["repair"] = repair
+            row["member_repair"] = "OBSERVED_FRESH_ID_LEARNER"
             after_repair = read_full(lab)
             test.assertEqual(after_repair, before, "N repair changed current Root/journal/OPEN")
             held = state_summary(*after_repair)
@@ -381,6 +382,7 @@ def run_unknown_case(test, lab, broker, repetition):
         test.assertFalse(broker.ready(), "N UNKNOWN scenario unexpectedly made old policy ready")
         repair = repair_with_receipt(test, physical, physical.original["id"])
         row["repair"] = repair
+        row["member_repair"] = "OBSERVED_FRESH_ID_LEARNER"
         after_repair = read_full(lab)
         test.assertEqual(after_repair, before, "N repair changed current Root/journal/UNKNOWN")
         held = state_summary(*after_repair)
@@ -431,3 +433,7 @@ def run_sample(test, lab, broker, case, repetition):
     if case == "N_PROGRESS_OLD_CLEAN_OPEN":
         return run_open_case(test, lab, broker, repetition)
     return run_unknown_case(test, lab, broker, repetition)
+
+
+# N uses the one-shot, quarantine-hash-verified repair observer; parent L/M stay immutable.
+from h_quorum.l_physical.n_recovery import repair_with_receipt as repair_with_receipt
