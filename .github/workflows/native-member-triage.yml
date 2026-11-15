@@ -17,7 +17,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lane: [probe]
+        include:
+          - {case: OFFLINE_OLD_CLEAN, repetition: 1}
+          - {case: OFFLINE_OLD_CLEAN, repetition: 2}
+          - {case: PROGRESSED_OLD_CLEAN, repetition: 1}
+          - {case: PROGRESSED_OLD_CLEAN, repetition: 2}
+          - {case: PROGRESSED_OLD_KILL, repetition: 1}
+          - {case: PROGRESSED_OLD_KILL, repetition: 2}
+          - {case: PROGRESSED_CURRENT_KILL, repetition: 1}
+          - {case: PROGRESSED_CURRENT_KILL, repetition: 2}
+          - {case: REGRESSIONS, repetition: 0}
     services:
       primary:
         image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
@@ -50,6 +59,8 @@ jobs:
           --health-cmd "pg_isready -U postgres -d cac_s009c_anchor"
           --health-interval 3s --health-timeout 3s --health-retries 20
     env:
+      CAC_M_CASE: ${{ matrix.case }}
+      CAC_M_REPEAT: ${{ matrix.repetition }}
       CAC_H_BANNER: 'Q_SURVIVAL_ONLY / NONRESTORED_MAJORITY_REQUIRED / SECURITY_UNPROVEN'
       CAC_EXPERIMENTAL_DISPOSABLE: '1'
       PYTHONPATH: .
@@ -62,6 +73,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
           python-version: '3.12.15'
@@ -77,6 +89,16 @@ jobs:
           git rev-parse HEAD >> "$GITHUB_WORKSPACE/evidence-s009h/tested-sha.txt"
           printf '%s\n%s\n' "$CAC_H_BANNER" "$PR_HEAD" > "$GITHUB_WORKSPACE/evidence-s009h/pr-head-sha.txt"
           python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+      - name: Prove inherited source and synthetic merge equality
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/source-receipt.log"
+          git diff --exit-code ba5bc82170da4523b39b1512eb7d2de344255c3a HEAD -- . ':(exclude)h_quorum/l_physical/m_*.py'
+          if [ -n "$PR_HEAD" ]; then
+            git diff --exit-code "$PR_HEAD" HEAD -- . ../../.github/workflows/native-member-triage.yml
+          fi
+          printf '%s\n' 'L backend unchanged except new m_*.py; PR head equals tested merge source' >> "$GITHUB_WORKSPACE/evidence-s009h/source-receipt.log"
       - name: Verify and install pinned upstream consensus binaries
         run: |
           curl --fail --location --retry 2 --max-time 120 https://github.com/etcd-io/etcd/releases/download/v3.6.16/etcd-v3.6.16-linux-amd64.tar.gz --output "$RUNNER_TEMP/etcd.tar.gz"
@@ -112,10 +134,18 @@ jobs:
               except OSError:time.sleep(.1)
           else:raise RuntimeError('Root transport did not start')
           PYTHON
-      - name: Real healthy baseline and missing M diagnostic probe
+      - name: One fixed native observation with real PostgreSQL
+        if: matrix.case != 'REGRESSIONS'
         run: |
           printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
-          python -m unittest -v h_quorum.l_physical.m_tests.MemberTriageTests.test_offline_old_clean 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.l_physical.m_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+      - name: Preserved H51 K17 L7 separate cohorts
+        if: matrix.case == 'REGRESSIONS'
+        run: |
+          printf '%s\n' "$CAC_H_BANNER" > "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.policy_run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
+          python -m h_quorum.l_physical.run 2>&1 | tee -a "$GITHUB_WORKSPACE/evidence-s009h/proof.log"
       - name: Scan safe evidence
         id: scan
         if: always()
@@ -142,6 +172,6 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always() && steps.scan.outputs.safe == 'true'
         with:
-          name: s009m-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.lane }}
+          name: s009m-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.case }}-${{ matrix.repetition }}
           path: evidence-s009h/
           retention-days: 30
