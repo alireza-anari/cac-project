@@ -1,10 +1,9 @@
 name: S010C private assistant domain lab
 on:
   pull_request:
-    paths: ['experimental/backend/private_assistant/**', 'experimental/backend/assistant_tests/**', 'experimental/backend/config/assistant_settings.py', 'experimental/backend/scripts/assistant_roundtrip.py', '.github/workflows/private-assistant-domain-lab.yml']
+    branches: [work/s0-10b-catalog-domain-lab]
   push:
     branches: [work/s0-10c-private-assistant-domain]
-    paths: ['experimental/backend/private_assistant/**', 'experimental/backend/assistant_tests/**', 'experimental/backend/config/assistant_settings.py', 'experimental/backend/scripts/assistant_roundtrip.py', '.github/workflows/private-assistant-domain-lab.yml']
 permissions:
   contents: read
 concurrency:
@@ -44,27 +43,66 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: '3.12.15'
       - name: Verify exact source and prepare paths
+        id: provenance
         env:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
-          base=96cf1f1a094362187516b6d61edcd3a9687e6e5c
+          cd "$GITHUB_WORKSPACE"
           tested=$(git rev-parse HEAD)
-          mkdir -p "$GITHUB_WORKSPACE/evidence-assistant"
-          printf 'base=%s\nhead=%s\ntested=%s\n' "$base" "${PR_HEAD:-$tested}" "$tested" > "$GITHUB_WORKSPACE/evidence-assistant/revision.txt"
-          if [ -n "$PR_HEAD" ]; then
+          mode=stacked-assistant
+          base=96cf1f1a094362187516b6d61edcd3a9687e6e5c
+          accepted=0a240bd33693b265dad2193cefe1c7d9cd926e53
+          case "$GITHUB_EVENT_NAME:$GITHUB_REF_NAME:$PR_HEAD_REF:$PR_BASE_REF" in
+            push:work/s0-10c-private-assistant-domain::)
+              head=$GITHUB_SHA
+              ;;
+            pull_request:*:work/s0-10c-private-assistant-domain:work/s0-10b-catalog-domain-lab)
+              head=$PR_HEAD
+              ;;
+            *) echo "::error::Unsupported assistant workflow branch and target"; exit 1 ;;
+          esac
+          test "$tested" = "$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            test "$PR_HEAD_REPO" = "$GITHUB_REPOSITORY"
             test "$PR_BASE" = "$base"
-            test "$(git rev-parse "$PR_HEAD^{tree}")" = "$(git rev-parse 'HEAD^{tree}')"
+            test "$(git rev-list --parents -n 1 "$tested")" = "$tested $base $head"
+            test "$(git rev-parse "$head^{tree}")" = "$(git rev-parse "$tested^{tree}")"
+          else
+            test "$tested" = "$head"
           fi
-          test "$(git rev-parse "${PR_HEAD:-$tested}^")" = "$base"
-          git -C "$GITHUB_WORKSPACE" diff --exit-code "$base" HEAD -- . ':(exclude).github/workflows/private-assistant-domain-lab.yml' ':(exclude)docs/changes/CR-S0-10C-001-private-assistant.md' ':(exclude)experimental/backend/private_assistant/**' ':(exclude)experimental/backend/assistant_tests/**' ':(exclude)experimental/backend/config/assistant_settings.py' ':(exclude)experimental/backend/scripts/assistant_roundtrip.py'
+          test "$(git rev-list --parents -n 1 "$accepted")" = "$accepted $base"
+          test "$(git rev-list --parents -n 1 "$head")" = "$head $accepted"
+          # Check both the reviewed C additions and the narrower R1 delta.
+          git diff --quiet "$base" "$accepted" -- . \
+            ':(exclude)experimental/backend/private_assistant/__init__.py' \
+            ':(exclude)experimental/backend/private_assistant/migrations/__init__.py' \
+            ':(exclude)experimental/backend/assistant_tests/__init__.py' \
+            ':(exclude)experimental/backend/config/assistant_settings.py' \
+            ':(exclude)experimental/backend/private_assistant/models.py' \
+            ':(exclude)experimental/backend/private_assistant/migrations/0001_assistant.py' \
+            ':(exclude)experimental/backend/private_assistant/migrations/assistant.sql' \
+            ':(exclude)experimental/backend/private_assistant/service.py' \
+            ':(exclude)experimental/backend/assistant_tests/test_assistant.py' \
+            ':(exclude)experimental/backend/scripts/assistant_roundtrip.py' \
+            ':(exclude).github/workflows/private-assistant-domain-lab.yml' \
+            ':(exclude)docs/changes/CR-S0-10C-001-private-assistant.md'
+          git diff --quiet "$accepted" "$head" -- . \
+            ':(exclude).github/workflows/catalog-domain-lab.yml' \
+            ':(exclude).github/workflows/private-assistant-domain-lab.yml'
+          mkdir -p "$GITHUB_WORKSPACE/evidence-assistant"
+          printf 'mode=%s\nbase=%s\naccepted=%s\nhead=%s\ntested=%s\n' \
+            "$mode" "$base" "$accepted" "$head" "$tested" > "$GITHUB_WORKSPACE/evidence-assistant/revision.txt"
           echo "CAC_TEST_CONFIG=$RUNNER_TEMP/cac-s010c-foundation.json" >> "$GITHUB_ENV"
           echo "CAC_CATALOG_CONFIG=$RUNNER_TEMP/cac-s010c-catalog.json" >> "$GITHUB_ENV"
           echo "CATALOG_EVIDENCE=$GITHUB_WORKSPACE/evidence-assistant" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
       - name: Bootstrap pinned Django and PostgreSQL
         run: |
           python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
@@ -113,10 +151,15 @@ jobs:
           grep -Eq 'Ran 5 tests? ' "$CATALOG_EVIDENCE/catalog.log"
       - name: Scan allowlisted evidence
         id: scan
-        if: always()
-        run: python scripts/catalog_scan.py | tee "$CATALOG_EVIDENCE/scan.log"
+        if: always() && steps.provenance.outcome == 'success'
+        run: |
+          if [[ ! -s "$CAC_TEST_CONFIG" || ! -s "$CAC_CATALOG_CONFIG" ]]; then
+            echo "::error::Evidence scan requires both disposable fixture configurations"
+            exit 1
+          fi
+          python scripts/catalog_scan.py | tee "$CATALOG_EVIDENCE/scan.log"
       - name: Upload scanned evidence
-        if: always() && steps.scan.outcome == 'success'
+        if: always() && steps.provenance.outcome == 'success' && steps.scan.outcome == 'success'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: s010c-${{ github.run_id }}-${{ github.run_attempt }}

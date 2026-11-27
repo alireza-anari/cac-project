@@ -1,10 +1,9 @@
 name: S010B catalog domain lab
 on:
   pull_request:
-    paths: ['experimental/backend/**', '.github/workflows/catalog-domain-lab.yml']
+    branches: [work/s0-07-new-origin-backend-foundation, work/s0-10b-catalog-domain-lab]
   push:
-    branches: [work/s0-10b-catalog-domain-lab]
-    paths: ['experimental/backend/**', '.github/workflows/catalog-domain-lab.yml']
+    branches: [work/s0-10b-catalog-domain-lab, work/s0-10c-private-assistant-domain]
 permissions:
   contents: read
 concurrency:
@@ -44,26 +43,91 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: '3.12.15'
       - name: Verify exact source and prepare paths
+        id: provenance
         env:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
-          base=a27eab0e978c6c60d54fab45b9f467ebd7ddff56
+          cd "$GITHUB_WORKSPACE"
           tested=$(git rev-parse HEAD)
-          mkdir -p "$GITHUB_WORKSPACE/evidence-catalog"
-          printf 'base=%s\nhead=%s\ntested=%s\n' "$base" "${PR_HEAD:-$tested}" "$tested" > "$GITHUB_WORKSPACE/evidence-catalog/revision.txt"
-          if [ -n "$PR_HEAD" ]; then
-            test "$PR_BASE" = "$base"
-            test "$(git rev-parse "$PR_HEAD^{tree}")" = "$(git rev-parse 'HEAD^{tree}')"
+          case "$GITHUB_EVENT_NAME:$GITHUB_REF_NAME:$PR_HEAD_REF:$PR_BASE_REF" in
+            push:work/s0-10b-catalog-domain-lab::)
+              mode=catalog
+              head=$GITHUB_SHA
+              ;;
+            push:work/s0-10c-private-assistant-domain::)
+              mode=stacked-assistant
+              head=$GITHUB_SHA
+              ;;
+            pull_request:*:work/s0-10b-catalog-domain-lab:work/s0-07-new-origin-backend-foundation)
+              mode=catalog
+              head=$PR_HEAD
+              ;;
+            pull_request:*:work/s0-10c-private-assistant-domain:work/s0-10b-catalog-domain-lab)
+              mode=stacked-assistant
+              head=$PR_HEAD
+              ;;
+            *) echo "::error::Unsupported catalog workflow branch and target"; exit 1 ;;
+          esac
+          if [[ "$mode" == catalog ]]; then
+            base=a27eab0e978c6c60d54fab45b9f467ebd7ddff56
+            accepted=$base
+          else
+            base=96cf1f1a094362187516b6d61edcd3a9687e6e5c
+            accepted=0a240bd33693b265dad2193cefe1c7d9cd926e53
           fi
-          git -C "$GITHUB_WORKSPACE" diff --exit-code "$base" HEAD -- . ':(exclude).github/workflows/catalog-domain-lab.yml' ':(exclude)docs/changes/CR-S0-10B-001-catalog.md' ':(exclude)experimental/backend/catalog_lab/**' ':(exclude)experimental/backend/catalog_tests/**' ':(exclude)experimental/backend/config/catalog_settings.py' ':(exclude)experimental/backend/scripts/catalog_*.py'
+          test "$tested" = "$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            test "$PR_HEAD_REPO" = "$GITHUB_REPOSITORY"
+            test "$PR_BASE" = "$base"
+            test "$(git rev-list --parents -n 1 "$tested")" = "$tested $base $head"
+            test "$(git rev-parse "$head^{tree}")" = "$(git rev-parse "$tested^{tree}")"
+          else
+            test "$tested" = "$head"
+          fi
+          if [[ "$mode" == catalog ]]; then
+            git merge-base --is-ancestor "$base" "$head"
+            git diff --quiet "$base" "$head" -- . \
+              ':(exclude).github/workflows/catalog-domain-lab.yml' \
+              ':(exclude)docs/changes/CR-S0-10B-001-catalog.md' \
+              ':(exclude)experimental/backend/catalog_lab/**' \
+              ':(exclude)experimental/backend/catalog_tests/**' \
+              ':(exclude)experimental/backend/config/catalog_settings.py' \
+              ':(exclude)experimental/backend/scripts/catalog_*.py'
+          else
+            test "$(git rev-list --parents -n 1 "$accepted")" = "$accepted $base"
+            test "$(git rev-list --parents -n 1 "$head")" = "$head $accepted"
+            # Check both the reviewed C additions and the narrower R1 delta.
+            git diff --quiet "$base" "$accepted" -- . \
+              ':(exclude)experimental/backend/private_assistant/__init__.py' \
+              ':(exclude)experimental/backend/private_assistant/migrations/__init__.py' \
+              ':(exclude)experimental/backend/assistant_tests/__init__.py' \
+              ':(exclude)experimental/backend/config/assistant_settings.py' \
+              ':(exclude)experimental/backend/private_assistant/models.py' \
+              ':(exclude)experimental/backend/private_assistant/migrations/0001_assistant.py' \
+              ':(exclude)experimental/backend/private_assistant/migrations/assistant.sql' \
+              ':(exclude)experimental/backend/private_assistant/service.py' \
+              ':(exclude)experimental/backend/assistant_tests/test_assistant.py' \
+              ':(exclude)experimental/backend/scripts/assistant_roundtrip.py' \
+              ':(exclude).github/workflows/private-assistant-domain-lab.yml' \
+              ':(exclude)docs/changes/CR-S0-10C-001-private-assistant.md'
+            git diff --quiet "$accepted" "$head" -- . \
+              ':(exclude).github/workflows/catalog-domain-lab.yml' \
+              ':(exclude).github/workflows/private-assistant-domain-lab.yml'
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/evidence-catalog"
+          printf 'mode=%s\nbase=%s\naccepted=%s\nhead=%s\ntested=%s\n' \
+            "$mode" "$base" "$accepted" "$head" "$tested" > "$GITHUB_WORKSPACE/evidence-catalog/revision.txt"
           echo "CAC_TEST_CONFIG=$RUNNER_TEMP/cac-s010b-foundation.json" >> "$GITHUB_ENV"
           echo "CAC_CATALOG_CONFIG=$RUNNER_TEMP/cac-s010b-catalog.json" >> "$GITHUB_ENV"
           echo "CATALOG_EVIDENCE=$GITHUB_WORKSPACE/evidence-catalog" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
       - name: Bootstrap pinned Django and PostgreSQL
         run: |
           python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
@@ -97,10 +161,15 @@ jobs:
           grep -Eq 'Ran 8 tests? ' "$CATALOG_EVIDENCE/catalog.log"
       - name: Scan allowlisted evidence
         id: scan
-        if: always()
-        run: python scripts/catalog_scan.py | tee "$CATALOG_EVIDENCE/scan.log"
+        if: always() && steps.provenance.outcome == 'success'
+        run: |
+          if [[ ! -s "$CAC_TEST_CONFIG" || ! -s "$CAC_CATALOG_CONFIG" ]]; then
+            echo "::error::Evidence scan requires both disposable fixture configurations"
+            exit 1
+          fi
+          python scripts/catalog_scan.py | tee "$CATALOG_EVIDENCE/scan.log"
       - name: Upload scanned evidence
-        if: always() && steps.scan.outcome == 'success'
+        if: always() && steps.provenance.outcome == 'success' && steps.scan.outcome == 'success'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: s010b-${{ github.run_id }}-${{ github.run_attempt }}
