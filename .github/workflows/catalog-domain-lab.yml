@@ -1,0 +1,112 @@
+name: S010B catalog domain lab
+on:
+  pull_request:
+    paths: ['experimental/backend/**', '.github/workflows/catalog-domain-lab.yml']
+  push:
+    branches: [work/s0-10b-catalog-domain-lab]
+    paths: ['experimental/backend/**', '.github/workflows/catalog-domain-lab.yml']
+permissions:
+  contents: read
+concurrency:
+  group: catalog-domain-lab-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  postgres-catalog:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        # Official postgres:17.11-bookworm manifest digest verified from registry.
+        image: postgres@sha256:839fbb5a4942a7758dd93e18b42ea5649807491a0545b5eeeb8f0b8bb11857a5
+        env:
+          POSTGRES_DB: cac_s007_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-s007-disposable-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cac_s007_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGDATABASE: cac_s007_test
+      PGPASSWORD: synthetic-s007-disposable-only
+      CAC_EXPERIMENTAL_DISPOSABLE: '1'
+      CAC_DB_ROLE: cac_owner
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        working-directory: experimental/backend
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
+      - name: Verify exact source and prepare paths
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          base=a27eab0e978c6c60d54fab45b9f467ebd7ddff56
+          tested=$(git rev-parse HEAD)
+          mkdir -p "$GITHUB_WORKSPACE/evidence-catalog"
+          printf 'base=%s\nhead=%s\ntested=%s\n' "$base" "${PR_HEAD:-$tested}" "$tested" > "$GITHUB_WORKSPACE/evidence-catalog/revision.txt"
+          if [ -n "$PR_HEAD" ]; then
+            test "$PR_BASE" = "$base"
+            test "$(git rev-parse "$PR_HEAD^{tree}")" = "$(git rev-parse 'HEAD^{tree}')"
+          fi
+          git -C "$GITHUB_WORKSPACE" diff --exit-code "$base" HEAD -- . ':(exclude).github/workflows/catalog-domain-lab.yml' ':(exclude)docs/changes/CR-S0-10B-001-catalog.md' ':(exclude)experimental/backend/catalog_lab/**' ':(exclude)experimental/backend/catalog_tests/**' ':(exclude)experimental/backend/config/catalog_settings.py' ':(exclude)experimental/backend/scripts/catalog_*.py'
+          echo "CAC_TEST_CONFIG=$RUNNER_TEMP/cac-s010b-foundation.json" >> "$GITHUB_ENV"
+          echo "CAC_CATALOG_CONFIG=$RUNNER_TEMP/cac-s010b-catalog.json" >> "$GITHUB_ENV"
+          echo "CATALOG_EVIDENCE=$GITHUB_WORKSPACE/evidence-catalog" >> "$GITHUB_ENV"
+      - name: Bootstrap pinned Django and PostgreSQL
+        run: |
+          python -m pip install --only-binary=:all: --require-hashes -r requirements.lock
+          python -VV > "$CATALOG_EVIDENCE/environment.txt"
+          python -m django --version >> "$CATALOG_EVIDENCE/environment.txt"
+          python scripts/bootstrap.py | tee "$CATALOG_EVIDENCE/setup.log"
+          python -c "import psycopg; c=psycopg.connect(user='postgres'); print(c.execute('SELECT version()').fetchone()[0]); c.close()" >> "$CATALOG_EVIDENCE/environment.txt"
+          python manage.py migrate --noinput | tee -a "$CATALOG_EVIDENCE/setup.log"
+      - name: Inherited S0-07B 43-test regression
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v 2>&1 | tee "$CATALOG_EVIDENCE/regression.log"
+          grep -Eq 'Ran 43 tests? ' "$CATALOG_EVIDENCE/regression.log"
+      - name: Add and verify catalog migration
+        env:
+          DJANGO_SETTINGS_MODULE: config.catalog_settings
+        run: |
+          python scripts/catalog_bootstrap.py role | tee -a "$CATALOG_EVIDENCE/setup.log"
+          {
+            python manage.py migrate --noinput
+            python manage.py check
+            python manage.py makemigrations --check --dry-run
+          } | tee "$CATALOG_EVIDENCE/schema.log"
+          python scripts/catalog_roundtrip.py | tee "$CATALOG_EVIDENCE/roundtrip.log"
+          python scripts/catalog_bootstrap.py key | tee -a "$CATALOG_EVIDENCE/setup.log"
+      - name: Fixed native catalog acceptance cases
+        env:
+          DJANGO_SETTINGS_MODULE: config.catalog_settings
+          CAC_CATALOG_LOGIN: "1"
+        run: |
+          python -m unittest catalog_tests.test_catalog -v -f 2>&1 | tee "$CATALOG_EVIDENCE/catalog.log"
+          grep -Eq 'Ran 8 tests? ' "$CATALOG_EVIDENCE/catalog.log"
+      - name: Scan allowlisted evidence
+        id: scan
+        if: always()
+        run: python scripts/catalog_scan.py | tee "$CATALOG_EVIDENCE/scan.log"
+      - name: Upload scanned evidence
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: s010b-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence-catalog/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove private credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/cac-s010b-foundation.json" "$RUNNER_TEMP/cac-s010b-catalog.json"
